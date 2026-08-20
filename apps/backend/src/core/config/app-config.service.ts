@@ -22,6 +22,22 @@ export class AppConfigService {
     return this.config.get('DATABASE_URL', { infer: true });
   }
 
+  get jwtSecret(): string {
+    return this.config.get('JWT_SECRET', { infer: true });
+  }
+
+  get corsOrigins(): string[] {
+    return this.config
+      .get('CORS_ORIGINS', { infer: true })
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter((origin) => origin.length > 0);
+  }
+
+  get bodyLimit(): string {
+    return this.config.get('BODY_LIMIT', { infer: true });
+  }
+
   get isProduction(): boolean {
     return this.nodeEnv === 'production';
   }

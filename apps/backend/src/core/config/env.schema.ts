@@ -1,4 +1,5 @@
 import Joi from 'joi';
+import { hydrateSecretsFromStore } from './hydrate-secrets';
 
 export const NODE_ENVS = ['development', 'production', 'test'] as const;
 export type NodeEnv = (typeof NODE_ENVS)[number];
@@ -19,6 +20,9 @@ export interface EnvVars {
   PORT: number;
   LOG_LEVEL: LogLevel;
   DATABASE_URL: string;
+  JWT_SECRET: string;
+  CORS_ORIGINS: string;
+  BODY_LIMIT: string;
 }
 
 export class ConfigValidationError extends Error {
@@ -39,6 +43,20 @@ export const envSchema = Joi.object<EnvVars>({
   DATABASE_URL: Joi.string()
     .pattern(/^postgres(ql)?:\/\//)
     .required(),
+  JWT_SECRET: Joi.string().min(16).required(),
+  CORS_ORIGINS: Joi.string()
+    .default('http://localhost:3000')
+    .custom((value: string, helpers) => {
+      const origins = value
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean);
+      if (origins.length === 0) {
+        return helpers.error('any.invalid');
+      }
+      return origins.join(',');
+    }, 'cors origins'),
+  BODY_LIMIT: Joi.string().default('256kb'),
 });
 
 function missingNames(error: Joi.ValidationError): string[] {
@@ -71,8 +89,9 @@ export function parseEnv(config: Record<string, unknown>): EnvVars {
  * Missing/invalid vars are printed by name and the process exits non-zero.
  */
 export function validateEnv(config: Record<string, unknown>): EnvVars {
+  hydrateSecretsFromStore();
   try {
-    return parseEnv(config);
+    return parseEnv({ ...process.env, ...config });
   } catch (err) {
     if (err instanceof ConfigValidationError) {
       console.error(err.message);
