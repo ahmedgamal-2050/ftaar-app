@@ -3,6 +3,10 @@ import { PrismaClient } from '@prisma/client';
 import { AppConfigService } from '../core/config/app-config.service';
 import { Money } from '../money/money';
 import { moneyTransformer } from '../money/money.transformer';
+import {
+  runInTransaction as runInPrismaTransaction,
+  type EntityManager,
+} from '../shared/run-in-transaction';
 
 @Injectable()
 export class PrismaService
@@ -21,6 +25,10 @@ export class PrismaService
 
   moneyFromDb(value: bigint | string | null | undefined): Money | null {
     return moneyTransformer.from(value);
+  }
+
+  runInTransaction<T>(work: (em: EntityManager) => Promise<T>): Promise<T> {
+    return runInPrismaTransaction(this, work);
   }
 
   async onModuleInit(): Promise<void> {

@@ -1,7 +1,0 @@
-Claim Module,Module #,ID,Code Module,Task,Done when,Side,Estimate (days),Depends On,Labels
-FOUNDATION-BE,1,MONEY-01,money,Money class skeleton,Private bigint piastres; fromPiastres; zero(),Backend,0.5,CORE-01,claim:FOUNDATION-BE side:backend module:money size:0.5d
-FOUNDATION-BE,1,MONEY-02,money,fromEgpString parser,"Accepts ""36.87"", ""36"", ""36.8""; rejects ""1.234"", ""abc"", """", null",Backend,0.5,MONEY-01,claim:FOUNDATION-BE side:backend module:money size:0.5d
-FOUNDATION-BE,1,MONEY-03,money,Arithmetic operations,"add, sub, mulInt; all return new instances",Backend,0.25,MONEY-01,claim:FOUNDATION-BE side:backend module:money size:0.25d
-FOUNDATION-BE,1,MONEY-04,money,toEgpString + toJSON,"3687n ? ""36.87""; serialisation is automatic in every response",Backend,0.25,MONEY-02,claim:FOUNDATION-BE side:backend module:money size:0.25d
-FOUNDATION-BE,1,MONEY-05,money,TypeORM MoneyTransformer,Money ? BIGINT round-trips; null-safe,Backend,0.5,MONEY-04,claim:FOUNDATION-BE side:backend module:money size:0.5d
-FOUNDATION-BE,1,MONEY-06,money,Unit test suite,100% branch coverage on the class,Backend,0.5,MONEY-05,claim:FOUNDATION-BE side:backend module:money size:0.5d
