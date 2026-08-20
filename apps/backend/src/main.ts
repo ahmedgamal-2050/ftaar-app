@@ -12,9 +12,12 @@ import { GLOBAL_PREFIX, setupApp } from './core/setup-app';
 async function bootstrap() {
   const exportOpenApi = process.argv.includes('--export-openapi');
 
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+    bodyParser: false,
+  });
   app.useLogger(app.get(Logger));
-  setupApp(app);
+  setupApp(app, app.get(AppConfigService));
 
   if (exportOpenApi) {
     const outputPath = process.env['OPENAPI_OUT'] ?? 'openapi.json';

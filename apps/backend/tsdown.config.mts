@@ -10,7 +10,10 @@ const here = dirname(fileURLToPath(import.meta.url));
 // tsdown reads tsconfig.app.json, so experimentalDecorators + emitDecoratorMetadata
 // (required for Nest DI and route reflection) are honored by the oxc transform.
 export default defineConfig({
-  entry: [join(here, 'src/main.ts')],
+  entry: {
+    main: join(here, 'src/main.ts'),
+    seed: join(here, 'src/database/run-seed.ts'),
+  },
   // CommonJS output keeps parity with the previous webpack build and Nest's defaults.
   format: ['cjs'],
   platform: 'node',

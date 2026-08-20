@@ -10,31 +10,57 @@ permissions:
   actions: read
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  main:
+  backend:
     runs-on: ubuntu-latest
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ftaar
+          POSTGRES_PASSWORD: ftaar
+          POSTGRES_DB: ftaar
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ftaar -d ftaar"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      PORT: '3000'
+      LOG_LEVEL: silent
+      DATABASE_URL: postgres://ftaar:ftaar@127.0.0.1:5432/ftaar
+      JWT_SECRET: ci-jwt-secret-16x
+      CORS_ORIGINS: http://localhost:3000
+      BODY_LIMIT: 256kb
     steps:
       - uses: actions/checkout@v5
         with:
           filter: tree:0
           fetch-depth: 0
 
-      # This enables task distribution via Nx Cloud
-      # Run this command as early as possible, before dependencies are installed
-      # Learn more at https://nx.dev/docs/reference/nx-cloud-cli#npx-nxcloud-startcirun
-      - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e"
-
-      # Cache node_modules
       - uses: actions/setup-node@v5
         with:
-          node-version: 24
-          cache: 'npm'
+          node-version: 22
+          cache: npm
 
       - run: npm ci
 
-      # Prepend any command with "nx record --" to record its logs to Nx Cloud
-      - run: npx nx record -- npx nx format:check --base="remotes/origin/main"
-      - run: npx nx run-many -t lint test build typecheck e2e openapi
-      # Nx Cloud recommends fixes for failures to help you get CI green faster. Learn more: https://nx.dev/docs/features/ci-features/self-healing-ci
-      - run: npx nx fix-ci
-        if: always()
+      - name: Apply Prisma migrations
+        run: npx prisma migrate deploy --schema apps/backend/prisma/schema.prisma
+
+      - run: npx nx format:check --base="remotes/origin/main"
+
+      - run: npx nx run-many -t lint typecheck test e2e openapi --projects=backend,api-e2e
+
+      - name: Production dependency audit (backend image graph)
+        run: |
+          npx nx run backend:prune --configuration=production
+          npm audit --omit=dev --audit-level=high --prefix dist/apps/backend

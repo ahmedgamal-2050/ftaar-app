@@ -1,20 +1,31 @@
 import { Controller, Get } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
 import { SkipThrottle } from '@nestjs/throttler';
-import type { HealthResponse } from '@nestjs-template/types';
+import { PrismaHealthIndicator } from './health.indicator';
 
 @ApiTags('health')
 @SkipThrottle()
 @Controller('health')
 export class HealthController {
+  constructor(
+    private readonly health: HealthCheckService,
+    private readonly prismaHealth: PrismaHealthIndicator,
+  ) {}
+
   @Get()
-  @ApiOperation({ summary: 'Liveness probe' })
-  @ApiOkResponse({ description: 'Service is up' })
-  check(): HealthResponse {
-    return {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-    };
+  @HealthCheck()
+  @ApiOperation({ summary: 'Liveness probe (no database)' })
+  liveness() {
+    return this.health.check([
+      () => ({ api: { status: 'up', uptime: process.uptime() } }),
+    ]);
+  }
+
+  @Get('db')
+  @HealthCheck()
+  @ApiOperation({ summary: 'Readiness probe (Postgres)' })
+  readiness() {
+    return this.health.check([() => this.prismaHealth.ping('database')]);
   }
 }

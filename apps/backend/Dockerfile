@@ -3,33 +3,33 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Copy lockfile and manifests first for layer caching
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
 
-# Copy source
 COPY . .
 
-# Build the backend app with the oxc toolchain (tsdown) and prune the lockfile.
-# The prune target depends on build, so this produces main.cjs plus a pruned
-# package.json + package-lock.json + workspace_modules in the output directory.
 RUN npx nx run backend:prune --configuration=production
 
-# Install production-only packages against the pruned lockfile
 WORKDIR /app/dist/apps/backend
-RUN npm ci --omit=dev --ignore-scripts
+COPY apps/backend/prisma ./prisma
+COPY apps/backend/docker-entrypoint.sh ./docker-entrypoint.sh
+RUN npm ci --omit=dev --ignore-scripts \
+  && npx prisma generate --schema prisma/schema.prisma
 
 # ---- Runtime Stage ----
 FROM node:22-alpine AS runner
 
 WORKDIR /app
 
+RUN apk add --no-cache openssl
+
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Copy built output + production node_modules
 COPY --from=builder /app/dist/apps/backend ./
+
+RUN chmod +x docker-entrypoint.sh
 
 EXPOSE 3000
 
-CMD ["node", "main.cjs"]
+ENTRYPOINT ["./docker-entrypoint.sh"]

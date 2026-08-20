@@ -209,7 +209,7 @@ npx nx run backend:openapi
 { "success": true, "data": { "message": "Hello API" } }
 ```
 
-`GET /api/health`
+`GET /health` and `GET /health/db` (no `/api` prefix; see `docs/backend-ops.md`).
 
 ```json
 {
