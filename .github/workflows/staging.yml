@@ -3,7 +3,7 @@ name: Staging
 on:
   push:
     branches:
-      - main
+      - master
 
 permissions:
   contents: read
@@ -38,13 +38,13 @@ jobs:
           file: apps/backend/Dockerfile
           push: true
           tags: |
-            ${{ steps.image.outputs.name }}:main
+            ${{ steps.image.outputs.name }}:master
             ${{ steps.image.outputs.name }}:${{ github.sha }}
 
       - name: Staging URL
         run: |
           echo "Staging URL: ${STAGING_URL:-https://staging.ftaar.example}" >> "$GITHUB_STEP_SUMMARY"
-          echo "Image: ${{ steps.image.outputs.name }}:main" >> "$GITHUB_STEP_SUMMARY"
+          echo "Image: ${{ steps.image.outputs.name }}:master" >> "$GITHUB_STEP_SUMMARY"
           echo "Start the host with RUN_SEED=true so the entrypoint migrates and seeds." >> "$GITHUB_STEP_SUMMARY"
         env:
           STAGING_URL: ${{ vars.STAGING_URL }}

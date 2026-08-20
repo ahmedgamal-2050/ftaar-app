@@ -61,9 +61,9 @@ Both routes are **outside** the `/api` prefix and skip the throttler.
 
 ## Staging (OPS-05)
 
-`.github/workflows/staging.yml` on push to `main`:
+`.github/workflows/staging.yml` on push to `master`:
 
-1. Builds `apps/backend/Dockerfile` and pushes `ghcr.io/<org>/<repo>/backend:main`.
+1. Builds `apps/backend/Dockerfile` and pushes `ghcr.io/<org>/<repo>/backend:master`.
 2. Writes the staging URL to the job summary.
 
 Create a GitHub Environment named `staging` (optional protection) and set repository or environment:
