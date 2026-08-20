@@ -1,0 +1,11 @@
+Claim Module,Module #,ID,Code Module,Task,Done when,Side,Estimate (days),Depends On,Labels
+FOUNDATION-BE,1,CORE-01,core,Scaffold NestJS app,"npm run start:dev boots, strict: true and noUncheckedIndexedAccess set",Backend,0.5,,claim:FOUNDATION-BE side:backend module:core size:0.5d
+FOUNDATION-BE,1,CORE-02,core,"ESLint, Prettier, pre-commit hook",Lint passes; husky blocks a commit that fails it,Backend,0.25,CORE-01,claim:FOUNDATION-BE side:backend module:core size:0.25d
+FOUNDATION-BE,1,CORE-03,core,Joi-validated config module,"Missing env var exits non-zero naming it; typed service, no process.env at call sites",Backend,0.5,CORE-01,claim:FOUNDATION-BE side:backend module:core size:0.5d
+FOUNDATION-BE,1,CORE-04,core,Error code union + AppError,All 17 codes typed; a code without an HTTP status is a compile error,Backend,0.5,CORE-01,claim:FOUNDATION-BE side:backend module:core size:0.5d
+FOUNDATION-BE,1,CORE-05,core,Global exception filter,"AppError, HttpException, validation errors and unknown throws all render one envelope",Backend,0.5,CORE-04,claim:FOUNDATION-BE side:backend module:core size:0.5d
+FOUNDATION-BE,1,CORE-06,core,Response wrap interceptor,"Returns become {success, data}; no double-wrap; 204 untouched",Backend,0.25,CORE-01,claim:FOUNDATION-BE side:backend module:core size:0.25d
+FOUNDATION-BE,1,CORE-07,core,Global validation pipe,whitelist + forbidNonWhitelisted + transform; an unexpected body field returns 400,Backend,0.25,CORE-05,claim:FOUNDATION-BE side:backend module:core size:0.25d
+FOUNDATION-BE,1,CORE-08,core,Pino logger with request-ID ALS,Every log line carries a request ID; passwords and tokens redacted,Backend,1,CORE-03,claim:FOUNDATION-BE side:backend module:core size:1.0d
+FOUNDATION-BE,1,CORE-09,core,Throttler,"100 req/min global, 10 req/min on /auth/*, /health skipped",Backend,0.5,CORE-05,claim:FOUNDATION-BE side:backend module:core size:0.5d
+FOUNDATION-BE,1,CORE-10,core,Swagger + openapi.json export,/docs serves; CI exports the spec; Prism can mock from it,Backend,1,CORE-07,claim:FOUNDATION-BE side:backend module:core size:1.0d

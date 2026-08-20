@@ -63,20 +63,50 @@
           "node --watch ../../dist/apps/backend/main.cjs"
         ],
         "env": {
-          "NODE_ENV": "development"
+          "NODE_ENV": "development",
+          "PORT": "3000",
+          "LOG_LEVEL": "info"
         }
       },
       "configurations": {
         "development": {
           "env": {
-            "NODE_ENV": "development"
+            "NODE_ENV": "development",
+            "PORT": "3000",
+            "LOG_LEVEL": "info"
           }
         },
         "production": {
           "env": {
-            "NODE_ENV": "production"
+            "NODE_ENV": "production",
+            "PORT": "3000",
+            "LOG_LEVEL": "info"
           }
         }
+      }
+    },
+    "openapi": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "outputs": ["{workspaceRoot}/dist/apps/backend/openapi.json"],
+      "options": {
+        "command": "node ../../dist/apps/backend/main.cjs --export-openapi",
+        "cwd": "apps/backend",
+        "env": {
+          "NODE_ENV": "production",
+          "PORT": "3000",
+          "LOG_LEVEL": "silent",
+          "OPENAPI_OUT": "../../dist/apps/backend/openapi.json"
+        }
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": ["production", "^production"],
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.app.json",
+        "cwd": "apps/backend"
       }
     },
     "test": {
