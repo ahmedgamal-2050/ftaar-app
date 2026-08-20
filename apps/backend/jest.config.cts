@@ -8,4 +8,13 @@ module.exports = {
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/apps/backend',
   setupFiles: ['<rootDir>/src/test-setup.ts'],
+  collectCoverageFrom: ['<rootDir>/src/money/money.ts'],
+  coverageThreshold: {
+    global: {
+      branches: 100,
+      functions: 100,
+      lines: 100,
+      statements: 100,
+    },
+  },
 };

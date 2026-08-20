@@ -1,5 +1,6 @@
 import { of } from 'rxjs';
 import type { CallHandler, ExecutionContext } from '@nestjs/common';
+import { Money } from '../../money/money';
 import { ResponseWrapInterceptor } from './response-wrap.interceptor';
 
 function contextWithStatus(statusCode: number): ExecutionContext {
@@ -28,7 +29,20 @@ describe('ResponseWrapInterceptor', () => {
     const already = { success: true, data: { ok: true } };
     const next: CallHandler = { handle: () => of(already) };
     interceptor.intercept(contextWithStatus(200), next).subscribe((body) => {
-      expect(body).toBe(already);
+      expect(body).toEqual(already);
+      done();
+    });
+  });
+
+  it('serialises Money in the envelope', (done) => {
+    const next: CallHandler = {
+      handle: () => of({ total: Money.fromPiastres(3687n) }),
+    };
+    interceptor.intercept(contextWithStatus(200), next).subscribe((body) => {
+      expect(body).toEqual({
+        success: true,
+        data: { total: '36.87' },
+      });
       done();
     });
   });

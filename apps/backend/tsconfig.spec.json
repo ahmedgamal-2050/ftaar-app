@@ -5,6 +5,7 @@
     "module": "commonjs",
     "moduleResolution": "node10",
     "types": ["jest", "node"],
+    "target": "es2021",
     "strict": true,
     "noUncheckedIndexedAccess": true
   },

@@ -8,6 +8,7 @@ import {
 import type { Response } from 'express';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { serializeMoney } from '../../money/serialize-money';
 
 export interface SuccessEnvelope<T> {
   success: true;
@@ -32,10 +33,14 @@ export class ResponseWrapInterceptor implements NestInterceptor {
         if (res.statusCode === HttpStatus.NO_CONTENT) {
           return body;
         }
-        if (isEnvelope(body)) {
-          return body;
+        const serialized = serializeMoney(body);
+        if (isEnvelope(serialized)) {
+          return serialized;
         }
-        const wrapped: SuccessEnvelope<unknown> = { success: true, data: body };
+        const wrapped: SuccessEnvelope<unknown> = {
+          success: true,
+          data: serialized,
+        };
         return wrapped;
       }),
     );
