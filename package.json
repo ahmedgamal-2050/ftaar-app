@@ -19,6 +19,9 @@
     "lint:mobile": "npx nx run mobile:lint"
   },
   "private": true,
+  "overrides": {
+    "deepmerge-ts": "^8.0.1"
+  },
   "dependencies": {
     "@expo/metro": "~54.2.0",
     "@expo/metro-runtime": "~6.1.2",

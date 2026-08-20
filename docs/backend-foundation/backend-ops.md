@@ -48,7 +48,7 @@ Copy `apps/backend/.env.example` to `apps/backend/.env` for that path.
 
 `.github/workflows/ci.yml` runs on pull requests and `main`. It starts a Postgres 16 service, applies migrations, then `lint`, `typecheck`, `test`, `e2e`, and `openapi` for `backend` and `api-e2e` only (mobile is skipped so the job stays under five minutes). Enable **Require status checks** for this workflow so it blocks merge.
 
-Audit is scoped to `dist/apps/backend` after prune so Expo/mobile high findings do not fail the API gate.
+Audit is scoped to `dist/apps/backend` after prune so Expo/mobile high findings do not fail the API gate. `deepmerge-ts` is overridden to `^8.0.1` so the Prisma CLI in the production image is not flagged for GHSA-ggr8-5vv4-36mx.
 
 ## Health (OPS-04)
 
@@ -61,9 +61,9 @@ Both routes are **outside** the `/api` prefix and skip the throttler.
 
 ## Staging (OPS-05)
 
-`.github/workflows/staging.yml` on push to `main`:
+`.github/workflows/staging.yml` on push to `master`:
 
-1. Builds `apps/backend/Dockerfile` and pushes `ghcr.io/<org>/<repo>/backend:main`.
+1. Builds `apps/backend/Dockerfile` and pushes `ghcr.io/<org>/<repo>/backend:master`.
 2. Writes the staging URL to the job summary.
 
 Create a GitHub Environment named `staging` (optional protection) and set repository or environment:
