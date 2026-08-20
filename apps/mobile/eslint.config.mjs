@@ -10,6 +10,6 @@ export default [
     rules: {},
   },
   {
-    ignores: ['public', '.cache', 'node_modules'],
+    ignores: ['.expo', 'web-build', 'cache', 'dist'],
   },
 ];
