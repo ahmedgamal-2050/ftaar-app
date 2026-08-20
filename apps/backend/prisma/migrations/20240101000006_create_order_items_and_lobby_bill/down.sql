@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS lobby_bill;
+DROP TABLE IF EXISTS order_items;

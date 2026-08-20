@@ -8,7 +8,7 @@
     "build": {
       "executor": "nx:run-commands",
       "cache": true,
-      "dependsOn": ["^build"],
+      "dependsOn": ["prisma-generate", "^build"],
       "inputs": ["production", "^production"],
       "outputs": ["{workspaceRoot}/dist/apps/backend"],
       "options": {
@@ -101,9 +101,23 @@
         }
       }
     },
+    "prisma-generate": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/prisma/schema.prisma",
+        "{projectRoot}/prisma/migrations/**"
+      ],
+      "outputs": ["{workspaceRoot}/node_modules/.prisma/client"],
+      "options": {
+        "command": "npx prisma generate --schema prisma/schema.prisma",
+        "cwd": "apps/backend"
+      }
+    },
     "typecheck": {
       "executor": "nx:run-commands",
       "cache": true,
+      "dependsOn": ["prisma-generate"],
       "inputs": ["production", "^production"],
       "options": {
         "command": "tsc --noEmit -p tsconfig.app.json",
@@ -113,42 +127,34 @@
     "migration-run": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx typeorm-ts-node-commonjs -d src/database/data-source.ts migration:run",
-        "cwd": "apps/backend",
-        "env": {
-          "TS_NODE_PROJECT": "tsconfig.app.json"
-        }
+        "command": "npx prisma migrate deploy --schema prisma/schema.prisma",
+        "cwd": "apps/backend"
       }
     },
     "migration-revert": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx typeorm-ts-node-commonjs -d src/database/data-source.ts migration:revert",
-        "cwd": "apps/backend",
-        "env": {
-          "TS_NODE_PROJECT": "tsconfig.app.json"
-        }
+        "command": "node prisma/revert-last.cjs",
+        "cwd": "apps/backend"
       }
     },
     "migration-generate": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "npx typeorm-ts-node-commonjs -d src/database/data-source.ts migration:generate src/database/migrations/Generated",
-        "cwd": "apps/backend",
-        "env": {
-          "TS_NODE_PROJECT": "tsconfig.app.json"
-        }
+        "command": "npx prisma migrate dev --create-only --name generated --schema prisma/schema.prisma",
+        "cwd": "apps/backend"
       }
     },
     "seed": {
       "executor": "nx:run-commands",
-      "dependsOn": ["migration-run"],
+      "dependsOn": ["migration-run", "prisma-generate"],
       "options": {
         "command": "npx ts-node --project tsconfig.app.json src/database/run-seed.ts",
         "cwd": "apps/backend"
       }
     },
     "test": {
+      "dependsOn": ["prisma-generate"],
       "options": {
         "passWithNoTests": true
       }

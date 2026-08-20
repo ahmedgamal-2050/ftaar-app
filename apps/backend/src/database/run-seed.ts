@@ -1,12 +1,12 @@
-import dataSource from './data-source';
+import { PrismaClient } from '@prisma/client';
 import { seedDatabase } from './seed';
 
 async function main(): Promise<void> {
-  await dataSource.initialize();
+  const prisma = new PrismaClient();
   try {
-    await seedDatabase(dataSource);
+    await seedDatabase(prisma);
   } finally {
-    await dataSource.destroy();
+    await prisma.$disconnect();
   }
 }
 

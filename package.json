@@ -29,7 +29,7 @@
     "@nestjs/platform-express": "^11.0.0",
     "@nestjs/swagger": "^11.2.0",
     "@nestjs/throttler": "^6.4.0",
-    "@nestjs/typeorm": "^11.0.0",
+    "@prisma/client": "^6.15.0",
     "axios": "^1.6.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
@@ -50,8 +50,7 @@
     "react-native": "0.81.5",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.0",
-    "swagger-ui-express": "^5.0.1",
-    "typeorm": "^0.3.26"
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.14.5",
@@ -97,6 +96,7 @@
     "lint-staged": "^16.1.2",
     "nx": "23.1.1",
     "prettier": "~3.6.2",
+    "prisma": "^6.15.0",
     "react-native-svg": "15.12.1",
     "react-native-svg-transformer": "~1.5.1",
     "react-native-web": "~0.21.0",
@@ -118,5 +118,8 @@
     "*.{json,md,yml,yaml,css}": [
       "prettier --write"
     ]
+  },
+  "prisma": {
+    "schema": "apps/backend/prisma/schema.prisma"
   }
 }

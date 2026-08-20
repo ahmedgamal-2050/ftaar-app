@@ -1,11 +1,6 @@
 import { DynamicModule, Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppConfigService } from '../core/config/app-config.service';
-import {
-  buildTypeOrmOptionsFromConfig,
-  shouldSkipDatabase,
-  TYPEORM_ENTITIES,
-} from './typeorm.options';
+import { PrismaService } from './prisma.service';
+import { shouldSkipDatabase } from './skip-db';
 
 @Module({})
 export class DatabaseModule {
@@ -16,15 +11,9 @@ export class DatabaseModule {
 
     return {
       module: DatabaseModule,
-      imports: [
-        TypeOrmModule.forRootAsync({
-          inject: [AppConfigService],
-          useFactory: (config: AppConfigService) =>
-            buildTypeOrmOptionsFromConfig(config),
-        }),
-        TypeOrmModule.forFeature(TYPEORM_ENTITIES),
-      ],
-      exports: [TypeOrmModule],
+      providers: [PrismaService],
+      exports: [PrismaService],
+      global: true,
     };
   }
 }

@@ -1,6 +1,6 @@
-import type { DataSource } from 'typeorm';
+import type { LobbyStatus, PrismaClient } from '@prisma/client';
 import { ARABIC_MENU_ITEMS } from './arabic-menu';
-import { LOBBY_STATUSES, type LobbyStatus } from './enums';
+import { LOBBY_STATUSES, type LobbyStatus as AppLobbyStatus } from './enums';
 
 const RESTAURANTS = [
   {
@@ -25,71 +25,68 @@ const USERS = [
     id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
     kind: 'registered',
     email: 'ahmad@seed.ftaar',
-    deviceId: null,
+    deviceId: null as string | null,
     displayName: 'أحمد',
   },
   {
     id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa2',
     kind: 'registered',
     email: 'lina@seed.ftaar',
-    deviceId: null,
+    deviceId: null as string | null,
     displayName: 'لينا',
   },
   {
     id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa3',
     kind: 'registered',
     email: 'omar@seed.ftaar',
-    deviceId: null,
+    deviceId: null as string | null,
     displayName: 'عمر',
   },
   {
     id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa4',
     kind: 'guest',
-    email: null,
+    email: null as string | null,
     deviceId: 'seed-device-guest-1',
     displayName: 'ضيف ١',
   },
   {
     id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa5',
     kind: 'guest',
-    email: null,
+    email: null as string | null,
     deviceId: 'seed-device-guest-2',
     displayName: 'ضيف ٢',
   },
   {
     id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa6',
     kind: 'guest',
-    email: null,
+    email: null as string | null,
     deviceId: 'seed-device-guest-3',
     displayName: 'ضيف ٣',
   },
 ] as const;
 
-function lobbyId(status: LobbyStatus): string {
+function lobbyId(status: AppLobbyStatus): string {
   const n = LOBBY_STATUSES.indexOf(status) + 1;
   return `bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb${n}`;
 }
 
-function memberId(status: LobbyStatus): string {
+function memberId(status: AppLobbyStatus): string {
   const n = LOBBY_STATUSES.indexOf(status) + 1;
   return `cccccccc-cccc-4ccc-8ccc-ccccccccccc${n}`;
 }
 
-export async function seedDatabase(dataSource: DataSource): Promise<void> {
+export async function seedDatabase(prisma: PrismaClient): Promise<void> {
   if (ARABIC_MENU_ITEMS.length < 40) {
     throw new Error('ARABIC_MENU_ITEMS must contain at least 40 dishes');
   }
 
-  await dataSource.transaction(async (manager) => {
+  await prisma.$transaction(async (tx) => {
     for (const restaurant of RESTAURANTS) {
-      await manager.query(
-        `
-        INSERT INTO restaurants (id, name, is_active)
-        VALUES ($1, $2, true)
-        ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, is_active = true
-        `,
-        [restaurant.id, restaurant.name],
-      );
+      await tx.restaurant.upsert({
+        where: { id: restaurant.id },
+        create: { id: restaurant.id, name: restaurant.name, isActive: true },
+        update: { name: restaurant.name, isActive: true },
+      });
 
       const count = restaurant.itemCount;
       if (count < 15 || count > 40) {
@@ -103,33 +100,37 @@ export async function seedDatabase(dataSource: DataSource): Promise<void> {
         }
         const itemId = `dddddddd-dddd-4ddd-8ddd-${restaurant.id.slice(0, 8)}${String(i).padStart(4, '0')}`;
         const price = BigInt(800 + i * 125);
-        await manager.query(
-          `
-          INSERT INTO menu_items (id, restaurant_id, name, reference_price, is_active)
-          VALUES ($1, $2, $3, $4, true)
-          ON CONFLICT (id) DO UPDATE SET
-            name = EXCLUDED.name,
-            reference_price = EXCLUDED.reference_price,
-            is_active = true
-          `,
-          [itemId, restaurant.id, name, price.toString()],
-        );
+        await tx.menuItem.upsert({
+          where: { id: itemId },
+          create: {
+            id: itemId,
+            restaurantId: restaurant.id,
+            name,
+            referencePrice: price,
+            isActive: true,
+          },
+          update: { name, referencePrice: price, isActive: true },
+        });
       }
     }
 
     for (const user of USERS) {
-      await manager.query(
-        `
-        INSERT INTO users (id, kind, email, device_id, display_name)
-        VALUES ($1, $2, $3, $4, $5)
-        ON CONFLICT (id) DO UPDATE SET
-          kind = EXCLUDED.kind,
-          email = EXCLUDED.email,
-          device_id = EXCLUDED.device_id,
-          display_name = EXCLUDED.display_name
-        `,
-        [user.id, user.kind, user.email, user.deviceId, user.displayName],
-      );
+      await tx.user.upsert({
+        where: { id: user.id },
+        create: {
+          id: user.id,
+          kind: user.kind,
+          email: user.email,
+          deviceId: user.deviceId,
+          displayName: user.displayName,
+        },
+        update: {
+          kind: user.kind,
+          email: user.email,
+          deviceId: user.deviceId,
+          displayName: user.displayName,
+        },
+      });
     }
 
     const extraMemberId = 'cccccccc-cccc-4ccc-8ccc-ccccccccccc0';
@@ -145,57 +146,58 @@ export async function seedDatabase(dataSource: DataSource): Promise<void> {
         throw new Error('Seed restaurant/user missing');
       }
 
-      await manager.query(
-        `
-        INSERT INTO lobbies (id, restaurant_id, code, status)
-        VALUES ($1, $2, $3, $4::lobby_status)
-        ON CONFLICT (id) DO UPDATE SET
-          restaurant_id = EXCLUDED.restaurant_id,
-          code = EXCLUDED.code,
-          status = EXCLUDED.status
-        `,
-        [
-          lobbyId(status),
-          restaurant.id,
-          `SEED-${status.toUpperCase()}`,
-          status,
-        ],
-      );
+      await tx.lobby.upsert({
+        where: { id: lobbyId(status) },
+        create: {
+          id: lobbyId(status),
+          restaurantId: restaurant.id,
+          code: `SEED-${status.toUpperCase()}`,
+          status: status as LobbyStatus,
+        },
+        update: {
+          restaurantId: restaurant.id,
+          code: `SEED-${status.toUpperCase()}`,
+          status: status as LobbyStatus,
+        },
+      });
 
-      await manager.query(
-        `
-        INSERT INTO lobby_members (id, lobby_id, user_id, role, display_name)
-        VALUES ($1, $2, $3, 'admin', $4)
-        ON CONFLICT (id) DO UPDATE SET
-          lobby_id = EXCLUDED.lobby_id,
-          user_id = EXCLUDED.user_id,
-          role = EXCLUDED.role,
-          display_name = EXCLUDED.display_name
-        `,
-        [memberId(status), lobbyId(status), user.id, user.displayName],
-      );
+      await tx.lobbyMember.upsert({
+        where: { id: memberId(status) },
+        create: {
+          id: memberId(status),
+          lobbyId: lobbyId(status),
+          userId: user.id,
+          role: 'admin',
+          displayName: user.displayName,
+        },
+        update: {
+          lobbyId: lobbyId(status),
+          userId: user.id,
+          role: 'admin',
+          displayName: user.displayName,
+        },
+      });
     }
 
     const extraUser = USERS[5];
     const firstStatus = LOBBY_STATUSES[0];
     if (extraUser && firstStatus) {
-      await manager.query(
-        `
-        INSERT INTO lobby_members (id, lobby_id, user_id, role, display_name)
-        VALUES ($1, $2, $3, 'member', $4)
-        ON CONFLICT (id) DO UPDATE SET
-          lobby_id = EXCLUDED.lobby_id,
-          user_id = EXCLUDED.user_id,
-          role = EXCLUDED.role,
-          display_name = EXCLUDED.display_name
-        `,
-        [
-          extraMemberId,
-          lobbyId(firstStatus),
-          extraUser.id,
-          extraUser.displayName,
-        ],
-      );
+      await tx.lobbyMember.upsert({
+        where: { id: extraMemberId },
+        create: {
+          id: extraMemberId,
+          lobbyId: lobbyId(firstStatus),
+          userId: extraUser.id,
+          role: 'member',
+          displayName: extraUser.displayName,
+        },
+        update: {
+          lobbyId: lobbyId(firstStatus),
+          userId: extraUser.id,
+          role: 'member',
+          displayName: extraUser.displayName,
+        },
+      });
     }
 
     const billed = LOBBY_STATUSES.find((s) => s === 'billed');
@@ -206,37 +208,37 @@ export async function seedDatabase(dataSource: DataSource): Promise<void> {
         throw new Error('Seed restaurant missing for billed lobby');
       }
       const firstItemId = `dddddddd-dddd-4ddd-8ddd-${restaurant.id.slice(0, 8)}0000`;
-      await manager.query(
-        `
-        INSERT INTO order_items (
-          id, lobby_id, lobby_member_id, menu_item_id, restaurant_id, qty, actual_price
-        )
-        VALUES ($1, $2, $3, $4, $5, 2, 1600)
-        ON CONFLICT (id) DO UPDATE SET qty = EXCLUDED.qty, actual_price = EXCLUDED.actual_price
-        `,
-        [
-          'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee1',
-          lobbyId(billed),
-          memberId(billed),
-          firstItemId,
-          restaurant.id,
-        ],
-      );
+      await tx.orderItem.upsert({
+        where: { id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee1' },
+        create: {
+          id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee1',
+          lobbyId: lobbyId(billed),
+          lobbyMemberId: memberId(billed),
+          menuItemId: firstItemId,
+          restaurantId: restaurant.id,
+          qty: 2,
+          actualPrice: 1600n,
+        },
+        update: { qty: 2, actualPrice: 1600n },
+      });
 
-      await manager.query(
-        `
-        INSERT INTO lobby_bill (
-          id, lobby_id, subtotal, tax, total, payment_status
-        )
-        VALUES ($1, $2, 1600, 240, 1840, 'pending'::payment_status)
-        ON CONFLICT (lobby_id) DO UPDATE SET
-          subtotal = EXCLUDED.subtotal,
-          tax = EXCLUDED.tax,
-          total = EXCLUDED.total,
-          payment_status = EXCLUDED.payment_status
-        `,
-        ['ffffffff-ffff-4fff-8fff-fffffffffff1', lobbyId(billed)],
-      );
+      await tx.lobbyBill.upsert({
+        where: { lobbyId: lobbyId(billed) },
+        create: {
+          id: 'ffffffff-ffff-4fff-8fff-fffffffffff1',
+          lobbyId: lobbyId(billed),
+          subtotal: 1600n,
+          tax: 240n,
+          total: 1840n,
+          paymentStatus: 'pending',
+        },
+        update: {
+          subtotal: 1600n,
+          tax: 240n,
+          total: 1840n,
+          paymentStatus: 'pending',
+        },
+      });
     }
   });
 }

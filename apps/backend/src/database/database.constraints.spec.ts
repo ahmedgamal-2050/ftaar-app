@@ -45,7 +45,7 @@ describe('database constraints (DB-11, DB-09, DB-10)', () => {
     });
     try {
       await next.connect();
-      await next.query('SELECT 1 FROM typeorm_migrations LIMIT 1');
+      await next.query('SELECT 1 FROM _prisma_migrations LIMIT 1');
       client = next;
     } catch {
       await next.end().catch(() => undefined);
