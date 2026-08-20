@@ -1,5 +1,8 @@
-const { withNxMetro } = require('@nx/react-native');
-const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
+const { withNxMetro } = require('@nx/expo');
+// Expo SDK 55+ ships Metro via `@expo/metro`. `getDefaultConfig` and
+// `mergeConfig` must come from the Expo-provided Metro instance.
+const { getDefaultConfig } = require('expo/metro-config');
+const { mergeConfig } = require('@expo/metro/metro-config');
 
 const defaultConfig = getDefaultConfig(__dirname);
 const { assetExts, sourceExts } = defaultConfig.resolver;
