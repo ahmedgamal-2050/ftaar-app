@@ -58,7 +58,7 @@ jobs:
 
       - run: npx nx format:check --base="origin/${{ github.event.pull_request.base.ref || 'master' }}"
 
-      - run: npx nx run-many -t lint,typecheck,test,e2e,openapi -p backend,api-e2e --outputStyle=static
+      - run: npx nx run-many --targets=lint,typecheck,test,e2e,openapi --projects=backend,api-e2e --outputStyle=static
 
       - name: Production dependency audit (backend image graph)
         run: |
