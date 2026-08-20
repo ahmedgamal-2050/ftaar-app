@@ -7,4 +7,5 @@ module.exports = {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/apps/backend',
+  setupFiles: ['<rootDir>/src/test-setup.ts'],
 };
