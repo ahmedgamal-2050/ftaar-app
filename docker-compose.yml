@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ftaar-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ftaar
+      POSTGRES_PASSWORD: ftaar
+      POSTGRES_DB: ftaar
+    ports:
+      - '5432:5432'
+    volumes:
+      - ftaar_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ftaar -d ftaar']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  ftaar_pg:

@@ -1,11 +1,13 @@
 Claim Module,Module #,ID,Code Module,Task,Done when,Side,Estimate (days),Depends On,Labels
-FOUNDATION-BE,1,CORE-01,core,Scaffold NestJS app,"npm run start:dev boots, strict: true and noUncheckedIndexedAccess set",Backend,0.5,,claim:FOUNDATION-BE side:backend module:core size:0.5d
-FOUNDATION-BE,1,CORE-02,core,"ESLint, Prettier, pre-commit hook",Lint passes; husky blocks a commit that fails it,Backend,0.25,CORE-01,claim:FOUNDATION-BE side:backend module:core size:0.25d
-FOUNDATION-BE,1,CORE-03,core,Joi-validated config module,"Missing env var exits non-zero naming it; typed service, no process.env at call sites",Backend,0.5,CORE-01,claim:FOUNDATION-BE side:backend module:core size:0.5d
-FOUNDATION-BE,1,CORE-04,core,Error code union + AppError,All 17 codes typed; a code without an HTTP status is a compile error,Backend,0.5,CORE-01,claim:FOUNDATION-BE side:backend module:core size:0.5d
-FOUNDATION-BE,1,CORE-05,core,Global exception filter,"AppError, HttpException, validation errors and unknown throws all render one envelope",Backend,0.5,CORE-04,claim:FOUNDATION-BE side:backend module:core size:0.5d
-FOUNDATION-BE,1,CORE-06,core,Response wrap interceptor,"Returns become {success, data}; no double-wrap; 204 untouched",Backend,0.25,CORE-01,claim:FOUNDATION-BE side:backend module:core size:0.25d
-FOUNDATION-BE,1,CORE-07,core,Global validation pipe,whitelist + forbidNonWhitelisted + transform; an unexpected body field returns 400,Backend,0.25,CORE-05,claim:FOUNDATION-BE side:backend module:core size:0.25d
-FOUNDATION-BE,1,CORE-08,core,Pino logger with request-ID ALS,Every log line carries a request ID; passwords and tokens redacted,Backend,1,CORE-03,claim:FOUNDATION-BE side:backend module:core size:1.0d
-FOUNDATION-BE,1,CORE-09,core,Throttler,"100 req/min global, 10 req/min on /auth/*, /health skipped",Backend,0.5,CORE-05,claim:FOUNDATION-BE side:backend module:core size:0.5d
-FOUNDATION-BE,1,CORE-10,core,Swagger + openapi.json export,/docs serves; CI exports the spec; Prism can mock from it,Backend,1,CORE-07,claim:FOUNDATION-BE side:backend module:core size:1.0d
+FOUNDATION-BE,1,DB-01,database,Data source + migration scripts,"Generate, run and revert scripts all work; synchronize: false everywhere",Backend,0.5,CORE-03,claim:FOUNDATION-BE side:backend module:database size:0.5d
+FOUNDATION-BE,1,DB-02,database,Migration: enums,"lobby_status, member_role, payment_status created",Backend,0.25,DB-01,claim:FOUNDATION-BE side:backend module:database size:0.25d
+FOUNDATION-BE,1,DB-03,database,Migration: users,All columns; email and device nullable per kind,Backend,0.5,DB-02,claim:FOUNDATION-BE side:backend module:database size:0.5d
+FOUNDATION-BE,1,DB-04,database,Migration: restaurants + menu_items,reference_price is BIGINT; is_active defaults true,Backend,0.5,DB-03,claim:FOUNDATION-BE side:backend module:database size:0.5d
+FOUNDATION-BE,1,DB-05,database,Migration: lobbies + lobby_members,restaurant_id NOT NULL; code unique,Backend,0.5,DB-04,claim:FOUNDATION-BE side:backend module:database size:0.5d
+FOUNDATION-BE,1,DB-06,database,Migration: order_items + lobby_bill,All money columns BIGINT; lobby_bill.lobby_id unique,Backend,0.5,DB-05,claim:FOUNDATION-BE side:backend module:database size:0.5d
+FOUNDATION-BE,1,DB-07,database,Migration: unique indexes,One admin per lobby � name unique per lobby on lower() � one membership per user � email unique on lower() � device unique among guests,Backend,0.5,DB-06,claim:FOUNDATION-BE side:backend module:database size:0.5d
+FOUNDATION-BE,1,DB-08,database,Migration: check constraints,"ck_user_kind, ck_qty, ck_actual_price",Backend,0.5,DB-07,claim:FOUNDATION-BE side:backend module:database size:0.5d
+FOUNDATION-BE,1,DB-09,database,Migration: composite FK,A raw SQL cross-restaurant order insert fails with a constraint violation,Backend,1,DB-08,claim:FOUNDATION-BE side:backend module:database size:1.0d
+FOUNDATION-BE,1,DB-10,database,Migration: performance indexes,EXPLAIN on lobby detail shows no sequential scan,Backend,0.5,DB-09,claim:FOUNDATION-BE side:backend module:database size:0.5d
+FOUNDATION-BE,1,DB-11,database,Constraint violation test suite,Each of the 8 constraints has a test proving violation raises,Backend,1,DB-10,claim:FOUNDATION-BE side:backend module:database size:1.0d
+FOUNDATION-BE,1,DB-12,database,Seed script,"3 restaurants, 15�40 Arabic items each, 6 mixed users, one lobby per state; idempotent",Backend,1,DB-11,claim:FOUNDATION-BE side:backend module:database size:1.0d

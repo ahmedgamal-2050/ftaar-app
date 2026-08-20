@@ -1,0 +1,3 @@
+ALTER TABLE order_items DROP CONSTRAINT IF EXISTS ck_actual_price;
+ALTER TABLE order_items DROP CONSTRAINT IF EXISTS ck_qty;
+ALTER TABLE users DROP CONSTRAINT IF EXISTS ck_user_kind;

@@ -11,6 +11,13 @@
     "strict": true,
     "noUncheckedIndexedAccess": true
   },
+  "ts-node": {
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "commonjs",
+      "moduleResolution": "node"
+    }
+  },
   "include": ["src/**/*.ts"],
   "exclude": [
     "jest.config.ts",

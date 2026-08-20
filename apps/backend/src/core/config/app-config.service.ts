@@ -18,6 +18,10 @@ export class AppConfigService {
     return this.config.get('LOG_LEVEL', { infer: true });
   }
 
+  get databaseUrl(): string {
+    return this.config.get('DATABASE_URL', { infer: true });
+  }
+
   get isProduction(): boolean {
     return this.nodeEnv === 'production';
   }

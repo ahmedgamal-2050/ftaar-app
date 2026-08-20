@@ -18,6 +18,7 @@ export interface EnvVars {
   NODE_ENV: NodeEnv;
   PORT: number;
   LOG_LEVEL: LogLevel;
+  DATABASE_URL: string;
 }
 
 export class ConfigValidationError extends Error {
@@ -35,6 +36,9 @@ export const envSchema = Joi.object<EnvVars>({
   LOG_LEVEL: Joi.string()
     .valid(...LOG_LEVELS)
     .default('info'),
+  DATABASE_URL: Joi.string()
+    .pattern(/^postgres(ql)?:\/\//)
+    .required(),
 });
 
 function missingNames(error: Joi.ValidationError): string[] {
