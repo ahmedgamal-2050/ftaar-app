@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { DatabaseModule } from '../database/database.module';
 import { AppConfigModule } from '../core/config/app-config.module';
 import { AllExceptionsFilter } from '../core/http/all-exceptions.filter';
 import { AppLoggerModule } from '../core/http/logger.module';
@@ -16,6 +17,7 @@ import { TodosService } from './todos.service';
   imports: [
     AppConfigModule,
     AppLoggerModule,
+    DatabaseModule.forRoot(),
     ThrottlerModule.forRoot({
       throttlers: [{ name: 'default', ttl: 60_000, limit: 100 }],
       skipIf: (context) => {

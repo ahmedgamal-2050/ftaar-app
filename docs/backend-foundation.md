@@ -14,28 +14,29 @@ Equivalent: `npx nx run backend:serve`.
 
 Nx injects `NODE_ENV`, `PORT`, and `LOG_LEVEL` for serve. If you run the built binary yourself, copy `apps/backend/.env.example` to `apps/backend/.env`.
 
-| Variable   | Required | Notes                                      |
-| ---------- | -------- | ------------------------------------------ |
-| `NODE_ENV` | yes      | `development` \| `production` \| `test`    |
-| `PORT`     | yes      | HTTP port                                  |
-| `LOG_LEVEL`| no       | Defaults to `info` (`silent` in Jest)      |
+| Variable       | Required | Notes                                   |
+| -------------- | -------- | --------------------------------------- |
+| `NODE_ENV`     | yes      | `development` \| `production` \| `test` |
+| `PORT`         | yes      | HTTP port                               |
+| `LOG_LEVEL`    | no       | Defaults to `info` (`silent` in Jest)   |
+| `DATABASE_URL` | yes      | Postgres URL (`postgres://…`)           |
 
 Missing required variables print their names and exit with a non-zero code.
 
 ## Task checklist
 
-| ID      | Task                                      | Done when                                              |
-| ------- | ----------------------------------------- | ------------------------------------------------------ |
-| CORE-01 | Scaffold NestJS app                       | `start:dev` boots; `strict` + `noUncheckedIndexedAccess` |
-| CORE-02 | ESLint, Prettier, pre-commit hook         | Lint passes; husky blocks a failing commit             |
-| CORE-03 | Joi-validated config module               | Typed `AppConfigService`; no `process.env` at call sites |
-| CORE-04 | Error code union + `AppError`             | 17 codes; missing HTTP status is a compile error       |
-| CORE-05 | Global exception filter                   | One error envelope for all failure types               |
-| CORE-06 | Response wrap interceptor                 | `{ success, data }`; no double-wrap; 204 untouched     |
-| CORE-07 | Global validation pipe                    | Unexpected body field → 400                            |
-| CORE-08 | Pino logger with request-ID ALS           | Request ID on logs; passwords/tokens redacted          |
-| CORE-09 | Throttler                                 | 100/min global; 10/min on `/auth/*`; `/health` skipped |
-| CORE-10 | Swagger + `openapi.json` export           | `/docs`; CI exports spec for Prism                     |
+| ID      | Task                              | Done when                                                |
+| ------- | --------------------------------- | -------------------------------------------------------- |
+| CORE-01 | Scaffold NestJS app               | `start:dev` boots; `strict` + `noUncheckedIndexedAccess` |
+| CORE-02 | ESLint, Prettier, pre-commit hook | Lint passes; husky blocks a failing commit               |
+| CORE-03 | Joi-validated config module       | Typed `AppConfigService`; no `process.env` at call sites |
+| CORE-04 | Error code union + `AppError`     | 17 codes; missing HTTP status is a compile error         |
+| CORE-05 | Global exception filter           | One error envelope for all failure types                 |
+| CORE-06 | Response wrap interceptor         | `{ success, data }`; no double-wrap; 204 untouched       |
+| CORE-07 | Global validation pipe            | Unexpected body field → 400                              |
+| CORE-08 | Pino logger with request-ID ALS   | Request ID on logs; passwords/tokens redacted            |
+| CORE-09 | Throttler                         | 100/min global; 10/min on `/auth/*`; `/health` skipped   |
+| CORE-10 | Swagger + `openapi.json` export   | `/docs`; CI exports spec for Prism                       |
 
 ## Layout
 

@@ -3,11 +3,17 @@ import { ConfigValidationError, parseEnv } from './env.schema';
 describe('parseEnv', () => {
   it('accepts a valid environment', () => {
     expect(
-      parseEnv({ NODE_ENV: 'test', PORT: '3000', LOG_LEVEL: 'silent' }),
+      parseEnv({
+        NODE_ENV: 'test',
+        PORT: '3000',
+        LOG_LEVEL: 'silent',
+        DATABASE_URL: 'postgres://ftaar:ftaar@127.0.0.1:5432/ftaar',
+      }),
     ).toEqual({
       NODE_ENV: 'test',
       PORT: 3000,
       LOG_LEVEL: 'silent',
+      DATABASE_URL: 'postgres://ftaar:ftaar@127.0.0.1:5432/ftaar',
     });
   });
 
@@ -21,7 +27,7 @@ describe('parseEnv', () => {
         /NODE_ENV.*PORT|PORT.*NODE_ENV/,
       );
       expect((err as ConfigValidationError).names).toEqual(
-        expect.arrayContaining(['NODE_ENV', 'PORT']),
+        expect.arrayContaining(['NODE_ENV', 'PORT', 'DATABASE_URL']),
       );
     }
   });

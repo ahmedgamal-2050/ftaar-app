@@ -96,7 +96,8 @@
           "NODE_ENV": "production",
           "PORT": "3000",
           "LOG_LEVEL": "silent",
-          "OPENAPI_OUT": "../../dist/apps/backend/openapi.json"
+          "OPENAPI_OUT": "../../dist/apps/backend/openapi.json",
+          "DATABASE_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar"
         }
       }
     },
@@ -106,6 +107,44 @@
       "inputs": ["production", "^production"],
       "options": {
         "command": "tsc --noEmit -p tsconfig.app.json",
+        "cwd": "apps/backend"
+      }
+    },
+    "migration-run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx typeorm-ts-node-commonjs -d src/database/data-source.ts migration:run",
+        "cwd": "apps/backend",
+        "env": {
+          "TS_NODE_PROJECT": "tsconfig.app.json"
+        }
+      }
+    },
+    "migration-revert": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx typeorm-ts-node-commonjs -d src/database/data-source.ts migration:revert",
+        "cwd": "apps/backend",
+        "env": {
+          "TS_NODE_PROJECT": "tsconfig.app.json"
+        }
+      }
+    },
+    "migration-generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx typeorm-ts-node-commonjs -d src/database/data-source.ts migration:generate src/database/migrations/Generated",
+        "cwd": "apps/backend",
+        "env": {
+          "TS_NODE_PROJECT": "tsconfig.app.json"
+        }
+      }
+    },
+    "seed": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["migration-run"],
+      "options": {
+        "command": "npx ts-node --project tsconfig.app.json src/database/run-seed.ts",
         "cwd": "apps/backend"
       }
     },
