@@ -11,14 +11,22 @@ import { notchInset } from '../insets';
  * edge-to-edge on Android and ignores `headerTopInsetEnabled`, so the
  * status-bar inset has to live here — not on `Screen` under a header.
  */
-export function SafeStackHeader({ navigation, options, route, back }: NativeStackHeaderProps) {
+export function SafeStackHeader({
+  navigation,
+  options,
+  route,
+  back,
+}: NativeStackHeaderProps) {
   const insets = useSafeAreaInsets();
   const title = options.title ?? route.name;
 
   return (
     <View
       testID="safe-stack-header"
-      style={[styles.header, { paddingTop: notchInset(insets.top) + spacing.sm }]}
+      style={[
+        styles.header,
+        { paddingTop: notchInset(insets.top) + spacing.sm },
+      ]}
     >
       <View style={styles.row}>
         {back ? (

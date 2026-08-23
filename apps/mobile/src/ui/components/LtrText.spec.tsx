@@ -6,7 +6,9 @@ describe('LtrText', () => {
   it('forces left-to-right rendering', () => {
     render(<LtrText>12.50 SAR</LtrText>);
 
-    expect(screen.getByText('12.50 SAR')).toHaveStyle({ writingDirection: 'ltr' });
+    expect(screen.getByText('12.50 SAR')).toHaveStyle({
+      writingDirection: 'ltr',
+    });
   });
 
   it('keeps caller styles on top of the direction style', () => {

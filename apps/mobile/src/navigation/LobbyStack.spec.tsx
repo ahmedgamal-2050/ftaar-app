@@ -1,5 +1,8 @@
 import * as React from 'react';
-import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  createNavigationContainerRef,
+} from '@react-navigation/native';
 import { act, render, screen } from '@testing-library/react-native';
 import { LobbyStack } from './LobbyStack';
 import type { LobbyStackParamList } from './types';
@@ -69,7 +72,10 @@ describe('LobbyStack', () => {
 
     act(() => ref.navigate('LobbyRoom', { lobbyCode: LOBBY_CODE }));
 
-    expect(screen.getByText(`Browse the restaurant menu and add items in lobby ${LOBBY_CODE}.`))
-      .toBeTruthy();
+    expect(
+      screen.getByText(
+        `Browse the restaurant menu and add items in lobby ${LOBBY_CODE}.`,
+      ),
+    ).toBeTruthy();
   });
 });

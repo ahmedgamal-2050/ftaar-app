@@ -62,7 +62,13 @@ export const fontFamily = {
 
 export type FontFamilyToken = keyof typeof fontFamily;
 
-export type TypographyToken = 'display' | 'title' | 'body' | 'caption' | 'label' | 'money';
+export type TypographyToken =
+  | 'display'
+  | 'title'
+  | 'body'
+  | 'caption'
+  | 'label'
+  | 'money';
 
 /**
  * `label` covers button and tab text, and `money` adds tabular figures so
@@ -82,4 +88,10 @@ export const typography: Record<TypographyToken, TextStyle> = {
   },
 };
 
-export const theme = { colors, spacing, radius, fontFamily, typography } as const;
+export const theme = {
+  colors,
+  spacing,
+  radius,
+  fontFamily,
+  typography,
+} as const;

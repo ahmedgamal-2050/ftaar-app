@@ -1,7 +1,11 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { env } from '../config/env';
 import { tokenStore } from './tokenStore';
-import { clearRefreshToken, getRefreshToken, setRefreshToken } from '../auth/storage';
+import {
+  clearRefreshToken,
+  getRefreshToken,
+  setRefreshToken,
+} from '../auth/storage';
 
 export const apiClient = axios.create({
   baseURL: env.apiUrl,

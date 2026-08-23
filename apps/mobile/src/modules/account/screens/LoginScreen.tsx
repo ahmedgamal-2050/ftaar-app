@@ -10,7 +10,10 @@ export function LoginScreen({ navigation }: Props) {
   const { login } = useAuth();
 
   return (
-    <ScreenPlaceholder name="Login" description="Registered sign-in — local session only in this pass.">
+    <ScreenPlaceholder
+      name="Login"
+      description="Registered sign-in — local session only in this pass."
+    >
       <PlaceholderLinks
         links={[
           {

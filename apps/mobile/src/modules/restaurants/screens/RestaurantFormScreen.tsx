@@ -3,7 +3,10 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RestaurantsStackParamList } from '../../../navigation/types';
 import { PlaceholderLinks, ScreenPlaceholder } from '../../../ui';
 
-type Props = NativeStackScreenProps<RestaurantsStackParamList, 'RestaurantForm'>;
+type Props = NativeStackScreenProps<
+  RestaurantsStackParamList,
+  'RestaurantForm'
+>;
 
 const SAMPLE_RESTAURANT_ID = 'sample-restaurant';
 

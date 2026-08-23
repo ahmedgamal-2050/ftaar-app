@@ -23,7 +23,10 @@ describe('MemberChip', () => {
   it('exposes the full name to screen readers even without the label', () => {
     render(<MemberChip name="Layla" testID="chip" />);
 
-    expect(screen.getByTestId('chip')).toHaveProp('accessibilityLabel', 'Layla');
+    expect(screen.getByTestId('chip')).toHaveProp(
+      'accessibilityLabel',
+      'Layla',
+    );
   });
 
   it('renders the name beside the circle when asked', () => {

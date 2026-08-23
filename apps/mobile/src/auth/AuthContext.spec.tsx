@@ -1,7 +1,12 @@
 import * as React from 'react';
 import { Text } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
 import { AuthProvider, useAuth } from './AuthContext';
 
 function Probe() {
@@ -36,7 +41,11 @@ describe('AuthContext', () => {
       </AuthProvider>,
     );
 
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('needs-onboarding'));
+    await waitFor(() =>
+      expect(screen.getByTestId('status')).toHaveTextContent(
+        'needs-onboarding',
+      ),
+    );
   });
 
   it('stores a guest session from completeOnboarding', async () => {
@@ -46,10 +55,16 @@ describe('AuthContext', () => {
       </AuthProvider>,
     );
 
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('needs-onboarding'));
+    await waitFor(() =>
+      expect(screen.getByTestId('status')).toHaveTextContent(
+        'needs-onboarding',
+      ),
+    );
     fireEvent.press(screen.getByTestId('onboard'));
 
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('ready'));
+    await waitFor(() =>
+      expect(screen.getByTestId('status')).toHaveTextContent('ready'),
+    );
     expect(screen.getByTestId('name')).toHaveTextContent('Layla');
     expect(screen.getByTestId('guest')).toHaveTextContent('true');
   });
@@ -61,12 +76,20 @@ describe('AuthContext', () => {
       </AuthProvider>,
     );
 
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('needs-onboarding'));
+    await waitFor(() =>
+      expect(screen.getByTestId('status')).toHaveTextContent(
+        'needs-onboarding',
+      ),
+    );
     fireEvent.press(screen.getByTestId('onboard'));
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('ready'));
+    await waitFor(() =>
+      expect(screen.getByTestId('status')).toHaveTextContent('ready'),
+    );
     fireEvent.press(screen.getByTestId('login'));
 
-    await waitFor(() => expect(screen.getByTestId('guest')).toHaveTextContent('false'));
+    await waitFor(() =>
+      expect(screen.getByTestId('guest')).toHaveTextContent('false'),
+    );
     expect(screen.getByTestId('name')).toHaveTextContent('Layla');
   });
 
@@ -77,11 +100,21 @@ describe('AuthContext', () => {
       </AuthProvider>,
     );
 
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('needs-onboarding'));
+    await waitFor(() =>
+      expect(screen.getByTestId('status')).toHaveTextContent(
+        'needs-onboarding',
+      ),
+    );
     fireEvent.press(screen.getByTestId('onboard'));
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('ready'));
+    await waitFor(() =>
+      expect(screen.getByTestId('status')).toHaveTextContent('ready'),
+    );
     fireEvent.press(screen.getByTestId('logout'));
 
-    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('needs-onboarding'));
+    await waitFor(() =>
+      expect(screen.getByTestId('status')).toHaveTextContent(
+        'needs-onboarding',
+      ),
+    );
   });
 });

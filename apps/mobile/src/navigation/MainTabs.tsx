@@ -26,7 +26,8 @@ import { colors, safeStackScreenOptions, typography } from '../ui';
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const HomeStackNav = createNativeStackNavigator<HomeStackParamList>();
 const HistoryStackNav = createNativeStackNavigator<HistoryStackParamList>();
-const RestaurantsStackNav = createNativeStackNavigator<RestaurantsStackParamList>();
+const RestaurantsStackNav =
+  createNativeStackNavigator<RestaurantsStackParamList>();
 const ProfileStackNav = createNativeStackNavigator<ProfileStackParamList>();
 
 function HomeStack() {
@@ -121,7 +122,10 @@ function ProfileStack() {
   );
 }
 
-const TAB_ICONS: Record<keyof MainTabParamList, keyof typeof Ionicons.glyphMap> = {
+const TAB_ICONS: Record<
+  keyof MainTabParamList,
+  keyof typeof Ionicons.glyphMap
+> = {
   Home: 'home-outline',
   History: 'time-outline',
   Restaurants: 'storefront-outline',
@@ -137,21 +141,40 @@ export function MainTabs() {
         headerShown: false,
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+        },
         tabBarLabelStyle: { fontFamily: typography.caption.fontFamily },
         tabBarIcon: ({ color, size }) => (
-          <Ionicons name={TAB_ICONS[route.name as keyof MainTabParamList]} size={size} color={color} />
+          <Ionicons
+            name={TAB_ICONS[route.name as keyof MainTabParamList]}
+            size={size}
+            color={color}
+          />
         ),
       })}
     >
-      <Tab.Screen name="Home" component={HomeStack} options={{ title: t('tabs.home') }} />
-      <Tab.Screen name="History" component={HistoryStack} options={{ title: t('tabs.history') }} />
+      <Tab.Screen
+        name="Home"
+        component={HomeStack}
+        options={{ title: t('tabs.home') }}
+      />
+      <Tab.Screen
+        name="History"
+        component={HistoryStack}
+        options={{ title: t('tabs.history') }}
+      />
       <Tab.Screen
         name="Restaurants"
         component={RestaurantsStack}
         options={{ title: t('tabs.restaurants') }}
       />
-      <Tab.Screen name="Profile" component={ProfileStack} options={{ title: t('tabs.profile') }} />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileStack}
+        options={{ title: t('tabs.profile') }}
+      />
     </Tab.Navigator>
   );
 }

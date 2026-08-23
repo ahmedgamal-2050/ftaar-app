@@ -15,7 +15,10 @@ export function OrderSummaryScreen({ navigation, route }: Props) {
     >
       <PlaceholderLinks
         links={[
-          { label: 'BillEntry', onPress: () => navigation.navigate('BillEntry', { lobbyCode }) },
+          {
+            label: 'BillEntry',
+            onPress: () => navigation.navigate('BillEntry', { lobbyCode }),
+          },
         ]}
       />
     </ScreenPlaceholder>

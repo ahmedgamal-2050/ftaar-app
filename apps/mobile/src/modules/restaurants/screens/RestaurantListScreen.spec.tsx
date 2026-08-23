@@ -8,7 +8,9 @@ import type { RestaurantsStackParamList } from '../../../navigation/types';
 // copy instead of raw keys.
 import '../../../i18n';
 
-const mockAuthUser = { current: { isGuest: false } as { isGuest: boolean } | null };
+const mockAuthUser = {
+  current: { isGuest: false } as { isGuest: boolean } | null,
+};
 
 jest.mock('../../../auth/AuthContext', () => ({
   useAuth: () => ({ user: mockAuthUser.current }),
@@ -32,7 +34,9 @@ describe('RestaurantListScreen', () => {
 
     renderScreen();
 
-    expect(screen.getByText('Restaurants are read-only for guests')).toBeTruthy();
+    expect(
+      screen.getByText('Restaurants are read-only for guests'),
+    ).toBeTruthy();
     expect(screen.getByTestId('placeholder-RestaurantList')).toBeTruthy();
   });
 
@@ -41,7 +45,9 @@ describe('RestaurantListScreen', () => {
 
     renderScreen();
 
-    expect(screen.getByText('Restaurants are read-only for guests')).toBeTruthy();
+    expect(
+      screen.getByText('Restaurants are read-only for guests'),
+    ).toBeTruthy();
   });
 
   it('shows the list for a registered user', () => {

@@ -9,8 +9,11 @@ import { isolateLtr } from '../ltr';
  * rather than a plain `Text`.
  */
 export function LtrText({ children, style, ...rest }: TextProps) {
-  const isTextValue = typeof children === 'string' || typeof children === 'number';
-  const content = isTextValue ? isolateLtr(children, I18nManager.isRTL) : children;
+  const isTextValue =
+    typeof children === 'string' || typeof children === 'number';
+  const content = isTextValue
+    ? isolateLtr(children, I18nManager.isRTL)
+    : children;
 
   return (
     <Text {...rest} style={[styles.ltr, style]}>

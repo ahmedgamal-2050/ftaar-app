@@ -28,7 +28,9 @@ export function ScreenPlaceholder({
       <Text style={styles.name} testID={`placeholder-${name}`}>
         {name}
       </Text>
-      {description ? <Text style={styles.description}>{description}</Text> : null}
+      {description ? (
+        <Text style={styles.description}>{description}</Text>
+      ) : null}
       {children ? <View style={styles.content}>{children}</View> : null}
     </Screen>
   );

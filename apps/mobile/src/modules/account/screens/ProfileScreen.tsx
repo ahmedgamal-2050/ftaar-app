@@ -11,7 +11,10 @@ export function ProfileScreen({ navigation }: Props) {
   const displayName = user?.displayName ?? 'Guest';
 
   return (
-    <ScreenPlaceholder name="ProfileScreen" description="Account, conversion, and sign-out.">
+    <ScreenPlaceholder
+      name="ProfileScreen"
+      description="Account, conversion, and sign-out."
+    >
       <MemberChip name={displayName} size="lg" withName />
       <PlaceholderLinks
         links={[

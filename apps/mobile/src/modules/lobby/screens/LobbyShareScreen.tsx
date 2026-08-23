@@ -9,10 +9,18 @@ export function LobbyShareScreen({ navigation, route }: Props) {
   const { lobbyCode } = route.params;
 
   return (
-    <ScreenPlaceholder name="LobbyShare" description="Hand the code to everyone else.">
+    <ScreenPlaceholder
+      name="LobbyShare"
+      description="Hand the code to everyone else."
+    >
       <LtrText>{lobbyCode}</LtrText>
       <PlaceholderLinks
-        links={[{ label: 'LobbyRoom', onPress: () => navigation.navigate('LobbyRoom', { lobbyCode }) }]}
+        links={[
+          {
+            label: 'LobbyRoom',
+            onPress: () => navigation.navigate('LobbyRoom', { lobbyCode }),
+          },
+        ]}
       />
     </ScreenPlaceholder>
   );

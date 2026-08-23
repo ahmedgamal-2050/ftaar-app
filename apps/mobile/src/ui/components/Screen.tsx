@@ -1,5 +1,11 @@
 import React from 'react';
-import { ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 import { useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
 import { colors, spacing } from '../theme';
 import { notchInset } from '../insets';
@@ -25,9 +31,17 @@ interface ScreenProps {
 const DEFAULT_EDGES: readonly Edge[] = ['left', 'right', 'bottom'];
 
 /** Headerless screens (onboarding, LobbyRoom tabs) must reserve the notch. */
-export const HEADERLESS_EDGES: readonly Edge[] = ['top', 'left', 'right', 'bottom'];
+export const HEADERLESS_EDGES: readonly Edge[] = [
+  'top',
+  'left',
+  'right',
+  'bottom',
+];
 
-function insetPadding(edges: readonly Edge[], insets: { top: number; right: number; bottom: number; left: number }) {
+function insetPadding(
+  edges: readonly Edge[],
+  insets: { top: number; right: number; bottom: number; left: number },
+) {
   return {
     paddingTop: edges.includes('top') ? notchInset(insets.top) : 0,
     paddingRight: edges.includes('right') ? insets.right : 0,
@@ -50,7 +64,11 @@ export function Screen({
   testID,
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
-  const contentStyle = [padded && styles.padded, center && styles.centered, style];
+  const contentStyle = [
+    padded && styles.padded,
+    center && styles.centered,
+    style,
+  ];
 
   return (
     <View

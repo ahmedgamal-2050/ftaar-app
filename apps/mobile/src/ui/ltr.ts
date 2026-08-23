@@ -9,5 +9,7 @@ const LTR_ISOLATE_END = '\u2069';
  * invisible characters to the string, so they are skipped.
  */
 export function isolateLtr(value: string | number, isRTL: boolean): string {
-  return isRTL ? `${LTR_ISOLATE_START}${value}${LTR_ISOLATE_END}` : String(value);
+  return isRTL
+    ? `${LTR_ISOLATE_START}${value}${LTR_ISOLATE_END}`
+    : String(value);
 }

@@ -1,5 +1,11 @@
 import React, { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as SplashScreen from 'expo-splash-screen';
@@ -9,11 +15,24 @@ import { useAuth } from '../auth/AuthContext';
 import { OnboardingStack } from './OnboardingStack';
 import { MainTabs } from './MainTabs';
 import { LobbyStack } from './LobbyStack';
-import { HEADERLESS_EDGES, Screen, colors, radius, spacing, typography } from '../ui';
+import {
+  HEADERLESS_EDGES,
+  Screen,
+  colors,
+  radius,
+  spacing,
+  typography,
+} from '../ui';
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
 
-function BootstrapError({ message, onRetry }: { message: string | null; onRetry: () => void }) {
+function BootstrapError({
+  message,
+  onRetry,
+}: {
+  message: string | null;
+  onRetry: () => void;
+}) {
   const { t } = useTranslation();
   return (
     <Screen
@@ -23,7 +42,9 @@ function BootstrapError({ message, onRetry }: { message: string | null; onRetry:
       testID="bootstrap-error"
     >
       <Text style={styles.errorTitle}>{t('bootstrapError.title')}</Text>
-      <Text style={styles.errorBody}>{message ?? t('bootstrapError.body')}</Text>
+      <Text style={styles.errorBody}>
+        {message ?? t('bootstrapError.body')}
+      </Text>
       <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
         <Text style={styles.retryLabel}>{t('common.retry')}</Text>
       </TouchableOpacity>
@@ -56,7 +77,10 @@ export function RootNavigator() {
     <NavigationContainer>
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {status === 'needs-onboarding' ? (
-          <RootStack.Screen name="OnboardingStack" component={OnboardingStack} />
+          <RootStack.Screen
+            name="OnboardingStack"
+            component={OnboardingStack}
+          />
         ) : (
           <>
             <RootStack.Screen name="MainTabs" component={MainTabs} />

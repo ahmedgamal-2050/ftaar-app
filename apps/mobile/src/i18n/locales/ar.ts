@@ -3,7 +3,9 @@ import type { en } from './en';
 // Same nested shape as `en`, but every leaf widened to `string` — `en`'s
 // `as const` literals would otherwise force ar.ts to match the English text
 // verbatim.
-type Messages<T> = { [K in keyof T]: T[K] extends string ? string : Messages<T[K]> };
+type Messages<T> = {
+  [K in keyof T]: T[K] extends string ? string : Messages<T[K]>;
+};
 
 // Egyptian Arabic, casual voice. Kept structurally identical to en.ts
 // (enforced by the type below) so a missing key fails fast instead of

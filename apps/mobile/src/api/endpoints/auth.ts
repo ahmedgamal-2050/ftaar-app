@@ -33,5 +33,7 @@ export const authApi = {
    * with an existing guest's access token, the backend updates that user's
    * row instead of inserting a new one. */
   register: (payload: EmailCredentials) =>
-    apiClient.post<AuthSession>('/auth/register', payload).then((res) => res.data),
+    apiClient
+      .post<AuthSession>('/auth/register', payload)
+      .then((res) => res.data),
 };

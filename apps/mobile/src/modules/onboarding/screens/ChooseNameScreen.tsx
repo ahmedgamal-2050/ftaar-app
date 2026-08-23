@@ -1,6 +1,10 @@
 import React from 'react';
 import { useAuth } from '../../../auth/AuthContext';
-import { HEADERLESS_EDGES, PlaceholderLinks, ScreenPlaceholder } from '../../../ui';
+import {
+  HEADERLESS_EDGES,
+  PlaceholderLinks,
+  ScreenPlaceholder,
+} from '../../../ui';
 
 export function ChooseNameScreen() {
   const { completeOnboarding } = useAuth();

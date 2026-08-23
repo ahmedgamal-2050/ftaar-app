@@ -5,7 +5,10 @@ import { useAuth } from '../../../auth/AuthContext';
 import { PlaceholderLinks, ScreenPlaceholder } from '../../../ui';
 import { RestaurantsLockedNotice } from '../components/RestaurantsLockedNotice';
 
-type Props = NativeStackScreenProps<RestaurantsStackParamList, 'RestaurantList'>;
+type Props = NativeStackScreenProps<
+  RestaurantsStackParamList,
+  'RestaurantList'
+>;
 
 const SAMPLE_RESTAURANT_ID = 'sample-restaurant';
 
@@ -25,16 +28,23 @@ export function RestaurantListScreen({ navigation }: Props) {
       {isLocked ? <RestaurantsLockedNotice /> : null}
       <PlaceholderLinks
         links={[
-          { label: 'RestaurantForm', onPress: () => navigation.navigate('RestaurantForm') },
+          {
+            label: 'RestaurantForm',
+            onPress: () => navigation.navigate('RestaurantForm'),
+          },
           {
             label: 'MenuManager',
             onPress: () =>
-              navigation.navigate('MenuManager', { restaurantId: SAMPLE_RESTAURANT_ID }),
+              navigation.navigate('MenuManager', {
+                restaurantId: SAMPLE_RESTAURANT_ID,
+              }),
           },
           {
             label: 'BulkMenuPaste',
             onPress: () =>
-              navigation.navigate('BulkMenuPaste', { restaurantId: SAMPLE_RESTAURANT_ID }),
+              navigation.navigate('BulkMenuPaste', {
+                restaurantId: SAMPLE_RESTAURANT_ID,
+              }),
           },
         ]}
       />

@@ -23,7 +23,9 @@ describe('Screen', () => {
     );
 
     expect(screen.getByText('content')).toBeTruthy();
-    expect(screen.getByTestId('screen')).toHaveStyle({ backgroundColor: colors.background });
+    expect(screen.getByTestId('screen')).toHaveStyle({
+      backgroundColor: colors.background,
+    });
   });
 
   it('leaves the notch to the header and reserves the home indicator', () => {
@@ -46,7 +48,9 @@ describe('Screen', () => {
       </Screen>,
     );
 
-    expect(screen.getByTestId('screen')).toHaveStyle({ paddingTop: mockInsets.top });
+    expect(screen.getByTestId('screen')).toHaveStyle({
+      paddingTop: mockInsets.top,
+    });
   });
 });
 

@@ -3,7 +3,11 @@
  * in a later pass — this file exists so Onboarding vs MainTabs can switch
  * without a backend.
  */
-export type AuthStatus = 'bootstrapping' | 'needs-onboarding' | 'ready' | 'error';
+export type AuthStatus =
+  | 'bootstrapping'
+  | 'needs-onboarding'
+  | 'ready'
+  | 'error';
 
 export interface SessionUser {
   displayName: string;

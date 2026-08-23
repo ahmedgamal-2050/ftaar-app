@@ -18,7 +18,11 @@ export function App() {
 
   useEffect(() => {
     getStoredLanguage()
-      .then((stored) => (stored && stored !== i18n.language ? i18n.changeLanguage(stored) : undefined))
+      .then((stored) =>
+        stored && stored !== i18n.language
+          ? i18n.changeLanguage(stored)
+          : undefined,
+      )
       .finally(() => setLanguageRestored(true));
   }, []);
 
@@ -29,7 +33,6 @@ export function App() {
   return (
     <AppProviders>
       <AuthProvider>
-        {/* eslint-disable-next-line react/style-prop-object -- expo-status-bar's `style` is a string enum, not a RN style object */}
         <StatusBar style="dark" />
         <RootNavigator />
       </AuthProvider>

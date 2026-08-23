@@ -3,7 +3,10 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import type { LobbyRoomTabParamList, LobbyStackParamList } from '../../../navigation/types';
+import type {
+  LobbyRoomTabParamList,
+  LobbyStackParamList,
+} from '../../../navigation/types';
 import { MenuTabScreen } from '../../lobby-room/screens/MenuTabScreen';
 import { MyCartTabScreen } from '../../lobby-room/screens/MyCartTabScreen';
 import { GroupTabScreen } from '../../lobby-room/screens/GroupTabScreen';
@@ -13,7 +16,10 @@ const Tab = createBottomTabNavigator<LobbyRoomTabParamList>();
 
 type Props = NativeStackScreenProps<LobbyStackParamList, 'LobbyRoom'>;
 
-const TAB_ICONS: Record<keyof LobbyRoomTabParamList, keyof typeof Ionicons.glyphMap> = {
+const TAB_ICONS: Record<
+  keyof LobbyRoomTabParamList,
+  keyof typeof Ionicons.glyphMap
+> = {
   Menu: 'restaurant-outline',
   MyCart: 'cart-outline',
   Group: 'people-outline',

@@ -15,7 +15,10 @@ export function BillEntryScreen({ navigation, route }: Props) {
     >
       <PlaceholderLinks
         links={[
-          { label: 'BillReview', onPress: () => navigation.navigate('BillReview', { lobbyCode }) },
+          {
+            label: 'BillReview',
+            onPress: () => navigation.navigate('BillReview', { lobbyCode }),
+          },
         ]}
       />
     </ScreenPlaceholder>

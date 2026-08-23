@@ -31,7 +31,12 @@ const INITIALS_SIZE: Record<MemberChipSize, number> = {
  * prop: avatars are always a coloured circle of initials, so nobody has to
  * upload a photo and no screen has to handle a missing one.
  */
-export function MemberChip({ name, size = 'md', withName = false, testID }: MemberChipProps) {
+export function MemberChip({
+  name,
+  size = 'md',
+  withName = false,
+  testID,
+}: MemberChipProps) {
   const diameter = DIAMETER[size];
 
   const circle = (
@@ -47,7 +52,10 @@ export function MemberChip({ name, size = 'md', withName = false, testID }: Memb
         },
       ]}
     >
-      <Text style={[styles.initials, { fontSize: INITIALS_SIZE[size] }]} allowFontScaling={false}>
+      <Text
+        style={[styles.initials, { fontSize: INITIALS_SIZE[size] }]}
+        allowFontScaling={false}
+      >
         {memberInitials(name)}
       </Text>
     </View>

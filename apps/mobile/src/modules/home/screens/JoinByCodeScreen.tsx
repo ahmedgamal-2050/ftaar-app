@@ -6,7 +6,8 @@ import { SAMPLE_LOBBY_CODE } from '../../lobby/lobbySample';
 import { LtrText, PlaceholderLinks, ScreenPlaceholder } from '../../../ui';
 
 export function JoinByCodeScreen() {
-  const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const rootNavigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
     <ScreenPlaceholder

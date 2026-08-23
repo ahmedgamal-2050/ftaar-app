@@ -20,7 +20,11 @@ export function PlaceholderLinks({ links }: PlaceholderLinksProps) {
   return (
     <View style={styles.container}>
       {links.map((link) => (
-        <TouchableOpacity key={link.label} style={styles.link} onPress={link.onPress}>
+        <TouchableOpacity
+          key={link.label}
+          style={styles.link}
+          onPress={link.onPress}
+        >
           <Text style={styles.label}>{link.label}</Text>
         </TouchableOpacity>
       ))}

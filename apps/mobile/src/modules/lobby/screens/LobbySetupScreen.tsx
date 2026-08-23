@@ -22,7 +22,10 @@ export function LobbySetupScreen({ navigation, route }: Props) {
         links={[
           {
             label: 'LobbyShare',
-            onPress: () => navigation.navigate('LobbyShare', { lobbyCode: SAMPLE_LOBBY_CODE }),
+            onPress: () =>
+              navigation.navigate('LobbyShare', {
+                lobbyCode: SAMPLE_LOBBY_CODE,
+              }),
           },
         ]}
       />

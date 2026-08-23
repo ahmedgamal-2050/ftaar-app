@@ -19,7 +19,9 @@ describe('JoinByCodeScreen', () => {
     );
 
     expect(screen.getByTestId('placeholder-JoinByCode')).toBeTruthy();
-    expect(screen.getByText(SAMPLE_LOBBY_CODE)).toHaveStyle({ writingDirection: 'ltr' });
+    expect(screen.getByText(SAMPLE_LOBBY_CODE)).toHaveStyle({
+      writingDirection: 'ltr',
+    });
     expect(screen.getByText('LobbyRoom')).toBeTruthy();
   });
 });

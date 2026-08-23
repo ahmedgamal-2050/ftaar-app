@@ -17,7 +17,8 @@ export function MenuManagerScreen({ navigation, route }: Props) {
         links={[
           {
             label: 'BulkMenuPaste',
-            onPress: () => navigation.navigate('BulkMenuPaste', { restaurantId }),
+            onPress: () =>
+              navigation.navigate('BulkMenuPaste', { restaurantId }),
           },
         ]}
       />

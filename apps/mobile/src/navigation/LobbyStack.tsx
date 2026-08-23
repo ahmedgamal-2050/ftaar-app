@@ -30,7 +30,11 @@ export function LobbyStack() {
         component={LobbyShareScreen}
         options={{ title: t('lobby.shareTitle') }}
       />
-      <Stack.Screen name="LobbyRoom" component={LobbyRoomScreen} options={{ headerShown: false }} />
+      <Stack.Screen
+        name="LobbyRoom"
+        component={LobbyRoomScreen}
+        options={{ headerShown: false }}
+      />
       <Stack.Screen
         name="OrderSummary"
         component={OrderSummaryScreen}

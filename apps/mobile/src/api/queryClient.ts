@@ -5,7 +5,9 @@ import NetInfo from '@react-native-community/netinfo';
 // pause and auto-resume around connectivity drops (see spec §4, Offline).
 onlineManager.setEventListener((setOnline) => {
   return NetInfo.addEventListener((state) => {
-    setOnline(Boolean(state.isConnected && state.isInternetReachable !== false));
+    setOnline(
+      Boolean(state.isConnected && state.isInternetReachable !== false),
+    );
   });
 });
 

@@ -1,5 +1,8 @@
 import * as React from 'react';
-import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  createNavigationContainerRef,
+} from '@react-navigation/native';
 import { act, render, screen } from '@testing-library/react-native';
 import { MainTabs } from './MainTabs';
 import type { MainTabParamList } from './types';
@@ -7,12 +10,16 @@ import type { MainTabParamList } from './types';
 // instead of raw keys.
 import '../i18n';
 
-const mockAuthUser = { current: { isGuest: false } as { isGuest: boolean } | null };
+const mockAuthUser = {
+  current: { isGuest: false } as { isGuest: boolean } | null,
+};
 
 jest.mock('../auth/AuthContext', () => ({
   useAuth: () => ({
     status: 'ready',
-    user: mockAuthUser.current ? { displayName: 'Mohamed Salah', ...mockAuthUser.current } : null,
+    user: mockAuthUser.current
+      ? { displayName: 'Mohamed Salah', ...mockAuthUser.current }
+      : null,
     logout: jest.fn(),
   }),
 }));
@@ -79,12 +86,18 @@ describe('routes inside the tabs', () => {
     expect(screen.getByTestId('placeholder-RestaurantForm')).toBeTruthy();
 
     act(() =>
-      ref.navigate('Restaurants', { screen: 'MenuManager', params: { restaurantId: 'r1' } }),
+      ref.navigate('Restaurants', {
+        screen: 'MenuManager',
+        params: { restaurantId: 'r1' },
+      }),
     );
     expect(screen.getByTestId('placeholder-MenuManager')).toBeTruthy();
 
     act(() =>
-      ref.navigate('Restaurants', { screen: 'BulkMenuPaste', params: { restaurantId: 'r1' } }),
+      ref.navigate('Restaurants', {
+        screen: 'BulkMenuPaste',
+        params: { restaurantId: 'r1' },
+      }),
     );
     expect(screen.getByTestId('placeholder-BulkMenuPaste')).toBeTruthy();
   });
@@ -94,7 +107,10 @@ describe('routes inside the tabs', () => {
     const ref = renderTabs();
 
     act(() =>
-      ref.navigate('Restaurants', { screen: 'MenuManager', params: { restaurantId: 'r1' } }),
+      ref.navigate('Restaurants', {
+        screen: 'MenuManager',
+        params: { restaurantId: 'r1' },
+      }),
     );
 
     expect(screen.getByTestId('placeholder-MenuManager')).toBeTruthy();

@@ -10,12 +10,15 @@ import { colors, radius, spacing, typography } from '../../../ui';
  * RestaurantList, not its own route — every restaurant screen stays registered.
  */
 export function RestaurantsLockedNotice() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
     <>
       <Text style={styles.title}>Restaurants are read-only for guests</Text>
-      <Text style={styles.subtitle}>Create an account to add restaurants and manage their menus.</Text>
+      <Text style={styles.subtitle}>
+        Create an account to add restaurants and manage their menus.
+      </Text>
       <TouchableOpacity
         style={styles.primaryButton}
         onPress={() =>

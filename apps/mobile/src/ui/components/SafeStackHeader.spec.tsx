@@ -14,9 +14,13 @@ jest.mock('react-native-safe-area-context', () => {
   };
 });
 
-function headerProps(overrides: Partial<NativeStackHeaderProps> = {}): NativeStackHeaderProps {
+function headerProps(
+  overrides: Partial<NativeStackHeaderProps> = {},
+): NativeStackHeaderProps {
   return {
-    navigation: { goBack: jest.fn() } as unknown as NativeStackHeaderProps['navigation'],
+    navigation: {
+      goBack: jest.fn(),
+    } as unknown as NativeStackHeaderProps['navigation'],
     route: { key: 'home', name: 'HomeScreen' },
     options: { title: 'Home' },
     ...overrides,

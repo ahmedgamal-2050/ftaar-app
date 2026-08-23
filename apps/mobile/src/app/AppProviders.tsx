@@ -13,7 +13,9 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
       <SafeAreaProvider>
         <SafeAppFrame>
           <I18nextProvider i18n={i18n}>
-            <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+            <QueryClientProvider client={queryClient}>
+              {children}
+            </QueryClientProvider>
           </I18nextProvider>
         </SafeAppFrame>
       </SafeAreaProvider>

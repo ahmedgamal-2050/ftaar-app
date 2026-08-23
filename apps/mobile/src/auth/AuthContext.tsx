@@ -37,7 +37,10 @@ async function readSession(): Promise<SessionUser | null> {
   }
 
   const parsed = JSON.parse(raw) as Partial<SessionUser>;
-  if (typeof parsed.displayName !== 'string' || typeof parsed.isGuest !== 'boolean') {
+  if (
+    typeof parsed.displayName !== 'string' ||
+    typeof parsed.isGuest !== 'boolean'
+  ) {
     return null;
   }
 
@@ -119,7 +122,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       retry: bootstrap,
     }),
-    [status, user, error, completeOnboarding, login, register, logout, bootstrap],
+    [
+      status,
+      user,
+      error,
+      completeOnboarding,
+      login,
+      register,
+      logout,
+      bootstrap,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
