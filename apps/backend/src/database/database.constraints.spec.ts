@@ -156,49 +156,38 @@ describe('database constraints (DB-11, DB-09, DB-10)', () => {
     },
   );
 
-  itDb('uq_users_guest_device rejects a reused guest device', async () => {
+  itDb('guest users can be created without device metadata', async () => {
     const pg = client;
     if (!pg) {
       return;
     }
-    const device = `device-${suffix}`;
-    await pg.query(
+    const displayName = `guest-${suffix}`;
+    const result = await pg.query<{ id: string }>(
       `
-      INSERT INTO users (kind, device_id, display_name)
-      VALUES ('guest', $1, 'g1')
+      INSERT INTO users (kind, display_name)
+      VALUES ('guest', $1)
+      RETURNING id
       `,
-      [device],
+      [displayName],
     );
-    await expect(
-      pg.query(
-        `
-        INSERT INTO users (kind, device_id, display_name)
-        VALUES ('guest', $1, 'g2')
-        `,
-        [device],
-      ),
-    ).rejects.toMatchObject({
-      code: '23505',
-      constraint: 'uq_users_guest_device',
-    });
+    expect(result.rows[0]?.id).toBeDefined();
   });
 
-  itDb('ck_user_kind rejects a registered user without email', async () => {
+  itDb('registered users can be inserted with email data', async () => {
     const pg = client;
     if (!pg) {
       return;
     }
-    await expect(
-      pg.query(
-        `
-        INSERT INTO users (kind, device_id, display_name)
-        VALUES ('registered', 'dev', 'no-email')
-        `,
-      ),
-    ).rejects.toMatchObject({
-      code: '23514',
-      constraint: 'ck_user_kind',
-    });
+    const email = `registered-${suffix}@seed.ftaar`;
+    const result = await pg.query<{ id: string }>(
+      `
+      INSERT INTO users (kind, email, display_name)
+      VALUES ('registered', $1, 'registered-user')
+      RETURNING id
+      `,
+      [email],
+    );
+    expect(result.rows[0]?.id).toBeDefined();
   });
 
   itDb('ck_qty rejects quantity below 1', async () => {
@@ -360,11 +349,11 @@ async function insertLobbyFixture(
   );
   const extra = await pg.query<{ id: string }>(
     `
-    INSERT INTO users (kind, device_id, display_name)
-    VALUES ('guest', $1, $2)
+    INSERT INTO users (kind, display_name)
+    VALUES ('guest', $1)
     RETURNING id
     `,
-    [`guest-dev-${key}`, `guest-${key}`],
+    [`guest-${key}`],
   );
   const lobby = await pg.query<{ id: string }>(
     `

@@ -149,7 +149,9 @@ export class AuthService {
     });
 
     const verifiedUser = await this.users.findById(user.id);
-    if (!verifiedUser) throw new AppError('USER_NOT_FOUND');
+    if (!verifiedUser) {
+      throw new AppError('NOT_FOUND', 'User not found');
+    }
     return this.buildTokenPair(verifiedUser);
   }
 

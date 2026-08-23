@@ -2,6 +2,7 @@ import { Controller, Get } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { HealthCheck, HealthCheckService } from '@nestjs/terminus';
 import { SkipThrottle } from '@nestjs/throttler';
+import { Public } from '../auth/decorators/public.decorator';
 import { PrismaHealthIndicator } from './health.indicator';
 
 @ApiTags('health')
@@ -14,6 +15,7 @@ export class HealthController {
   ) {}
 
   @Get()
+  @Public()
   @HealthCheck()
   @ApiOperation({ summary: 'Liveness probe (no database)' })
   liveness() {
@@ -23,6 +25,7 @@ export class HealthController {
   }
 
   @Get('db')
+  @Public()
   @HealthCheck()
   @ApiOperation({ summary: 'Readiness probe (Postgres)' })
   readiness() {

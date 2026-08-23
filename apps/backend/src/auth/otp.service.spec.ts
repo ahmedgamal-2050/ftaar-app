@@ -6,15 +6,24 @@ import { Test } from '@nestjs/testing';
 const SECRET = 'test-email-otp-secret-must-be-at-least-32chars!!';
 const MOCK_OTP_ID = 'otp-uuid-1234';
 
-function buildOtpMocks() {
-  const db = {
+type OtpDbMock = {
+  otpVerification: {
+    create: jest.Mock;
+    findFirst: jest.Mock;
+    update: jest.Mock;
+    updateMany: jest.Mock;
+  };
+};
+
+function buildOtpMocks(): { db: OtpDbMock; config: AppConfigService } {
+  const db: OtpDbMock = {
     otpVerification: {
       create: jest.fn(),
       findFirst: jest.fn(),
       update: jest.fn(),
       updateMany: jest.fn(),
     },
-  } as unknown as PrismaService;
+  };
 
   const config = {
     emailOtpSecret: SECRET,
@@ -23,9 +32,10 @@ function buildOtpMocks() {
   return { db, config };
 }
 
-async function buildOtpService(
-  mocks: ReturnType<typeof buildOtpMocks>,
-): Promise<OtpService> {
+async function buildOtpService(mocks: {
+  db: OtpDbMock;
+  config: AppConfigService;
+}): Promise<OtpService> {
   const module = await Test.createTestingModule({
     providers: [
       OtpService,
