@@ -6,7 +6,14 @@ import { shouldSkipDatabase } from './skip-db';
 export class DatabaseModule {
   static forRoot(): DynamicModule {
     if (shouldSkipDatabase()) {
-      return { module: DatabaseModule };
+      // Provide a stub so DI resolves PrismaService even without a real DB.
+      // Any actual DB operation will throw at runtime (expected in unit tests).
+      return {
+        module: DatabaseModule,
+        providers: [{ provide: PrismaService, useValue: {} }],
+        exports: [PrismaService],
+        global: true,
+      };
     }
 
     return {

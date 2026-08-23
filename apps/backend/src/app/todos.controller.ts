@@ -14,8 +14,10 @@ import type { Todo, TodoListResponse } from '@nestjs-template/types';
 import { CreateTodoDto } from './dto/create-todo.dto';
 import { UpdateTodoDto } from './dto/update-todo.dto';
 import { TodosService } from './todos.service';
+import { Public } from '../auth/decorators/public.decorator';
 
 @ApiTags('todos')
+@Public()
 @Controller('todos')
 export class TodosController {
   constructor(private readonly todosService: TodosService) {}

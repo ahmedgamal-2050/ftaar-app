@@ -9,11 +9,12 @@ import { AppLoggerModule } from '../core/http/logger.module';
 import { ResponseWrapInterceptor } from '../core/http/response-wrap.interceptor';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthController } from './auth.controller';
 import { HealthController } from './health.controller';
 import { PrismaHealthIndicator } from './health.indicator';
 import { TodosController } from './todos.controller';
 import { TodosService } from './todos.service';
+import { AuthModule } from '../auth/auth.module';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -28,17 +29,14 @@ import { TodosService } from './todos.service';
         return req.url?.includes('/health') === true;
       },
     }),
+    AuthModule,
   ],
-  controllers: [
-    AppController,
-    HealthController,
-    TodosController,
-    AuthController,
-  ],
+  controllers: [AppController, HealthController, TodosController],
   providers: [
     AppService,
     TodosService,
     PrismaHealthIndicator,
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: ResponseWrapInterceptor },

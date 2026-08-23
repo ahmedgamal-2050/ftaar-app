@@ -41,4 +41,66 @@ export class AppConfigService {
   get isProduction(): boolean {
     return this.nodeEnv === 'production';
   }
+
+  // --- OTP ---
+  get emailOtpSecret(): string {
+    return this.config.get('EMAIL_OTP_SECRET', { infer: true });
+  }
+
+  get emailVerificationOtpTtlMinutes(): number {
+    return this.config.get('EMAIL_VERIFICATION_OTP_TTL_MINUTES', {
+      infer: true,
+    });
+  }
+
+  get emailVerificationOtpMaxAttempts(): number {
+    return this.config.get('EMAIL_VERIFICATION_OTP_MAX_ATTEMPTS', {
+      infer: true,
+    });
+  }
+
+  get emailVerificationOtpResendCooldownSeconds(): number {
+    return this.config.get('EMAIL_VERIFICATION_OTP_RESEND_COOLDOWN_SECONDS', {
+      infer: true,
+    });
+  }
+
+  get passwordResetOtpTtlMinutes(): number {
+    return this.config.get('PASSWORD_RESET_OTP_TTL_MINUTES', { infer: true });
+  }
+
+  get passwordResetOtpMaxAttempts(): number {
+    return this.config.get('PASSWORD_RESET_OTP_MAX_ATTEMPTS', { infer: true });
+  }
+
+  get passwordResetOtpResendCooldownSeconds(): number {
+    return this.config.get('PASSWORD_RESET_OTP_RESEND_COOLDOWN_SECONDS', {
+      infer: true,
+    });
+  }
+
+  get passwordResetTokenTtlMinutes(): number {
+    return this.config.get('PASSWORD_RESET_TOKEN_TTL_MINUTES', { infer: true });
+  }
+
+  // --- SMTP ---
+  get smtpHost(): string {
+    return this.config.get('SMTP_HOST', { infer: true });
+  }
+
+  get smtpPort(): number {
+    return this.config.get('SMTP_PORT', { infer: true });
+  }
+
+  get smtpUser(): string {
+    return this.config.get('SMTP_USER', { infer: true });
+  }
+
+  get smtpPass(): string {
+    return this.config.get('SMTP_PASS', { infer: true });
+  }
+
+  get mailFrom(): string {
+    return this.config.get('MAIL_FROM', { infer: true });
+  }
 }
