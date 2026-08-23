@@ -130,3 +130,9 @@ npm-debug.*
 *.orig.*
 web-build/
 cache/
+expo-env.d.ts
+
+# Environment variables
+.env
+.env.local
+!.env.example
