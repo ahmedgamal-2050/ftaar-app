@@ -68,8 +68,7 @@
           "LOG_LEVEL": "info",
           "JWT_SECRET": "development-jwt-secret",
           "CORS_ORIGINS": "http://localhost:3000",
-          "BODY_LIMIT": "256kb",
-          "DATABASE_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar"
+          "BODY_LIMIT": "256kb"
         }
       },
       "configurations": {
@@ -80,8 +79,7 @@
             "LOG_LEVEL": "info",
             "JWT_SECRET": "development-jwt-secret",
             "CORS_ORIGINS": "http://localhost:3000",
-            "BODY_LIMIT": "256kb",
-            "DATABASE_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar"
+            "BODY_LIMIT": "256kb"
           }
         },
         "production": {
@@ -91,8 +89,7 @@
             "LOG_LEVEL": "info",
             "JWT_SECRET": "development-jwt-secret",
             "CORS_ORIGINS": "http://localhost:3000",
-            "BODY_LIMIT": "256kb",
-            "DATABASE_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar"
+            "BODY_LIMIT": "256kb"
           }
         }
       }
@@ -109,7 +106,6 @@
           "PORT": "3000",
           "LOG_LEVEL": "silent",
           "OPENAPI_OUT": "../../dist/apps/backend/openapi.json",
-          "DATABASE_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar",
           "JWT_SECRET": "openapi-jwt-secret",
           "CORS_ORIGINS": "http://localhost:3000",
           "BODY_LIMIT": "256kb"
