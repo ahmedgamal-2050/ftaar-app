@@ -8,7 +8,7 @@
     "build": {
       "executor": "nx:run-commands",
       "cache": true,
-      "dependsOn": ["^build"],
+      "dependsOn": ["prisma-generate", "^build"],
       "inputs": ["production", "^production"],
       "outputs": ["{workspaceRoot}/dist/apps/backend"],
       "options": {
@@ -63,25 +63,116 @@
           "node --watch ../../dist/apps/backend/main.cjs"
         ],
         "env": {
-          "NODE_ENV": "development"
+          "NODE_ENV": "development",
+          "PORT": "3000",
+          "LOG_LEVEL": "info",
+          "JWT_SECRET": "development-jwt-secret",
+          "CORS_ORIGINS": "http://localhost:3000",
+          "BODY_LIMIT": "256kb",
+          "DATABASE_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar"
         }
       },
       "configurations": {
         "development": {
           "env": {
-            "NODE_ENV": "development"
+            "NODE_ENV": "development",
+            "PORT": "3000",
+            "LOG_LEVEL": "info",
+            "JWT_SECRET": "development-jwt-secret",
+            "CORS_ORIGINS": "http://localhost:3000",
+            "BODY_LIMIT": "256kb",
+            "DATABASE_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar"
           }
         },
         "production": {
           "env": {
-            "NODE_ENV": "production"
+            "NODE_ENV": "production",
+            "PORT": "3000",
+            "LOG_LEVEL": "info",
+            "JWT_SECRET": "development-jwt-secret",
+            "CORS_ORIGINS": "http://localhost:3000",
+            "BODY_LIMIT": "256kb",
+            "DATABASE_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar"
           }
         }
       }
     },
-    "test": {
+    "openapi": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "outputs": ["{workspaceRoot}/dist/apps/backend/openapi.json"],
       "options": {
-        "passWithNoTests": true
+        "command": "node ../../dist/apps/backend/main.cjs --export-openapi",
+        "cwd": "apps/backend",
+        "env": {
+          "NODE_ENV": "production",
+          "PORT": "3000",
+          "LOG_LEVEL": "silent",
+          "OPENAPI_OUT": "../../dist/apps/backend/openapi.json",
+          "DATABASE_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar",
+          "JWT_SECRET": "openapi-jwt-secret",
+          "CORS_ORIGINS": "http://localhost:3000",
+          "BODY_LIMIT": "256kb"
+        }
+      }
+    },
+    "prisma-generate": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "{projectRoot}/prisma/schema.prisma",
+        "{projectRoot}/prisma/migrations/**"
+      ],
+      "outputs": ["{workspaceRoot}/node_modules/.prisma/client"],
+      "options": {
+        "command": "npx prisma generate --schema prisma/schema.prisma",
+        "cwd": "apps/backend"
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "dependsOn": ["prisma-generate"],
+      "inputs": ["production", "^production"],
+      "options": {
+        "command": "tsc --noEmit -p tsconfig.app.json",
+        "cwd": "apps/backend"
+      }
+    },
+    "migration-run": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prisma migrate deploy --schema prisma/schema.prisma",
+        "cwd": "apps/backend"
+      }
+    },
+    "migration-revert": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node prisma/revert-last.cjs",
+        "cwd": "apps/backend"
+      }
+    },
+    "migration-generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "npx prisma migrate dev --create-only --name generated --schema prisma/schema.prisma",
+        "cwd": "apps/backend"
+      }
+    },
+    "seed": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["migration-run", "prisma-generate"],
+      "options": {
+        "command": "npx ts-node --project tsconfig.app.json src/database/run-seed.ts",
+        "cwd": "apps/backend"
+      }
+    },
+    "test": {
+      "dependsOn": ["prisma-generate"],
+      "options": {
+        "passWithNoTests": true,
+        "coverage": true
       }
     }
   }

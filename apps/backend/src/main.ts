@@ -1,24 +1,38 @@
 /**
- * This is not a production server yet!
- * This is only a minimal backend to get started.
+ * NestJS API bootstrap. reflect-metadata must load before decorated classes.
  */
-
-// reflect-metadata must load before any decorated class so Nest can read
-// the metadata emitted by emitDecoratorMetadata (DI + route reflection).
 import 'reflect-metadata';
-import { Logger } from '@nestjs/common';
+import { Logger } from 'nestjs-pino';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app/app.module';
+import { AppConfigService } from './core/config/app-config.service';
+import { writeOpenApiFile } from './core/http/swagger';
+import { GLOBAL_PREFIX, setupApp } from './core/setup-app';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const globalPrefix = 'api';
-  app.setGlobalPrefix(globalPrefix);
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
-  Logger.log(
-    `🚀 Application is running on: http://localhost:${port}/${globalPrefix}`,
+  const exportOpenApi = process.argv.includes('--export-openapi');
+
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+    bodyParser: false,
+  });
+  app.useLogger(app.get(Logger));
+  setupApp(app, app.get(AppConfigService));
+
+  if (exportOpenApi) {
+    const outputPath = process.env['OPENAPI_OUT'] ?? 'openapi.json';
+    writeOpenApiFile(app, outputPath);
+    await app.close();
+    return;
+  }
+
+  const config = app.get(AppConfigService);
+  await app.listen(config.port);
+  const logger = app.get(Logger);
+  logger.log(
+    `Application is running on: http://localhost:${config.port}/${GLOBAL_PREFIX}`,
   );
+  logger.log(`Swagger UI: http://localhost:${config.port}/docs`);
 }
 
 bootstrap();

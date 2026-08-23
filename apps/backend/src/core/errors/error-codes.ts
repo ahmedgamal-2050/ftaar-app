@@ -1,0 +1,68 @@
+import { HttpStatus } from '@nestjs/common';
+
+/**
+ * Canonical API error codes. Adding a code here without an HTTP status
+ * in ERROR_HTTP_STATUS is a compile error (`satisfies Record<ErrorCode, ...>`).
+ */
+export const ERROR_CODES = [
+  'BAD_REQUEST',
+  'VALIDATION_ERROR',
+  'UNAUTHORIZED',
+  'INVALID_CREDENTIALS',
+  'TOKEN_EXPIRED',
+  'TOKEN_INVALID',
+  'FORBIDDEN',
+  'NOT_FOUND',
+  'CONFLICT',
+  'ALREADY_EXISTS',
+  'PAYLOAD_TOO_LARGE',
+  'UNPROCESSABLE_ENTITY',
+  'RATE_LIMITED',
+  'INTERNAL_ERROR',
+  'NOT_IMPLEMENTED',
+  'SERVICE_UNAVAILABLE',
+  'GATEWAY_TIMEOUT',
+] as const;
+
+export type ErrorCode = (typeof ERROR_CODES)[number];
+
+export const ERROR_HTTP_STATUS = {
+  BAD_REQUEST: HttpStatus.BAD_REQUEST,
+  VALIDATION_ERROR: HttpStatus.BAD_REQUEST,
+  UNAUTHORIZED: HttpStatus.UNAUTHORIZED,
+  INVALID_CREDENTIALS: HttpStatus.UNAUTHORIZED,
+  TOKEN_EXPIRED: HttpStatus.UNAUTHORIZED,
+  TOKEN_INVALID: HttpStatus.UNAUTHORIZED,
+  FORBIDDEN: HttpStatus.FORBIDDEN,
+  NOT_FOUND: HttpStatus.NOT_FOUND,
+  CONFLICT: HttpStatus.CONFLICT,
+  ALREADY_EXISTS: HttpStatus.CONFLICT,
+  PAYLOAD_TOO_LARGE: HttpStatus.PAYLOAD_TOO_LARGE,
+  UNPROCESSABLE_ENTITY: HttpStatus.UNPROCESSABLE_ENTITY,
+  RATE_LIMITED: HttpStatus.TOO_MANY_REQUESTS,
+  INTERNAL_ERROR: HttpStatus.INTERNAL_SERVER_ERROR,
+  NOT_IMPLEMENTED: HttpStatus.NOT_IMPLEMENTED,
+  SERVICE_UNAVAILABLE: HttpStatus.SERVICE_UNAVAILABLE,
+  GATEWAY_TIMEOUT: HttpStatus.GATEWAY_TIMEOUT,
+} as const satisfies Record<ErrorCode, number>;
+
+export type ErrorHttpStatus = (typeof ERROR_HTTP_STATUS)[ErrorCode];
+
+const HTTP_STATUS_TO_CODE: Partial<Record<number, ErrorCode>> = {
+  [HttpStatus.BAD_REQUEST]: 'BAD_REQUEST',
+  [HttpStatus.UNAUTHORIZED]: 'UNAUTHORIZED',
+  [HttpStatus.FORBIDDEN]: 'FORBIDDEN',
+  [HttpStatus.NOT_FOUND]: 'NOT_FOUND',
+  [HttpStatus.CONFLICT]: 'CONFLICT',
+  [HttpStatus.PAYLOAD_TOO_LARGE]: 'PAYLOAD_TOO_LARGE',
+  [HttpStatus.UNPROCESSABLE_ENTITY]: 'UNPROCESSABLE_ENTITY',
+  [HttpStatus.TOO_MANY_REQUESTS]: 'RATE_LIMITED',
+  [HttpStatus.INTERNAL_SERVER_ERROR]: 'INTERNAL_ERROR',
+  [HttpStatus.NOT_IMPLEMENTED]: 'NOT_IMPLEMENTED',
+  [HttpStatus.SERVICE_UNAVAILABLE]: 'SERVICE_UNAVAILABLE',
+  [HttpStatus.GATEWAY_TIMEOUT]: 'GATEWAY_TIMEOUT',
+};
+
+export function errorCodeFromHttpStatus(status: number): ErrorCode {
+  return HTTP_STATUS_TO_CODE[status] ?? 'INTERNAL_ERROR';
+}

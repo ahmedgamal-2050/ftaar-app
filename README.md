@@ -168,11 +168,7 @@ Docs -> https://nx.dev/nx-cloud
 
 ## Replacing the In-Memory Store
 
-`TodosService` uses a plain array. Drop in any persistence layer:
-
-- **TypeORM** - `npx nx add @nx/typeorm` (or install manually + `TypeOrmModule.forRoot(...)`)
-- **Prisma** - add `prisma` + `@prisma/client`, generate, inject `PrismaService`
-- **MikroORM**, **Mongoose**, **Drizzle** - follow the same pattern
+`TodosService` uses a plain array. Persistence for domain tables is **Prisma** (`PrismaService` in `apps/backend`). See [docs/backend-database.md](docs/backend-database.md).
 
 ---
 
