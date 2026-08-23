@@ -37,7 +37,9 @@ jobs:
       PORT: '3000'
       LOG_LEVEL: silent
       DATABASE_URL: postgres://ftaar:ftaar@127.0.0.1:5432/ftaar
-      JWT_SECRET: ci-jwt-secret-16x
+      DIRECT_URL: postgres://ftaar:ftaar@127.0.0.1:5432/ftaar
+      JWT_SECRET: ci-jwt-secret-at-least-32-characters!!
+      EMAIL_OTP_SECRET: ci-email-otp-secret-at-least-32-chars!!
       CORS_ORIGINS: http://localhost:3000
       BODY_LIMIT: 256kb
     steps:

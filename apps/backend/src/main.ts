@@ -35,4 +35,9 @@ async function bootstrap() {
   logger.log(`Swagger UI: http://localhost:${config.port}/docs`);
 }
 
-bootstrap();
+bootstrap().catch((err: unknown) => {
+  // bufferLogs:true suppresses pino output if the process crashes before the
+  // logger is flushed. Writing to stderr here ensures the error is always visible.
+  console.error('Bootstrap failed:', err);
+  process.exit(1);
+});
