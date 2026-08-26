@@ -94,15 +94,16 @@ model Lobby {
 }
 
 model LobbyMember {
-  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  lobbyId     String      @map("lobby_id") @db.Uuid
-  lobby       Lobby       @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
-  userId      String      @map("user_id") @db.Uuid
-  user        User        @relation(fields: [userId], references: [id])
-  role        MemberRole
-  displayName String      @map("display_name") @db.VarChar(120)
-  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
-  orderItems  OrderItem[]
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lobbyId       String        @map("lobby_id") @db.Uuid
+  lobby         Lobby         @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  userId        String        @map("user_id") @db.Uuid
+  user          User          @relation(fields: [userId], references: [id])
+  role          MemberRole
+  displayName   String        @map("display_name") @db.VarChar(120)
+  paymentStatus PaymentStatus @default(unpaid) @map("payment_status")
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  orderItems    OrderItem[]
 
   @@index([lobbyId], map: "idx_lobby_members_lobby_id")
   @@map("lobby_members")
@@ -118,7 +119,8 @@ model OrderItem {
   menuItem      MenuItem    @relation(fields: [menuItemId], references: [id])
   restaurantId  String      @map("restaurant_id") @db.Uuid
   qty           Int
-  actualPrice   BigInt      @map("actual_price")
+  actualPrice   BigInt?     @map("actual_price")
+  delivered     Boolean     @default(true)
   createdAt     DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
 
   @@index([lobbyId], map: "idx_order_items_lobby_id")
@@ -127,15 +129,20 @@ model OrderItem {
 }
 
 model LobbyBill {
-  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  lobbyId       String        @unique @map("lobby_id") @db.Uuid
-  lobby         Lobby         @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
-  subtotal      BigInt
-  tax           BigInt
-  total         BigInt
-  paymentStatus PaymentStatus @map("payment_status")
-  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt     DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lobbyId         String        @unique @map("lobby_id") @db.Uuid
+  lobby           Lobby         @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  subtotal        BigInt
+  tax             BigInt
+  deliveryFee     BigInt        @default(0) @map("delivery_fee")
+  serviceFee      BigInt        @default(0) @map("service_fee")
+  discount        BigInt        @default(0)
+  total           BigInt
+  receiptTotal    BigInt?       @map("receipt_total")
+  paymentStatus   PaymentStatus @map("payment_status")
+  idempotencyKey  String?       @unique @map("idempotency_key") @db.VarChar(128)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@index([lobbyId], map: "idx_lobby_bill_lobby_id")
   @@map("lobby_bill")
