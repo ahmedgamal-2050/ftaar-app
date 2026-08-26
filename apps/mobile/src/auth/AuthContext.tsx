@@ -6,20 +6,32 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { authApi } from '../api/endpoints/auth';
+import { registerSessionExpiredHandler } from '../api/client';
+import { tokenStore } from '../api/tokenStore';
+import type { AuthSession } from '../api/types';
 import type { AuthStatus, SessionUser } from './session';
-
-const SESSION_KEY = 'ftaar.localSession';
+import { toSessionUser } from './session';
+import {
+  clearGuestDisplayName,
+  clearRefreshToken,
+  getGuestDisplayName,
+  getRefreshToken,
+  setGuestDisplayName,
+  setRefreshToken,
+} from './storage';
 
 interface AuthContextValue {
   status: AuthStatus;
   user: SessionUser | null;
   error: string | null;
-  /** Guest session after the ChooseName placeholder. */
+  /** Bootstraps a guest session (POST /auth/guest) and locally caches the
+   * typed display name, since the backend can't store one for guests. */
   completeOnboarding: (displayName: string) => Promise<void>;
-  /** Marks the local session as a registered account — no network. */
-  login: () => Promise<void>;
-  register: () => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  /** Converts the current guest to a registered account (POST /auth/convert)
+   * and syncs the carried-over display name via PATCH /auth/me. */
+  register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   retry: () => void;
 }
@@ -30,86 +42,119 @@ function toErrorMessage(err: unknown): string {
   return err instanceof Error ? err.message : 'Something went wrong.';
 }
 
-async function readSession(): Promise<SessionUser | null> {
-  const raw = await AsyncStorage.getItem(SESSION_KEY);
-  if (!raw) {
-    return null;
-  }
-
-  const parsed = JSON.parse(raw) as Partial<SessionUser>;
-  if (
-    typeof parsed.displayName !== 'string' ||
-    typeof parsed.isGuest !== 'boolean'
-  ) {
-    return null;
-  }
-
-  return { displayName: parsed.displayName, isGuest: parsed.isGuest };
-}
-
-async function writeSession(user: SessionUser): Promise<void> {
-  await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(user));
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<AuthStatus>('bootstrapping');
   const [user, setUser] = useState<SessionUser | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const applySession = useCallback(
+    async (session: AuthSession, displayNameOverride?: string) => {
+      tokenStore.setAccessToken(session.accessToken);
+      await setRefreshToken(session.refreshToken);
+      setUser(toSessionUser(session.user, displayNameOverride));
+      setStatus('ready');
+    },
+    [],
+  );
+
+  const resetToOnboarding = useCallback(async () => {
+    await clearRefreshToken();
+    await clearGuestDisplayName();
+    tokenStore.setAccessToken(null);
+    setUser(null);
+    setStatus('needs-onboarding');
+  }, []);
+
   const bootstrap = useCallback(async () => {
     setStatus('bootstrapping');
     setError(null);
     try {
-      const stored = await readSession();
-      if (stored) {
-        setUser(stored);
-        setStatus('ready');
+      const refreshToken = await getRefreshToken();
+      if (!refreshToken) {
+        setUser(null);
+        setStatus('needs-onboarding');
         return;
       }
-      setUser(null);
-      setStatus('needs-onboarding');
+      try {
+        const session = await authApi.refresh(refreshToken);
+        const displayNameOverride =
+          session.user.kind === 'guest'
+            ? ((await getGuestDisplayName()) ?? undefined)
+            : undefined;
+        await applySession(session, displayNameOverride);
+      } catch {
+        // Expired/revoked refresh token — this is the normal steady state
+        // for a logged-out device, not an exceptional failure.
+        await resetToOnboarding();
+      }
     } catch (err) {
       setError(toErrorMessage(err));
       setStatus('error');
     }
-  }, []);
+  }, [applySession, resetToOnboarding]);
 
   useEffect(() => {
     void bootstrap();
   }, [bootstrap]);
 
-  const persistReady = useCallback(async (next: SessionUser) => {
-    await writeSession(next);
-    setUser(next);
-    setStatus('ready');
-  }, []);
+  useEffect(
+    () => registerSessionExpiredHandler(() => void resetToOnboarding()),
+    [resetToOnboarding],
+  );
 
   const completeOnboarding = useCallback(
     async (displayName: string) => {
-      await persistReady({ displayName, isGuest: true });
+      const session = await authApi.bootstrapGuest();
+      await setGuestDisplayName(displayName);
+      await applySession(session, displayName);
     },
-    [persistReady],
+    [applySession],
   );
 
-  const login = useCallback(async () => {
-    await persistReady({
-      displayName: user?.displayName ?? 'Member',
-      isGuest: false,
-    });
-  }, [persistReady, user?.displayName]);
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const session = await authApi.login({ email, password });
+      await clearGuestDisplayName();
+      await applySession(session);
+    },
+    [applySession],
+  );
 
-  const register = useCallback(async () => {
-    await persistReady({
-      displayName: user?.displayName ?? 'Member',
-      isGuest: false,
-    });
-  }, [persistReady, user?.displayName]);
+  const register = useCallback(
+    async (email: string, password: string) => {
+      const displayName = user?.displayName;
+      const session = await authApi.convert({ email, password });
+      tokenStore.setAccessToken(session.accessToken);
+      await setRefreshToken(session.refreshToken);
+
+      let finalUser = session.user;
+      if (displayName) {
+        try {
+          finalUser = await authApi.updateMe({ displayName });
+        } catch {
+          // Best-effort — the account is registered either way; the name
+          // sync can be retried later from the profile screen.
+        }
+      }
+
+      await clearGuestDisplayName();
+      setUser(toSessionUser(finalUser));
+      setStatus('ready');
+    },
+    [user?.displayName],
+  );
 
   const logout = useCallback(async () => {
-    await AsyncStorage.removeItem(SESSION_KEY);
-    setUser(null);
-    setStatus('needs-onboarding');
-  }, []);
+    const refreshToken = await getRefreshToken();
+    if (refreshToken) {
+      try {
+        await authApi.logout(refreshToken);
+      } catch {
+        // Best-effort — still drop the local session even if this fails.
+      }
+    }
+    await resetToOnboarding();
+  }, [resetToOnboarding]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
