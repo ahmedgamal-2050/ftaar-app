@@ -23,6 +23,21 @@ export interface EnvVars {
   JWT_SECRET: string;
   CORS_ORIGINS: string;
   BODY_LIMIT: string;
+  // OTP
+  EMAIL_OTP_SECRET: string;
+  EMAIL_VERIFICATION_OTP_TTL_MINUTES: number;
+  EMAIL_VERIFICATION_OTP_MAX_ATTEMPTS: number;
+  EMAIL_VERIFICATION_OTP_RESEND_COOLDOWN_SECONDS: number;
+  PASSWORD_RESET_OTP_TTL_MINUTES: number;
+  PASSWORD_RESET_OTP_MAX_ATTEMPTS: number;
+  PASSWORD_RESET_OTP_RESEND_COOLDOWN_SECONDS: number;
+  PASSWORD_RESET_TOKEN_TTL_MINUTES: number;
+  // SMTP
+  SMTP_HOST: string;
+  SMTP_PORT: number;
+  SMTP_USER: string;
+  SMTP_PASS: string;
+  MAIL_FROM: string;
 }
 
 export class ConfigValidationError extends Error {
@@ -43,7 +58,7 @@ export const envSchema = Joi.object<EnvVars>({
   DATABASE_URL: Joi.string()
     .pattern(/^postgres(ql)?:\/\//)
     .required(),
-  JWT_SECRET: Joi.string().min(16).required(),
+  JWT_SECRET: Joi.string().min(32).required(),
   CORS_ORIGINS: Joi.string()
     .default('http://localhost:3000')
     .custom((value: string, helpers) => {
@@ -57,6 +72,36 @@ export const envSchema = Joi.object<EnvVars>({
       return origins.join(',');
     }, 'cors origins'),
   BODY_LIMIT: Joi.string().default('256kb'),
+  // OTP
+  EMAIL_OTP_SECRET: Joi.string().min(32).required(),
+  EMAIL_VERIFICATION_OTP_TTL_MINUTES: Joi.number()
+    .positive()
+    .integer()
+    .default(10),
+  EMAIL_VERIFICATION_OTP_MAX_ATTEMPTS: Joi.number()
+    .positive()
+    .integer()
+    .default(5),
+  EMAIL_VERIFICATION_OTP_RESEND_COOLDOWN_SECONDS: Joi.number()
+    .positive()
+    .integer()
+    .default(60),
+  PASSWORD_RESET_OTP_TTL_MINUTES: Joi.number().positive().integer().default(10),
+  PASSWORD_RESET_OTP_MAX_ATTEMPTS: Joi.number().positive().integer().default(5),
+  PASSWORD_RESET_OTP_RESEND_COOLDOWN_SECONDS: Joi.number()
+    .positive()
+    .integer()
+    .default(60),
+  PASSWORD_RESET_TOKEN_TTL_MINUTES: Joi.number()
+    .positive()
+    .integer()
+    .default(10),
+  // SMTP — optional, defaults allow running without a mail server in development
+  SMTP_HOST: Joi.string().default('localhost'),
+  SMTP_PORT: Joi.number().port().default(587),
+  SMTP_USER: Joi.string().allow('').default(''),
+  SMTP_PASS: Joi.string().allow('').default(''),
+  MAIL_FROM: Joi.string().default('noreply@ftaar.app'),
 });
 
 function missingNames(error: Joi.ValidationError): string[] {

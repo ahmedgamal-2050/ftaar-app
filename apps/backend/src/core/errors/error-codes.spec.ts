@@ -1,8 +1,8 @@
 import { ERROR_CODES, ERROR_HTTP_STATUS, type ErrorCode } from './error-codes';
 
 describe('error codes', () => {
-  it('defines exactly 19 codes', () => {
-    expect(ERROR_CODES).toHaveLength(19);
+  it('defines exactly 25 codes', () => {
+    expect(ERROR_CODES).toHaveLength(27);
   });
 
   it('maps every code to an HTTP status (compile-time + runtime)', () => {
