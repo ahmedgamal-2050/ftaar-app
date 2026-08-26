@@ -20,7 +20,9 @@ import { BulkMenuPasteScreen } from '../modules/restaurants/screens/BulkMenuPast
 import { ProfileScreen } from '../modules/account/screens/ProfileScreen';
 import { RegisterScreen } from '../modules/account/screens/RegisterScreen';
 import { LoginScreen } from '../modules/account/screens/LoginScreen';
-import { ForgotPasswordStubScreen } from '../modules/account/screens/ForgotPasswordStubScreen';
+import { ForgotPasswordScreen } from '../modules/account/screens/ForgotPasswordScreen';
+import { ForgotPasswordOtpScreen } from '../modules/account/screens/ForgotPasswordOtpScreen';
+import { ResetPasswordScreen } from '../modules/account/screens/ResetPasswordScreen';
 import { colors, safeStackScreenOptions, typography } from '../ui';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -114,9 +116,19 @@ function ProfileStack() {
         options={{ title: t('account.logIn') }}
       />
       <ProfileStackNav.Screen
-        name="ForgotPasswordStub"
-        component={ForgotPasswordStubScreen}
-        options={{ title: t('account.forgotPassword') }}
+        name="ForgotPassword"
+        component={ForgotPasswordScreen}
+        options={{ title: t('forgotPassword.title') }}
+      />
+      <ProfileStackNav.Screen
+        name="ForgotPasswordOtp"
+        component={ForgotPasswordOtpScreen}
+        options={{ title: t('forgotPassword.otpTitle') }}
+      />
+      <ProfileStackNav.Screen
+        name="ResetPassword"
+        component={ResetPasswordScreen}
+        options={{ title: t('forgotPassword.newPasswordTitle') }}
       />
     </ProfileStackNav.Navigator>
   );

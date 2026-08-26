@@ -3,10 +3,23 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 // One param list per navigator in the tree, mirroring the screen map exactly.
 // Every route's params are declared here — navigation is never typed `any`.
 
+/** The forgot-password flow's routes — same three screens under both
+ * OnboardingStack and ProfileStack (see LoginScreen/ForgotPassword*Screen's
+ * Props, typed against this shared subset rather than either stack's full
+ * param list). */
+export type ForgotPasswordRoutes = {
+  ForgotPassword: undefined;
+  ForgotPasswordOtp: { email: string };
+  ResetPassword: { resetToken: string };
+};
+
 export type OnboardingStackParamList = {
   Welcome: undefined;
   ChooseName: undefined;
-};
+  /** Reachable from Welcome's "Already have an account?" link — lets a
+   * device with no session at all skip straight past guest onboarding. */
+  Login: undefined;
+} & ForgotPasswordRoutes;
 
 export type HomeStackParamList = {
   HomeScreen: undefined;
@@ -28,8 +41,7 @@ export type ProfileStackParamList = {
   ProfileScreen: undefined;
   Register: undefined;
   Login: undefined;
-  ForgotPasswordStub: undefined;
-};
+} & ForgotPasswordRoutes;
 
 /** Exactly four entries, in this order. The Group view is a LobbyRoom sub-tab. */
 export type MainTabParamList = {

@@ -1,18 +1,40 @@
-import type { AuthStatus, SessionUser } from './session';
+import type { AuthUser } from '../api/types';
+import type { AuthStatus } from './session';
+import { toSessionUser } from './session';
 
-describe('session types', () => {
-  it('models a guest or registered local user', () => {
-    const guest: SessionUser = { displayName: 'Layla', isGuest: true };
-    const registered: SessionUser = { displayName: 'Layla', isGuest: false };
+function authUser(overrides: Partial<AuthUser> = {}): AuthUser {
+  return {
+    id: 'user-1',
+    kind: 'guest',
+    email: null,
+    displayName: 'Guest',
+    instaPayHandle: null,
+    emailVerifiedAt: null,
+    ...overrides,
+  };
+}
+
+describe('toSessionUser', () => {
+  it('derives isGuest from kind rather than trusting a server-sent flag', () => {
+    expect(toSessionUser(authUser({ kind: 'guest' })).isGuest).toBe(true);
+    expect(toSessionUser(authUser({ kind: 'registered' })).isGuest).toBe(false);
+
     const statuses: AuthStatus[] = [
       'bootstrapping',
       'needs-onboarding',
       'ready',
       'error',
     ];
-
-    expect(guest.isGuest).toBe(true);
-    expect(registered.isGuest).toBe(false);
     expect(statuses).toHaveLength(4);
+  });
+
+  it('overrides the backend-hardcoded displayName for guests', () => {
+    const user = toSessionUser(authUser({ displayName: 'Guest' }), 'Layla');
+    expect(user.displayName).toBe('Layla');
+  });
+
+  it('falls back to the backend displayName when there is no override', () => {
+    const user = toSessionUser(authUser({ displayName: 'Layla' }));
+    expect(user.displayName).toBe('Layla');
   });
 });

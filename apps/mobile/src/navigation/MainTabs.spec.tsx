@@ -120,12 +120,28 @@ describe('routes inside the tabs', () => {
     const ref = renderTabs();
 
     act(() => ref.navigate('Profile', { screen: 'Register' }));
-    expect(screen.getByTestId('placeholder-Register')).toBeTruthy();
+    expect(screen.getByTestId('screen-Register')).toBeTruthy();
 
     act(() => ref.navigate('Profile', { screen: 'Login' }));
-    expect(screen.getByTestId('placeholder-Login')).toBeTruthy();
+    expect(screen.getByTestId('screen-Login')).toBeTruthy();
 
-    act(() => ref.navigate('Profile', { screen: 'ForgotPasswordStub' }));
-    expect(screen.getByTestId('placeholder-ForgotPasswordStub')).toBeTruthy();
+    act(() => ref.navigate('Profile', { screen: 'ForgotPassword' }));
+    expect(screen.getByTestId('screen-ForgotPassword')).toBeTruthy();
+
+    act(() =>
+      ref.navigate('Profile', {
+        screen: 'ForgotPasswordOtp',
+        params: { email: 'a@b.com' },
+      }),
+    );
+    expect(screen.getByTestId('screen-ForgotPasswordOtp')).toBeTruthy();
+
+    act(() =>
+      ref.navigate('Profile', {
+        screen: 'ResetPassword',
+        params: { resetToken: 'reset-token' },
+      }),
+    );
+    expect(screen.getByTestId('screen-ResetPassword')).toBeTruthy();
   });
 });
