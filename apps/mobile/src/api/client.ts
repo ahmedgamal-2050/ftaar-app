@@ -1,6 +1,7 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { env } from '../config/env';
 import { tokenStore } from './tokenStore';
+import type { ApiErrorBody, ErrorEnvelope, SuccessEnvelope } from './types';
 import {
   clearRefreshToken,
   getRefreshToken,
@@ -19,6 +20,46 @@ apiClient.interceptors.request.use((config) => {
   }
   return config;
 });
+
+/** Unwraps the backend's `{ success: true, data }` envelope so every call
+ * site works with the real payload directly. */
+apiClient.interceptors.response.use((response) => {
+  const body = response.data as SuccessEnvelope<unknown> | undefined;
+  if (body && typeof body === 'object' && body.success === true) {
+    response.data = body.data;
+  }
+  return response;
+});
+
+/** Reads `{ code, message }` off an `AxiosError` from this client, whether
+ * it hit the backend's `{ success: false, error }` envelope or failed before
+ * a response was ever received. */
+export function getApiError(err: unknown): ApiErrorBody {
+  if (axios.isAxiosError(err)) {
+    const body = err.response?.data as ErrorEnvelope | undefined;
+    if (body?.error) {
+      return body.error;
+    }
+  }
+  return { code: 'NETWORK_ERROR', message: 'Something went wrong.' };
+}
+
+/** Endpoints that take no bearer token (or, for /auth/refresh, ARE the
+ * refresh call itself) — a 401 from one of these is never "your access
+ * token expired," so retrying after a refresh would be pointless. Every
+ * other /auth/* route (convert, logout, me) is bearer-authed and must go
+ * through the normal refresh-and-retry path below like any other endpoint. */
+const PUBLIC_AUTH_ENDPOINTS = new Set([
+  '/auth/guest',
+  '/auth/register',
+  '/auth/register/verify-otp',
+  '/auth/register/resend-otp',
+  '/auth/login',
+  '/auth/refresh',
+  '/auth/forgot-password',
+  '/auth/forgot-password/verify-otp',
+  '/auth/reset-password',
+]);
 
 type RetryableConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
@@ -42,9 +83,9 @@ async function refreshAccessToken(): Promise<string | null> {
     // (auth.ts imports apiClient from this file).
     const { authApi } = await import('./endpoints/auth');
     const session = await authApi.refresh(refreshToken);
-    tokenStore.setAccessToken(session.tokens.accessToken);
-    await setRefreshToken(session.tokens.refreshToken);
-    return session.tokens.accessToken;
+    tokenStore.setAccessToken(session.accessToken);
+    await setRefreshToken(session.refreshToken);
+    return session.accessToken;
   } catch {
     await clearRefreshToken();
     tokenStore.setAccessToken(null);
@@ -56,13 +97,14 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as RetryableConfig | undefined;
-    const isAuthEndpoint = originalRequest?.url?.startsWith('/auth/');
+    const isPublicAuthEndpoint =
+      !!originalRequest?.url && PUBLIC_AUTH_ENDPOINTS.has(originalRequest.url);
 
     if (
       error.response?.status === 401 &&
       originalRequest &&
       !originalRequest._retry &&
-      !isAuthEndpoint
+      !isPublicAuthEndpoint
     ) {
       originalRequest._retry = true;
       refreshPromise ??= refreshAccessToken().finally(() => {

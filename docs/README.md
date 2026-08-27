@@ -10,3 +10,7 @@ Guides for work completed in this workspace.
 - [Ops (OPS-01–OPS-08)](./backend-ops.md) — Docker, compose, CI, Terminus health, staging, Helmet/CORS, secrets, audit.
 - [Shared (SHR-01–SHR-03)](./backend-shared.md) — `runInTransaction`, nested join, UUID/Money pipes, `@Public()`.
 - [Catalog menu (MENU-01–MENU-07)](./backend-catalog/backend-menu.md) — MenuItem `Money` price, restaurant menu APIs, bulk import, soft delete.
+
+## Mobile
+
+- [Auth flow](./mobile-auth.md) — Welcome/ChooseName/Register/Login/Profile + the forgot-password flow, wired against the real backend API, with the contract gotchas and bugs found along the way.

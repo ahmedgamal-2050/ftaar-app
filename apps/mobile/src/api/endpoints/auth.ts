@@ -1,25 +1,32 @@
 import { apiClient } from '../client';
-import type { AuthSession } from '../types';
-
-export interface BootstrapGuestPayload {
-  deviceId: string;
-  /** Omitted for a silent re-bootstrap of an already-onboarded guest. */
-  displayName?: string;
-}
+import type { AuthSession, AuthUser } from '../types';
 
 export interface EmailCredentials {
   email: string;
   password: string;
 }
 
-/**
- * Typed client for the FR-A auth endpoints. The backend doesn't exist yet
- * (this workspace's mobile foundation is being built ahead of it) — these
- * calls define the contract the app is built against.
- */
+export interface UpdateMePayload {
+  displayName?: string;
+  instaPayHandle?: string;
+}
+
+export interface MessageResponse {
+  message: string;
+}
+
+export interface ResetTokenResponse {
+  resetToken: string;
+}
+
+/** Typed client for the backend's `/auth` endpoints — see
+ * apps/backend/src/auth/auth.controller.ts for the source of truth. */
 export const authApi = {
-  bootstrapGuest: (payload: BootstrapGuestPayload) =>
-    apiClient.post<AuthSession>('/auth/guest', payload).then((res) => res.data),
+  /** No body — the backend mints a brand-new anonymous guest on every call,
+   * it does not accept a deviceId. Callers must call this exactly once and
+   * persist the returned refreshToken; see AuthContext. */
+  bootstrapGuest: () =>
+    apiClient.post<AuthSession>('/auth/guest').then((res) => res.data),
 
   refresh: (refreshToken: string) =>
     apiClient
@@ -29,11 +36,46 @@ export const authApi = {
   login: (payload: EmailCredentials) =>
     apiClient.post<AuthSession>('/auth/login', payload).then((res) => res.data),
 
-  /** Also used for guest -> registered conversion (FR-A.2): when called
-   * with an existing guest's access token, the backend updates that user's
-   * row instead of inserting a new one. */
-  register: (payload: EmailCredentials) =>
+  /** Guest -> registered conversion (bearer-authed via the request
+   * interceptor). Does not require OTP verification. */
+  convert: (payload: EmailCredentials) =>
     apiClient
-      .post<AuthSession>('/auth/register', payload)
+      .post<AuthSession>('/auth/convert', payload)
+      .then((res) => res.data),
+
+  logout: (refreshToken: string) =>
+    apiClient
+      .post<void>('/auth/logout', { refreshToken })
+      .then(() => undefined),
+
+  getMe: () => apiClient.get<AuthUser>('/auth/me').then((res) => res.data),
+
+  updateMe: (payload: UpdateMePayload) =>
+    apiClient.patch<AuthUser>('/auth/me', payload).then((res) => res.data),
+
+  /** Always returns the same generic message, whether or not the email is
+   * registered (account-enumeration safe) — also how a resend works, there
+   * is no separate resend endpoint for this flow. Silently no-ops within
+   * the server's cooldown window rather than erroring. */
+  forgotPassword: (email: string) =>
+    apiClient
+      .post<MessageResponse>('/auth/forgot-password', { email })
+      .then((res) => res.data),
+
+  verifyForgotPasswordOtp: (email: string, otp: string) =>
+    apiClient
+      .post<ResetTokenResponse>('/auth/forgot-password/verify-otp', {
+        email,
+        otp,
+      })
+      .then((res) => res.data),
+
+  /** Revokes all existing sessions on success — see auth.service.ts. */
+  resetPassword: (resetToken: string, newPassword: string) =>
+    apiClient
+      .post<MessageResponse>('/auth/reset-password', {
+        resetToken,
+        newPassword,
+      })
       .then((res) => res.data),
 };

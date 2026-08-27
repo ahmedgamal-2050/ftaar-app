@@ -8,6 +8,7 @@ const SECURE_KEYS = {
 } as const;
 
 const HAS_ONBOARDED_KEY = 'ftaar.hasCompletedOnboarding';
+const GUEST_DISPLAY_NAME_KEY = 'ftaar.guestDisplayName';
 
 /**
  * The device id is generated once and must never be regenerated —
@@ -42,4 +43,22 @@ export async function getHasCompletedOnboarding(): Promise<boolean> {
 
 export function setHasCompletedOnboarding(value: boolean): Promise<void> {
   return AsyncStorage.setItem(HAS_ONBOARDED_KEY, value ? 'true' : 'false');
+}
+
+/**
+ * The backend has no way for a guest to set their own displayName (it's
+ * hardcoded to `'Guest'` server-side, see UserRepositoryService.createGuest),
+ * so the name typed on ChooseName is cached here and shown until it can be
+ * synced via `PATCH /auth/me` after the account is converted/registered.
+ */
+export function getGuestDisplayName(): Promise<string | null> {
+  return AsyncStorage.getItem(GUEST_DISPLAY_NAME_KEY);
+}
+
+export function setGuestDisplayName(name: string): Promise<void> {
+  return AsyncStorage.setItem(GUEST_DISPLAY_NAME_KEY, name);
+}
+
+export function clearGuestDisplayName(): Promise<void> {
+  return AsyncStorage.removeItem(GUEST_DISPLAY_NAME_KEY);
 }

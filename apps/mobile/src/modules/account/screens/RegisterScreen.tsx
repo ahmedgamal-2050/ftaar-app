@@ -1,25 +1,140 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { ProfileStackParamList } from '../../../navigation/types';
 import { useAuth } from '../../../auth/AuthContext';
-import { PlaceholderLinks, ScreenPlaceholder } from '../../../ui';
+import { getApiError } from '../../../api/client';
+import {
+  Button,
+  ErrorBanner,
+  Screen,
+  TextField,
+  colors,
+  radius,
+  spacing,
+  typography,
+} from '../../../ui';
 
-export function RegisterScreen() {
-  const { register } = useAuth();
+const MIN_PASSWORD_LENGTH = 8;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type Props = NativeStackScreenProps<ProfileStackParamList, 'Register'>;
+
+export function RegisterScreen({ navigation }: Props) {
+  const { t } = useTranslation();
+  const { user, register } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const isValid =
+    EMAIL_PATTERN.test(email.trim()) && password.length >= MIN_PASSWORD_LENGTH;
+
+  const handleSubmit = async () => {
+    if (!EMAIL_PATTERN.test(email.trim())) {
+      setError(t('errors.invalidEmail'));
+      return;
+    }
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(t('errors.passwordTooShort'));
+      return;
+    }
+    setSubmitting(true);
+    setError(null);
+    try {
+      await register(email.trim(), password);
+      // Nothing else unmounts this screen on success — status stays 'ready'
+      // (guest -> registered doesn't change it), so this has to navigate
+      // back itself or the button spins forever.
+      navigation.goBack();
+    } catch (err) {
+      const apiError = getApiError(err);
+      setError(
+        apiError.code === 'EMAIL_ALREADY_REGISTERED'
+          ? t('register.emailAlreadyRegistered')
+          : apiError.message,
+      );
+      setSubmitting(false);
+    }
+  };
 
   return (
-    <ScreenPlaceholder
-      name="Register"
-      description="Guest-to-registered conversion — local session only in this pass."
-    >
-      <PlaceholderLinks
-        links={[
-          {
-            label: 'Continue',
-            onPress: () => {
-              void register();
-            },
-          },
-        ]}
+    <Screen scroll testID="screen-Register">
+      <View style={styles.hero}>
+        <Ionicons name="restaurant-outline" size={40} color={colors.primary} />
+      </View>
+      <Text style={styles.title}>{t('register.title')}</Text>
+      <Text style={styles.subtitle}>{t('register.subtitle')}</Text>
+
+      <View style={styles.form}>
+        <TextField
+          label={t('register.displayNameLabel')}
+          value={user?.displayName ?? ''}
+          editable={false}
+          helperText={t('register.displayNameHelper')}
+          testID="register-display-name"
+        />
+        <TextField
+          label={t('register.emailLabel')}
+          value={email}
+          onChangeText={setEmail}
+          placeholder={t('register.emailLabel')}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          testID="register-email"
+        />
+        <TextField
+          label={t('register.passwordLabel')}
+          value={password}
+          onChangeText={setPassword}
+          placeholder={t('register.passwordLabel')}
+          secureTextEntry
+          testID="register-password"
+        />
+        {error ? <ErrorBanner message={error} testID="register-error" /> : null}
+      </View>
+
+      <Button
+        label={t('register.submit')}
+        onPress={() => void handleSubmit()}
+        disabled={!isValid}
+        loading={submitting}
+        testID="register-submit"
       />
-    </ScreenPlaceholder>
+    </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  hero: {
+    width: 96,
+    height: 96,
+    borderRadius: radius.pill,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginBottom: spacing.lg,
+  },
+  title: {
+    ...typography.title,
+    color: colors.text,
+    textAlign: 'center',
+  },
+  subtitle: {
+    ...typography.body,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+  },
+  form: {
+    gap: spacing.lg,
+    marginTop: spacing.xl,
+    marginBottom: spacing.lg,
+  },
+});

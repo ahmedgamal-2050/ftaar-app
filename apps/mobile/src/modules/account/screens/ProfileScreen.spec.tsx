@@ -1,33 +1,60 @@
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import { ProfileScreen } from './ProfileScreen';
 import type { ProfileStackParamList } from '../../../navigation/types';
+// Initialises the shared i18next instance so copy renders instead of raw keys.
+import '../../../i18n';
+
+const mockLogout = jest.fn();
+const mockAuthUser = {
+  current: { displayName: 'Mohamed Salah', isGuest: true },
+};
 
 jest.mock('../../../auth/AuthContext', () => ({
-  useAuth: () => ({
-    user: { displayName: 'Mohamed Salah', isGuest: true },
-    logout: jest.fn(),
-  }),
+  useAuth: () => ({ user: mockAuthUser.current, logout: mockLogout }),
 }));
 
 const Stack = createNativeStackNavigator<ProfileStackParamList>();
 
-describe('ProfileScreen', () => {
-  it('renders initials instead of a photo and the account routes', () => {
-    render(
-      <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
-        </Stack.Navigator>
-      </NavigationContainer>,
-    );
+function renderScreen() {
+  render(
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen name="ProfileScreen" component={ProfileScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>,
+  );
+}
 
-    expect(screen.getByTestId('placeholder-ProfileScreen')).toBeTruthy();
+beforeEach(() => {
+  mockLogout.mockReset();
+});
+
+describe('ProfileScreen', () => {
+  it('renders initials instead of a photo and a guest conversion card', () => {
+    mockAuthUser.current = { displayName: 'Mohamed Salah', isGuest: true };
+    renderScreen();
+
+    expect(screen.getByTestId('screen-ProfileScreen')).toBeTruthy();
     expect(screen.getByText('MS')).toBeTruthy();
-    expect(screen.getByText('Register')).toBeTruthy();
-    expect(screen.getByText('Login')).toBeTruthy();
-    expect(screen.getByText('ForgotPasswordStub')).toBeTruthy();
+    expect(screen.getByTestId('profile-register-cta')).toBeTruthy();
+  });
+
+  it('hides the guest conversion card for a registered user', () => {
+    mockAuthUser.current = { displayName: 'Mohamed Salah', isGuest: false };
+    renderScreen();
+
+    expect(screen.queryByTestId('profile-register-cta')).toBeNull();
+  });
+
+  it('logs out when Log out is pressed', () => {
+    mockAuthUser.current = { displayName: 'Mohamed Salah', isGuest: true };
+    renderScreen();
+
+    fireEvent.press(screen.getByTestId('profile-logout'));
+
+    expect(mockLogout).toHaveBeenCalled();
   });
 });
