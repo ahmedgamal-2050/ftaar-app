@@ -100,16 +100,18 @@ export async function seedDatabase(prisma: PrismaClient): Promise<void> {
         }
         const itemId = `dddddddd-dddd-4ddd-8ddd-${restaurant.id.slice(0, 8)}${String(i).padStart(4, '0')}`;
         const price = BigInt(800 + i * 125);
+        const category = i < 16 ? 'أطباق' : i < 32 ? 'مقبلات' : 'حلويات';
         await tx.menuItem.upsert({
           where: { id: itemId },
           create: {
             id: itemId,
             restaurantId: restaurant.id,
             name,
+            category,
             referencePrice: price,
             isActive: true,
           },
-          update: { name, referencePrice: price, isActive: true },
+          update: { name, category, referencePrice: price, isActive: true },
         });
       }
     }

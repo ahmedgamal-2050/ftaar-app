@@ -1,0 +1,14 @@
+Claim Module,Module #,ID,Code Module,Task,Done when,Side,Estimate (days),Depends On,Labels
+CATALOG,4,MENU-01,menu,MenuItem entity,"referencePrice is a Money column, ? 0",Backend,0.5,MONEY-05 REST-01,claim:CATALOG side:backend module:menu size:0.5d
+CATALOG,4,MENU-02,menu,POST /restaurants/:id/menu,Registered users only,Backend,0.25,MENU-01 AUTH-16,claim:CATALOG side:backend module:menu size:0.25d
+CATALOG,4,MENU-03,menu,GET /restaurants/:id/menu,Sorted by category then name; ?includeInactive,Backend,0.25,MENU-01,claim:CATALOG side:backend module:menu size:0.25d
+CATALOG,4,MENU-04,menu,PATCH /menu-items/:id,Partial update,Backend,0.25,MENU-02,claim:CATALOG side:backend module:menu size:0.25d
+CATALOG,4,MENU-05,menu,Soft delete + RESTRICT guard,Never hard-deletes while referenced; 409 without force,Backend,0.5,MENU-04,claim:CATALOG side:backend module:menu size:0.5d
+CATALOG,4,MENU-06,menu,?? POST /menu/bulk,Up to 200 items all-or-nothing in one transaction; per-row errors with index; duplicate names in payload rejected,Backend,1.5,MENU-02 SHR-01,claim:CATALOG side:backend module:menu size:1.5d key
+CATALOG,4,MENU-07,menu,Snapshot integrity test,"Order an item, deactivate it, assert the historical order still resolves name and price",Backend,0.5,MENU-05 ORD-01,claim:CATALOG side:backend module:menu size:0.5d
+CATALOG,4,REST-01,restaurants,Entity + soft-delete scope,Default scope excludes isActive: false,Backend,0.5,DB-11,claim:CATALOG side:backend module:restaurants size:0.5d
+CATALOG,4,REST-02,restaurants,GET /restaurants,Case-insensitive search working in Arabic; paginated; max limit 100,Backend,1,REST-01,claim:CATALOG side:backend module:restaurants size:1.0d
+CATALOG,4,REST-03,restaurants,POST /restaurants,Name ? 2 chars; registered users only,Backend,0.25,REST-01 AUTH-16,claim:CATALOG side:backend module:restaurants size:0.25d
+CATALOG,4,REST-04,restaurants,PATCH /restaurants/:id,Partial update,Backend,0.25,REST-03,claim:CATALOG side:backend module:restaurants size:0.25d
+CATALOG,4,REST-05,restaurants,DELETE soft + reference guard,Sets isActive: false; 409 if referenced by an active lobby,Backend,0.5,REST-04,claim:CATALOG side:backend module:restaurants size:0.5d
+CATALOG,4,REST-06,restaurants,GET /restaurants/:id with menu,Active menu sorted by category then name; ?includeInactive for the manager,Backend,0.5,MENU-03,claim:CATALOG side:backend module:restaurants size:0.5d
