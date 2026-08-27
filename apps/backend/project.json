@@ -67,6 +67,7 @@
           "PORT": "3000",
           "LOG_LEVEL": "info",
           "JWT_SECRET": "development-jwt-secret-32chars!!",
+          "EMAIL_OTP_SECRET": "development-email-otp-secret-32chars!!",
           "CORS_ORIGINS": "http://localhost:3000",
           "BODY_LIMIT": "256kb"
         }
@@ -78,6 +79,7 @@
             "PORT": "3000",
             "LOG_LEVEL": "info",
             "JWT_SECRET": "development-jwt-secret-32chars!!",
+            "EMAIL_OTP_SECRET": "development-email-otp-secret-32chars!!",
             "CORS_ORIGINS": "http://localhost:3000",
             "BODY_LIMIT": "256kb"
           }
@@ -88,6 +90,7 @@
             "PORT": "3000",
             "LOG_LEVEL": "info",
             "JWT_SECRET": "development-jwt-secret-32chars!!",
+            "EMAIL_OTP_SECRET": "development-email-otp-secret-32chars!!",
             "CORS_ORIGINS": "http://localhost:3000",
             "BODY_LIMIT": "256kb"
           }
@@ -107,6 +110,7 @@
           "LOG_LEVEL": "silent",
           "OPENAPI_OUT": "../../dist/apps/backend/openapi.json",
           "JWT_SECRET": "openapi-jwt-secret-min-32chars!!",
+          "EMAIL_OTP_SECRET": "openapi-email-otp-secret-min-32chars!!",
           "CORS_ORIGINS": "http://localhost:3000",
           "BODY_LIMIT": "256kb"
         }
