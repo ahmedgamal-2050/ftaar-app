@@ -15,7 +15,7 @@ Guides for work completed in this workspace.
 - [Shared (SHR-01–SHR-03)](./backend-shared.md) — `runInTransaction`, nested join, UUID/Money pipes, `@Public()`.
 - [Catalog menu (MENU-01–MENU-07)](./backend-catalog/backend-menu.md) — MenuItem `Money` price, restaurant menu APIs, bulk import, soft delete.
 - [Catalog restaurants (REST-01–REST-06)](./backend-catalog/backend-restaurants.md) — Restaurant CRUD, Arabic search, pagination, nested menu.
-- [Billing (BILL-01–BILL-16)](./backend-billing.md) — Fee allocator, draft/preview/finalise, reconciliation, reopen.
+- [Billing (BILL-01–BILL-16)](./backend-billing.md) — Fee allocator, draft / lines / preview / finalise / reopen, mapped from `backend_billing.csv`.
 
 ## Mobile
 
