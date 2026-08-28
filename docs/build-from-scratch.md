@@ -59,7 +59,7 @@ Any **member** can **GET** the finalised bill (full transparency: everyone sees 
 | --- | --- | --- |
 | **Platform** | Boot, config, HTTP envelope, logging, health, Docker, CI | `apps/backend/src/core`, `src/shared`, ops files |
 | **Domain kernel** | Money, schema, transactions, fee math | `src/money`, `prisma/`, `src/billing/allocator.ts`, `bill-math.ts` |
-| **Feature HTTP** | Controllers, access checks, DTOs | `src/billing/*` (and leftover `todos` / `auth`) |
+| **Feature HTTP** | Controllers, access checks, DTOs | `src/billing/*`, `src/auth/*`, catalog modules |
 | **Clients** | Mobile, shared DTOs | Expo starter + Todo types — **not the product** |
 
 **Principle:** finish the platform and the *pure* domain before HTTP. HTTP should be a thin translation of already-tested math.
@@ -70,7 +70,7 @@ Any **member** can **GET** the finalised bill (full transparency: everyone sees 
 apps/backend     NestJS API (product lives here)
 apps/mobile      Expo app (template welcome screen)
 apps/api-e2e     Smoke tests against a running server
-packages/types   Shared TS interfaces (still Health + Todo)
+packages/types   Shared TS interfaces (`HealthResponse`)
 ```
 
 Nx **tags** (`scope:backend`, `scope:mobile`, `scope:shared`) plus ESLint `@nx/enforce-module-boundaries` exist so a mobile app cannot import backend internals, and shared libs cannot import apps.

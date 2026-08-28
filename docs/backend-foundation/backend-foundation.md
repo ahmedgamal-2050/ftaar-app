@@ -51,7 +51,6 @@ apps/backend/src/
   app/
     app.module.ts
     health.controller.ts
-    todos.controller.ts
     auth.controller.ts           # placeholder; stricter throttle
     dto/
 ```
@@ -109,7 +108,7 @@ Seventeen codes in `apps/backend/src/core/errors/error-codes.ts`. `ERROR_HTTP_ST
 Throw domain failures with:
 
 ```ts
-throw new AppError('NOT_FOUND', `Todo #${id} not found`);
+throw new AppError('NOT_FOUND', `Restaurant ${id} not found`);
 ```
 
 ## CORE-05 — Exception envelope
@@ -121,7 +120,7 @@ throw new AppError('NOT_FOUND', `Todo #${id} not found`);
   "success": false,
   "error": {
     "code": "NOT_FOUND",
-    "message": "Todo #99 not found"
+    "message": "Restaurant … not found"
   },
   "requestId": "…"
 }
@@ -140,7 +139,7 @@ In production, unknown errors hide the original message.
 }
 ```
 
-Already-wrapped `{ success: boolean, … }` bodies are not wrapped again. HTTP **204** (for example `DELETE /api/todos/:id`) is left empty.
+Already-wrapped `{ success: boolean, … }` bodies are not wrapped again. HTTP **204** (for example `POST /api/auth/logout`) is left empty.
 
 ## CORE-07 — Validation
 
@@ -150,9 +149,9 @@ Global `ValidationPipe`:
 - `forbidNonWhitelisted: true`
 - `transform: true`
 
-An extra JSON field (for example `{ "title": "ok", "extra": true }` on `POST /api/todos`) returns **400** `VALIDATION_ERROR`.
+An extra JSON field (for example `{ "email": "a@b.c", "password": "secret", "extra": true }` on `POST /api/auth/login`) returns **400** `VALIDATION_ERROR`.
 
-Body DTOs are class-validator classes under `apps/backend/src/app/dto/`.
+Body DTOs are class-validator classes next to each feature (for example `apps/backend/src/auth/dto/`).
 
 ## CORE-08 — Logging
 
@@ -214,10 +213,6 @@ npx nx run backend:openapi
 ```json
 {
   "success": true,
-  "data": { "status": "ok", "timestamp": "…", "uptime": 1.23 }
+  "data": { "status": "ok", "details": { "api": { "status": "up" } } }
 }
 ```
-
-`POST /api/todos` with `{ "title": "Ship APIs" }` → **201** wrapped todo.
-
-`DELETE /api/todos/:id` → **204** empty body.

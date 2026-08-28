@@ -32,12 +32,8 @@ The API starts at `http://localhost:3000/api`.
 Endpoints available out of the box:
 
 - `GET /api` - hello message
-- `GET /api/health` - health check with uptime + timestamp
-- `GET /api/todos` - list todos
-- `POST /api/todos` - create a todo `{ "title": "..." }`
-- `GET /api/todos/:id` - get one todo
-- `PATCH /api/todos/:id` - update a todo
-- `DELETE /api/todos/:id` - delete a todo
+- `GET /health` - liveness (no database)
+- `GET /health/db` - readiness (Postgres)
 
 ### Build for production
 
@@ -82,13 +78,11 @@ nestjs-template/
 |     |- tsdown.config.mts # oxc toolchain build config (decorators + metadata)
 |     |- src/app/
 |        |- app.module.ts  # Root module wiring controllers + providers
-|        |- health.controller.ts  # GET /api/health
-|        |- todos.controller.ts   # CRUD /api/todos
-|        |- todos.service.ts      # In-memory todos store (replace with DB)
+|        |- health.controller.ts  # GET /health, GET /health/db
 |     |- Dockerfile         # Multi-stage Docker build
 |- packages/
    |- types/               # Shared DTOs and interfaces (scope:shared tag)
-      |- src/lib/types.ts  # HealthResponse, Todo, CreateTodoDto, UpdateTodoDto
+      |- src/lib/types.ts  # HealthResponse
 ```
 
 ### Module Boundary Tags
@@ -166,9 +160,9 @@ Docs -> https://nx.dev/nx-cloud
 
 ---
 
-## Replacing the In-Memory Store
+## Database
 
-`TodosService` uses a plain array. Persistence for domain tables is **Prisma** (`PrismaService` in `apps/backend`). See [docs/backend-database.md](docs/backend-database.md).
+Domain tables persist through **Prisma** (`PrismaService` in `apps/backend`). See [docs/backend-database.md](docs/backend-database.md).
 
 ---
 

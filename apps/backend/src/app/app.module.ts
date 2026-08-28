@@ -12,8 +12,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthController } from './health.controller';
 import { PrismaHealthIndicator } from './health.indicator';
-import { TodosController } from './todos.controller';
-import { TodosService } from './todos.service';
 import { AuthModule } from '../auth/auth.module';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { MenuModule } from '../menu/menu.module';
@@ -37,10 +35,9 @@ import { RestaurantsModule } from '../restaurants/restaurants.module';
     RestaurantsModule,
     MenuModule,
   ],
-  controllers: [AppController, HealthController, TodosController],
+  controllers: [AppController, HealthController],
   providers: [
     AppService,
-    TodosService,
     PrismaHealthIndicator,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
