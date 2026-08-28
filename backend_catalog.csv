@@ -1,0 +1,7 @@
+Claim Module,Module #,ID,Code Module,Task,Done when,Side,Estimate (days),Depends On,Labels
+CATALOG,4,REST-01,restaurants,Entity + soft-delete scope,Default scope excludes isActive: false,Backend,0.5,DB-11,claim:CATALOG side:backend module:restaurants size:0.5d
+CATALOG,4,REST-02,restaurants,GET /restaurants,Case-insensitive search working in Arabic; paginated; max limit 100,Backend,1,REST-01,claim:CATALOG side:backend module:restaurants size:1.0d
+CATALOG,4,REST-03,restaurants,POST /restaurants,Name ? 2 chars; registered users only,Backend,0.25,REST-01 AUTH-16,claim:CATALOG side:backend module:restaurants size:0.25d
+CATALOG,4,REST-04,restaurants,PATCH /restaurants/:id,Partial update,Backend,0.25,REST-03,claim:CATALOG side:backend module:restaurants size:0.25d
+CATALOG,4,REST-05,restaurants,DELETE soft + reference guard,Sets isActive: false; 409 if referenced by an active lobby,Backend,0.5,REST-04,claim:CATALOG side:backend module:restaurants size:0.5d
+CATALOG,4,REST-06,restaurants,GET /restaurants/:id with menu,Active menu sorted by category then name; ?includeInactive for the manager,Backend,0.5,MENU-03,claim:CATALOG side:backend module:restaurants size:0.5d

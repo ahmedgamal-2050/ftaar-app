@@ -19,6 +19,8 @@ export const colors = {
   warning: '#D9A544',
   /** "Not paid" / errors. */
   danger: '#C24545',
+  /** Pale fill behind `danger` text/icons, e.g. inline form-error banners. */
+  dangerSurface: '#FBE9E9',
   border: '#E8DDD3',
   /** Cards sitting on top of the cream background. */
   surface: '#FFFFFF',

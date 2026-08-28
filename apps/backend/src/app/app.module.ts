@@ -16,6 +16,8 @@ import { TodosController } from './todos.controller';
 import { TodosService } from './todos.service';
 import { AuthModule } from '../auth/auth.module';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { MenuModule } from '../menu/menu.module';
+import { RestaurantsModule } from '../restaurants/restaurants.module';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
       },
     }),
     AuthModule,
+    RestaurantsModule,
+    MenuModule,
   ],
   controllers: [AppController, HealthController, TodosController],
   providers: [
