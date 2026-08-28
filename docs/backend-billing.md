@@ -42,7 +42,7 @@ Property tests live in `allocator.property.spec.ts` (`numRuns: 10_000`).
 
 ## HTTP
 
-Prefix: `/api/lobbies/:lobbyId/bill`. Header: `x-user-id`.
+Prefix: `/api/lobbies/:lobbyId/bill`. Requires Bearer JWT **and** header `x-user-id` (until MEM-03).
 
 | Method  | Path        | Who    | Status required    |
 | ------- | ----------- | ------ | ------------------ |

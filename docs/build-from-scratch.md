@@ -2,9 +2,9 @@
 
 This is a **learning and replication guide**, not a file inventory. It reverse-engineers the architecture of this workspace so you can build a **similar** product later without an AI and without copying this repository.
 
-**What this workspace is:** FTAAR — a group restaurant order (lobby) with split billing. The **real product** is a NestJS API: Postgres, integer money, an admin bill workflow, Docker, and CI.
+**What this workspace is:** FTAAR — a group restaurant order (lobby) with split billing. The **real product** is a NestJS API: Postgres, integer money, JWT auth (guest / register / OTP / refresh), restaurant catalog, an admin bill workflow, Docker, and CI. Expo implements the **auth** screens against that API; it does not yet load lobbies or bills.
 
-**What it sits on:** an Nx NestJS + Expo **template**. The README, in-memory todos, shared Todo types, and the mobile welcome screen are leftover scaffolding. Treat them as examples of what *not* to confuse with the architecture.
+**What it sits on:** an Nx NestJS + Expo **template**. Root README still describes the template. `packages/types` still only exports `HealthResponse` (not billing). Do not confuse template copy with the architecture.
 
 **How to use this document**
 
@@ -51,7 +51,7 @@ A **lobby** is a shared order at one **restaurant**. Members add **order lines**
 
 Any **member** can **GET** the finalised bill (full transparency: everyone sees everyone else’s totals).
 
-**FTAAR-specific:** identity for this slice is header `x-user-id` (UUID). Real JWT auth is not implemented. Payment gateways are not implemented.
+**FTAAR-specific:** HTTP APIs (except `@Public()` and health) require a Bearer access token. Catalog **writes** require `kind === 'registered'`. Billing **authorization** still uses header `x-user-id` on top of that JWT — the token’s `sub` is not the lobby actor until MEM-03. Payment gateways are not implemented.
 
 ### Three layers you must keep distinct
 
@@ -59,8 +59,8 @@ Any **member** can **GET** the finalised bill (full transparency: everyone sees 
 | --- | --- | --- |
 | **Platform** | Boot, config, HTTP envelope, logging, health, Docker, CI | `apps/backend/src/core`, `src/shared`, ops files |
 | **Domain kernel** | Money, schema, transactions, fee math | `src/money`, `prisma/`, `src/billing/allocator.ts`, `bill-math.ts` |
-| **Feature HTTP** | Controllers, access checks, DTOs | `src/billing/*`, `src/auth/*`, catalog modules |
-| **Clients** | Mobile, shared DTOs | Expo starter + Todo types — **not the product** |
+| **Feature HTTP** | Controllers, access checks, DTOs | `src/auth/*`, `src/restaurants/*`, `src/menu/*`, `src/billing/*` |
+| **Clients** | Mobile, shared DTOs | Expo auth flow (`docs/mobile-auth.md`); shared types are still health-only |
 
 **Principle:** finish the platform and the *pure* domain before HTTP. HTTP should be a thin translation of already-tested math.
 
@@ -84,6 +84,7 @@ HTTP
   helmet → CORS → json/urlencoded (Nest bodyParser: false)
   → request-id middleware (AsyncLocalStorage)
   → global prefix /api  (except /health*)
+  → JwtAuthGuard  (@Public() skip; else Bearer → TOKEN_EXPIRED / TOKEN_INVALID)
   → ThrottlerGuard
   → pipes + param decorators + ValidationPipe
   → controller → service → (optional) runInTransaction → Prisma
@@ -95,10 +96,10 @@ HTTP
 
 This is the most important path in the product.
 
-1. Client: `POST /api/lobbies/{lobbyId}/bill/finalise` with EGP fee strings, optional `receiptTotal`, optional `Idempotency-Key`, required `x-user-id`.
+1. Client: `POST /api/lobbies/{lobbyId}/bill/finalise` with Bearer access token, EGP fee strings, optional `receiptTotal`, optional `Idempotency-Key`, required `x-user-id`.
 2. `setupApp` already applied helmet, CORS, body size cap, request id, ValidationPipe.
-3. `ThrottlerGuard` counts this URL toward 100 requests / 60s (health is skipped; `/auth/*` is 10/min — unused by billing).
-4. `ParseUuidPipe` on `:lobbyId`. `@CurrentUserId()` reads `x-user-id`, rejects missing header as `UNAUTHORIZED`, then UUID-validates it.
+3. `JwtAuthGuard` requires a valid access token (this route is not `@Public()`). `ThrottlerGuard` counts the URL toward 100 requests / 60s (health is skipped; several `/auth/*` routes use a tighter `@Throttle`).
+4. `ParseUuidPipe` on `:lobbyId`. `@CurrentUserId()` reads `x-user-id` (not JWT `sub`), rejects missing header as `UNAUTHORIZED`, then UUID-validates it.
 5. `PreviewBillDto` is class-validator’d; extra JSON keys → `VALIDATION_ERROR`.
 6. `BillingService.finalise`: `LobbyAccessService.requireAdmin` loads membership; non-admin → `FORBIDDEN`.
 7. **Idempotency outside the transaction:** if a bill already exists for the lobby, same key returns the existing bill; otherwise `CONFLICT`. If the key exists on another lobby, `CONFLICT`.
@@ -107,9 +108,9 @@ This is the most important path in the product.
 10. Insert `lobby_bill`, update lines, update member `payment_status` (zero delivered → `paid`), set lobby `billed`. `FinaliseFault.trip(...)` exists so tests can abort mid-transaction and assert **zero** bill rows.
 11. Interceptor serialises `Money` / leftover `bigint` to EGP strings and wraps `{ success: true, data }`.
 
-**Principle:** authorization (are you this lobby’s admin?) is **not** authentication (are you who you claim?). This slice only does authorization against `lobby_members` after trusting a header.
+**Principle:** authorization (are you this lobby’s admin?) is **not** authentication (are you who you claim?). Auth proves a user via JWT. Billing still authorizes `lobby_members` using the **header**, so a valid token for user A plus `x-user-id` of admin B can act as B.
 
-**Maps to:** `apps/backend/src/core/setup-app.ts`, `billing/current-user.ts`, `billing/lobby-access.service.ts`, `billing/billing.service.ts`, `billing/bill-math.ts`, `billing/allocator.ts`, `core/http/response-wrap.interceptor.ts`.
+**Maps to:** `apps/backend/src/core/setup-app.ts`, `auth/guards/jwt-auth.guard.ts`, `billing/current-user.ts`, `billing/lobby-access.service.ts`, `billing/billing.service.ts`, `billing/bill-math.ts`, `billing/allocator.ts`, `core/http/response-wrap.interceptor.ts`.
 
 ---
 
@@ -185,7 +186,7 @@ This is the most important path in the product.
 
 **Why:** cheap abuse resistance before you have WAF. Health skipped so probes do not 429. Auth routes (when they exist) get a tighter limit.
 
-**This project:** CORS from `CORS_ORIGINS`; compose already lists Expo `8081` even though mobile does not call the API.
+**This project:** CORS from `CORS_ORIGINS`; compose lists Expo `8081`. Mobile auth uses `EXPO_PUBLIC_API_URL` (default `http://localhost:3000/api`).
 
 ### Terminus: `/health` vs `/health/db`
 
@@ -212,9 +213,9 @@ This is the most important path in the product.
 
 ### Expo in the same workspace
 
-**Why it is here:** template + future client + ESLint tags.
+**Why it is here:** template tags plus a shipped **auth** client (`docs/mobile-auth.md`).
 
-**Why you might skip it on a new clone:** until you have an API contract (OpenAPI or shared types that are *real*), a mobile app is a second product. This repo’s mobile app does not talk to the API.
+**What is still missing:** lobby/bill UI. Shared types are not generated from OpenAPI. Do not add Expo “just in case” on a fork until you have a contract you will actually call.
 
 ---
 
@@ -239,16 +240,22 @@ Docker / health / CI / secrets
         ↓
 Pure allocator + invariant math + property tests
         ↓
+JWT + guest/register/OTP (so catalog and clients are not header-spoofable)
+        ↓
+Catalog HTTP (restaurants, menu; registered writes)
+        ↓
 Billing HTTP (access, draft, patch, preview, finalise, reopen)
         ↓
-Shared client types (optional)
+Shared client types from OpenAPI (optional; this repo did not)
         ↓
-Real mobile + real auth (this repo did not)
+Mobile against that contract (this repo: auth screens only)
 ```
+
+**This repo’s actual order** shipped billing HTTP **before** JWT, so billing still trusts `x-user-id`. Rebuild with auth **before** any resource that must not be spoofable.
 
 **Do not** start with lobby REST if you cannot parse `"36.87"` into integers and wrap errors uniformly. **Do not** start with JWT if you have no users table and no “who is admin of this lobby” rule.
 
-Billing **data** prerequisites (FTAAR-specific): restaurant + menu with `referencePrice`; lobby `locked`; members with order lines; `x-user-id` matching an admin `userId`. Seed provides this.
+Billing **data** prerequisites (FTAAR-specific): restaurant + menu with `referencePrice`; lobby `locked`; members with order lines; Bearer token **and** `x-user-id` matching an admin `userId`. Seed provides users and a locked lobby.
 
 ---
 
@@ -375,7 +382,7 @@ app.setGlobalPrefix('api', {
 
 **(5) Steps.**
 
-1. Schema: `NODE_ENV`, `PORT`, `LOG_LEVEL`, `DATABASE_URL`, CORS, body limit. Add `JWT_SECRET` **only when you verify JWTs** (this repo requires it early — see critique).
+1. Schema: `NODE_ENV`, `PORT`, `LOG_LEVEL`, `DATABASE_URL`, CORS, body limit. Add `JWT_SECRET` when you verify JWTs (this repo requires it at boot — correct once the guard exists).
 2. `allowUnknown: true` so Nx injects extra env.
 3. Inject `AppConfigService`; never read `process.env` in domain code.
 4. `hydrateSecretsFromStore()` for production mounts.
@@ -410,7 +417,7 @@ throw new AppError('NOT_FOUND', `Lobby ${id} not found`);
 // → { success: false, error: { code: 'NOT_FOUND', message: '...' }, requestId }
 ```
 
-**(6) Exhibits.** `core/errors/error-codes.ts`, `app-error.ts`, `all-exceptions.filter.ts`, `response-wrap.interceptor.ts`. Foundation docs still say “17 codes”; billing added two more — **keep the union and the docs in sync**.
+**(6) Exhibits.** `core/errors/error-codes.ts`, `app-error.ts`, `all-exceptions.filter.ts`, `response-wrap.interceptor.ts`. Count of codes grows with auth/billing — **keep `docs/backend-foundation/backend-foundation.md` in sync with `ERROR_CODES`**.
 
 **(7) Exit.** You can throw `AppError` from a service and the HTTP body never contains a raw stack in production.
 
@@ -436,7 +443,7 @@ throw new AppError('NOT_FOUND', `Lobby ${id} not found`);
 
 ### Phase 7 — Logging, request id, throttling
 
-**(1) What.** `nestjs-pino`, request-id middleware + ALS mixin, `ThrottlerModule` + `ThrottlerGuard`, skip health, tighter `/auth/*`.
+**(1) What.** `nestjs-pino`, request-id middleware + ALS mixin, `ThrottlerModule` + `ThrottlerGuard`, skip health, tighter `@Throttle` on login/register/OTP/forgot-password.
 
 **(2) Why.** Correlate a client screenshot with one log line; blunt brute force.
 
@@ -541,9 +548,9 @@ await runInTransaction(prisma, async (em) => {
 });
 ```
 
-**(5) Steps.** Store `Prisma.TransactionClient` in ALS. Test that `$transaction` is invoked once when nested. Pipes throw `AppError('VALIDATION_ERROR')`. `@Public()` only sets metadata — **wire a guard later** or you have theatre.
+**(5) Steps.** Store `Prisma.TransactionClient` in ALS. Test that `$transaction` is invoked once when nested. Pipes throw `AppError('VALIDATION_ERROR')`. `@Public()` only sets metadata — **wire a global guard that reads it** (`JwtAuthGuard` in this repo) or you have theatre.
 
-**(6) Exhibits.** `shared/run-in-transaction.ts` (+ spec), `parse-uuid.pipe.ts`, `money.pipe.ts` (**unused** on billing controllers — they parse in the service), `public.decorator.ts`.
+**(6) Exhibits.** `shared/run-in-transaction.ts` (+ spec), `parse-uuid.pipe.ts`, `money.pipe.ts` (**unused** on billing controllers — they parse in the service), `auth/decorators/public.decorator.ts` (wired by `JwtAuthGuard`).
 
 **(7) Exit.** Nested helper test passes. Invalid `:lobbyId` is 400, not a Prisma error.
 
@@ -591,7 +598,11 @@ await runInTransaction(prisma, async (em) => {
 
 ---
 
-### Phase 14 — Billing HTTP
+### Phase 14 — Catalog then billing HTTP
+
+Catalog (`docs/backend-catalog/`): restaurants and menu with JWT + `RegisteredUserGuard` on writes. Build this after auth so guests cannot create restaurants.
+
+Then billing:
 
 **(1) What.** Module, controller, access service, DTOs, draft/patch/preview/finalise/reopen/get.
 
@@ -611,7 +622,7 @@ await runInTransaction(prisma, async (em) => {
 6. `POST reopen` — `BILL_LOCKED` if any `paid`.
 7. `GET /` — any member, full totals.
 
-**(6) Exhibits.** `billing.module.ts`, `billing.controller.ts`, `billing.service.ts`, `lobby-access.service.ts`, `lobby-bill.entity.ts`, `finalise-fault.ts`, `billing.integration.spec.ts`.
+**(6) Exhibits.** `docs/backend-catalog/`; `billing.module.ts`, `billing.controller.ts`, `billing.service.ts`, `lobby-access.service.ts`, `lobby-bill.entity.ts`, `finalise-fault.ts`, `billing.integration.spec.ts`.
 
 **(7) Exit.** You can narrate the finalise trace (section 2) without opening files. Integration test: injected fault → no bill row.
 
@@ -623,51 +634,51 @@ await runInTransaction(prisma, async (em) => {
 
 **(2) Why.** Mobile and web should not copy DTO classes.
 
-**(3) Problem.** This repo shares **Todo** types while billing DTOs live only on the backend.
+**(3) Problem.** This repo shares **health** types while billing and auth DTOs live only on the backend (mobile copies shapes in `apps/mobile/src/api/types.ts`).
 
 **(4) Concepts.** Generated vs hand-written DTOs; OpenAPI as source of truth (`nx run backend:openapi`).
 
-**(5) Steps.** Export OpenAPI; generate TS **or** hand-write bill types after the HTTP shape freezes. Delete Todo types when you delete todos.
+**(5) Steps.** Export OpenAPI; generate TS **or** hand-write bill/auth types after the HTTP shape freezes.
 
-**(6) Exhibits.** `packages/types/src/lib/types.ts` (negative example); `tsdown.config.mts` alias `@nestjs-template/types`.
+**(6) Exhibits.** `packages/types/src/lib/types.ts` (`HealthResponse` only); `tsdown.config.mts` alias `@nestjs-template/types`.
 
 **(7) Exit.** A second client can compile against bill types without importing Nest.
 
 ---
 
-### Phase 16 — Mobile (optional; this repo did not)
+### Phase 16 — Mobile (auth shipped; lobbies not)
 
-**(1) What.** Replace Expo welcome UI. Navigation, API client, auth storage, server state.
+**(1) What.** Session storage, API client that unwraps `{ success, data }`, onboarding + login + forgot-password. Later: lobby/bill screens.
 
-**(2) Why.** Users do not curl `x-user-id`.
+**(2) Why.** Users do not curl Bearer tokens and `x-user-id`.
 
-**(3) Problem.** Building screens before OpenAPI exists.
+**(3) Problem.** Building screens before OpenAPI exists; duplicating DTO types on the client.
 
 **(4) Concepts.** Expo Router or React Navigation; TanStack Query vs Redux; EAS builds; Metro in a monorepo (`withNxMetro`); EAS `post-install` symlink of workspace `node_modules`.
 
-**(5) Steps.** Point `CORS_ORIGINS` at Expo. Client for `/api`. Do not invent a second money parser — use the same string rules. Add mobile to CI when it has tests worth running.
+**(5) Steps.** Point `CORS_ORIGINS` at Expo. Client for `/api`. Same EGP string rules. Add mobile to CI when it has tests worth running.
 
-**(6) Exhibits.** `apps/mobile/src/app/App.tsx` (template), `app.json`, `eas.json`, `metro.config.js`, `tools/scripts/eas-build-post-install.mjs`. Compose CORS includes `8081`.
+**(6) Exhibits.** `docs/mobile-auth.md`; `apps/mobile/src/auth/`; `apps/mobile/src/api/`; `app.json`, `eas.json`, `metro.config.js`, `tools/scripts/eas-build-post-install.mjs`.
 
-**(7) Exit.** One screen loads a seeded lobby bill. Until then, skip this phase.
+**(7) Exit.** Guest → register/login → profile against a running API. Lobby bill on a screen is **not** done here.
 
 ---
 
-### Phase 17 — Real authentication
+### Phase 17 — Real authentication (JWT shipped; billing header remains)
 
-**(1) What.** Global `AuthGuard`, JWT or session, `@Public()` for login/health, stop trusting `x-user-id`.
+**(1) What.** Global `JwtAuthGuard`, access + refresh, `@Public()` for login/health/guest/register/OTP, `@CurrentUser()` from `req.user`. Stop trusting `x-user-id` on **resource** APIs.
 
-**(2) Why.** Header identity is a test stub.
+**(2) Why.** Header identity is spoofable even when JWT is required.
 
-**(3) Problem.** `JWT_SECRET` in env with no verifier; Swagger Bearer button that does nothing.
+**(3) Problem.** Dual identity: valid token for A + header of B. Guest mint is not device-idempotent (`POST /auth/guest` ignores body).
 
-**(4) Concepts.** Guard + Reflector `IS_PUBLIC_KEY`; refresh vs access; guest `device_id` vs registered email (`ck_user_kind`).
+**(4) Concepts.** Guard + Reflector `IS_PUBLIC_KEY`; refresh **family** reuse revocation; guest `kind` vs registered (`ck_user_kind`); OTP hashed at rest.
 
-**(5) Steps.** Verify user exists. Map token `sub` to `userId`. Keep `LobbyAccessService` for **authorization**. Stricter throttle on login. Remove header decorator from billing.
+**(5) Steps.** Verify user exists in `JwtStrategy`. Map token `sub` to `userId` in billing. Keep `LobbyAccessService` for **authorization**. Stricter throttle on login. Remove `@CurrentUserId()` header decorator.
 
-**(6) Exhibits.** `auth.controller.ts` (`NOT_IMPLEMENTED`); `public.decorator.ts`; `login.dto.ts`; Joi `JWT_SECRET`; Swagger `addBearerAuth()`.
+**(6) Exhibits.** `docs/backend-auth.md`; `auth.controller.ts`; `jwt-auth.guard.ts`; `docs/auth-otp-security-audit.md`.
 
-**(7) Exit.** Spoofing a UUID header cannot act as another member.
+**(7) Exit.** Spoofing a UUID header cannot act as another member. **This repo has not met that exit for billing.**
 
 ---
 
@@ -715,12 +726,13 @@ Copy the **patterns**. Do not copy these accidents.
 
 | Issue | Why it is a problem | Better default |
 | --- | --- | --- |
-| README + todos + Todo types + Expo welcome | Looks like the product is a todo API | Delete or quarantine demos; README describes lobbies |
+| README still template-shaped | Looks like a Nest starter, not FTAAR | Point README at `docs/` and lobbies |
 | `@nestjs-template/*` naming | Cognitive tax | Rename when you fork |
-| `x-user-id` + required unused `JWT_SECRET` | Spoofable identity; false sense of auth | Stub secret optional until guard exists |
-| `@Public()` and Swagger Bearer unused | Dead API | Implement guard or remove |
-| `MoneyTransformer` TypeORM shape on Prisma | Misleading comments (`EntityManager`) | Name it `moneyToDb` only |
+| Billing `x-user-id` after JWT | Dual identity; spoof admin | Use `@CurrentUser('id')` (MEM-03) |
+| `POST /auth/guest` not device-idempotent | New guest every call; `GuestDto` unused | Idempotent device id **or** delete the DTO |
+| Duplicate `@Public()` modules | Two files, same metadata key | One export |
 | `tax` = service fee | Clients will display “tax” wrong | Rename or compute tax |
+| `MoneyTransformer` TypeORM shape on Prisma | Misleading comments (`EntityManager`) | Name it `moneyToDb` only |
 | `MoneyPipe` unused | Two ways to parse money | Use the pipe in DTOs or delete it |
 | `FinaliseFault` in production providers | Test hook in prod graph | Test module / env-gated provider |
 | `BillingModule` implicit global Prisma | Optional inject `undefined` | Import `DatabaseModule` explicitly |
@@ -728,12 +740,12 @@ Copy the **patterns**. Do not copy these accidents.
 | Manual `down.sql` | Easy to forget | Prefer Prisma migrate discipline + expand/contract |
 | `tsconfig.base.json` not strict | Libs can be sloppy | Strict at the root |
 | `api-e2e` has no tags | Boundaries don’t apply | Tag `type:e2e` |
-| CI skips mobile | Dead app bitrots | Lint mobile or remove the app |
+| CI skips mobile | Auth client bitrots | Lint/test mobile or accept the risk |
 | Staging = image push | “Deployed” is a lie | CD to a real environment |
 | `deepmerge-ts` override | Audit workaround | Track upstream Prisma fix |
-| Foundation doc “17 codes” | Docs lie | Generate the table from `ERROR_CODES` |
+| Error-code table in docs | Docs drift from `ERROR_CODES` | Generate the table or link the source |
 
-**Strengths to copy:** integer money; constraint tests; nested transactions; property tests on allocation; uniform envelope; migrate in Docker entrypoint; prune + audit; skip DB for OpenAPI export.
+**Strengths to copy:** integer money; constraint tests; nested transactions; property tests on allocation; uniform envelope; global JWT + `@Public()`; OTP hashed at rest; migrate in Docker entrypoint; prune + audit; skip DB for OpenAPI export.
 
 ---
 
@@ -754,10 +766,10 @@ Perform these when creating a **new** similar project. No access to this repo re
 11. `runInTransaction` nested join + UUID pipe.
 12. Dockerfile prune, entrypoint migrate, Terminus `/health` and `/health/db`, CI with Postgres, secrets files for prod.
 13. Pure split/total math + property tests.
-14. Feature module: access service, DTOs, draft → patch → preview → finalise → reopen.
+14. Feature module: access service, DTOs, draft → patch → preview → finalise → reopen. Catalog first if those entities are prerequisites.
 15. Export OpenAPI; share types with clients.
-16. Client app only after 15.
-17. Real auth last among “user-facing” work, replacing header stubs.
+16. Client app only after 15 (this repo: auth screens without generated types).
+17. Wire resource APIs to JWT `sub`. Do not leave a spoofable header beside a real guard.
 
 Commands you will actually type (names may differ):
 
@@ -834,7 +846,7 @@ npx nx run-many -t lint,typecheck,test --projects=backend
 | Finalise 422 `PRICES_INCOMPLETE` | Cannot bill | Delivered line `actual_price` null | Patch lines first |
 | Finalise 409 | Retry created duplicate intent | No or different idempotency key | Send the same key |
 | Reopen 409 `BILL_LOCKED` | Cannot unlock | A member is `paid` | Product rule; do not “force” in API |
-| Spoofed admin | Wrong user billed | Trusted `x-user-id` | Phase 17 |
+| Spoofed admin | Wrong user billed | Header `x-user-id` after JWT | Use token `sub` (MEM-03) |
 | Prisma CHECK not in schema | Invalid rows from SQL console | Constraint only in migration | Keep SQL + constraint tests |
 | Docker image huge / Expo in API image | Slow deploy | Built whole workspace without prune | `backend:prune` then `npm ci --omit=dev` |
 | Audit fails on mobile advisory | CI red | Audited root graph | Audit `dist/apps/backend` after prune |
@@ -883,7 +895,7 @@ Use this on **your** implementation of a similar system.
 - [ ] Docker entrypoint migrates
 - [ ] Production image is pruned
 - [ ] Module boundaries enforced
-- [ ] Demos (todos) are not required for production paths
+- [ ] Demos (template README) are not required for production paths
 
 **Auth (when claimed “done”)**
 
@@ -906,11 +918,11 @@ Compare a **future** project to this one **without copying names**.
 | How is config loaded? | Joi + hydrate files | |
 | How is schema changed? | Prisma migrate + extra SQL | |
 | How are nested writes atomic? | ALS `runInTransaction` | |
-| What is the identity stub vs real auth? | `x-user-id` vs unimplemented JWT | |
+| What is the identity stub vs real auth? | JWT global; billing still `x-user-id` | |
 | What is liveness vs readiness? | `/health` vs `/health/db` | |
 | What is in CI vs skipped? | backend + e2e; not mobile | |
-| What is template leftover? | todos, Expo welcome, Todo types | |
-| Shared types: generated or hand-written? | Hand-written, **stale** | |
+| What is template leftover? | Root README; `@nestjs-template/*` names | |
+| Shared types: generated or hand-written? | Hand-written health only; mobile copies auth | |
 | Monorepo tags? | backend / mobile / shared | |
 | How is the API image built? | Nx prune + Node 22 Alpine | |
 
@@ -939,7 +951,7 @@ Answer out loud. If you cannot, re-read the matching phase.
 15. Why `satisfies Record<ErrorCode, number>`?
 16. How does nested `runInTransaction` avoid a second `BEGIN`?
 17. Why can CHECK constraints live in SQL but not in `schema.prisma`?
-18. Why is `x-user-id` insufficient for production?
+18. Why is `x-user-id` still insufficient once JWT exists?
 19. What would break if you removed the response wrap interceptor?
 20. What would break if you throttled `/health`?
 21. Why audit `dist/apps/backend` instead of the repo root?
@@ -983,13 +995,13 @@ Replace a trusted user header with a signed token. Public login route. Resource 
 
 ### Architecture
 
-Platform (envelope, config, logs, health) → Money + schema + transactions → **pure domain math** → HTTP feature → clients → real auth.
+Platform (envelope, config, logs, health) → Money + schema + transactions → **pure domain math** → JWT → catalog → billing HTTP (identity from token) → clients.
 
-Request: Helmet/CORS/body → request id → prefix → throttle → validate → service → tx/DB → wrap or filter.
+Request: Helmet/CORS/body → request id → prefix → **JWT** → throttle → validate → service → tx/DB → wrap or filter.
 
 ### Implementation order
 
-0 invariants → 1 Nx/tags/strict → 2 setupApp → 3 lint/hooks → 4 config → 5 errors/envelope → 6 DTOs → 7 pino/throttle → 8 Prisma migrate → 9 Money → 10 schema/SQL/seed → 11 tx/pipes → 12 Docker/CI → 13 allocator tests → 14 billing HTTP → 15 shared types → 16 client → 17 JWT/guard
+0 invariants → 1 Nx/tags/strict → 2 setupApp → 3 lint/hooks → 4 config → 5 errors/envelope → 6 DTOs → 7 pino/throttle → 8 Prisma migrate → 9 Money → 10 schema/SQL/seed → 11 tx/pipes → 12 Docker/CI → 13 allocator tests → **JWT/guard** → catalog → 14 billing HTTP (`sub` not header) → 15 shared types → 16 client
 
 ### Commands / concepts
 
@@ -1012,5 +1024,5 @@ Request: Helmet/CORS/body → request id → prefix → throttle → validate �
 - [ ] Health not throttled, not under `/api`
 - [ ] OpenAPI export skips DB
 - [ ] Image runs migrate then process
-- [ ] No spoofable identity if you claim auth is done
-- [ ] Demos (todos/welcome screens) not required to bill
+- [ ] No spoofable identity if you claim auth is done (billing header is the current FTAAR hole)
+- [ ] Demos (template README) not required to bill

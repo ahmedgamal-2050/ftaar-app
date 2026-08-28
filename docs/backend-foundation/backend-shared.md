@@ -48,7 +48,7 @@ Nested calls use `AsyncLocalStorage`. After the outer callback finishes, the nex
 | --------------- | ------------------------------------------------------------------ |
 | `ParseUuidPipe` | Route/query param must be UUID v4; otherwise `VALIDATION_ERROR`    |
 | `MoneyPipe`     | Parses an EGP string (`"36.87"`) into `Money`                      |
-| `@Public()`     | Sets `isPublic` metadata so a future auth guard can skip the route |
+| `@Public()`     | Sets `isPublic`; global `JwtAuthGuard` skips those handlers        |
 
 ```ts
 @Get(':id')
@@ -62,4 +62,4 @@ quote(@Query('amount', MoneyPipe) amount: Money) { /* ... */ }
 login() { /* ... */ }
 ```
 
-Auth is not global yet. Guards should read `IS_PUBLIC_KEY` (`'isPublic'`) via `Reflector`.
+`JwtAuthGuard` is global (`AppModule` `APP_GUARD`). It reads `IS_PUBLIC_KEY` (`'isPublic'`) via `Reflector`. Prefer `apps/backend/src/auth/decorators/public.decorator.ts` on routes; `src/shared/public.decorator.ts` uses the same key.
