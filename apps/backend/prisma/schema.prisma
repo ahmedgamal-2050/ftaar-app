@@ -150,16 +150,19 @@ model MenuItem {
 }
 
 model Lobby {
-  id           String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  restaurantId String        @map("restaurant_id") @db.Uuid
-  restaurant   Restaurant    @relation(fields: [restaurantId], references: [id])
-  code         String        @unique(map: "uq_lobbies_code") @db.VarChar(32)
-  status       LobbyStatus
-  createdAt    DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
-  members      LobbyMember[]
-  orderItems   OrderItem[]
-  bill         LobbyBill?
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  restaurantId   String        @map("restaurant_id") @db.Uuid
+  restaurant     Restaurant    @relation(fields: [restaurantId], references: [id])
+  code           String        @unique(map: "uq_lobbies_code") @db.VarChar(32)
+  status         LobbyStatus
+  maxMembers     Int?          @map("max_members")
+  expiresAt      DateTime?     @map("expires_at") @db.Timestamptz(6)
+  instaPayHandle String?       @map("insta_pay_handle") @db.VarChar(100)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+  members        LobbyMember[]
+  orderItems     OrderItem[]
+  bill           LobbyBill?
 
   @@unique([id, restaurantId], map: "uq_lobbies_id_restaurant")
   @@index([restaurantId], map: "idx_lobbies_restaurant_id")
@@ -178,6 +181,7 @@ model LobbyMember {
   createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
   orderItems  OrderItem[]
 
+  @@unique([lobbyId, userId], map: "uq_lobby_members_lobby_user")
   @@index([lobbyId], map: "idx_lobby_members_lobby_id")
   @@map("lobby_members")
 }
