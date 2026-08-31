@@ -14,6 +14,7 @@ import { HealthController } from './health.controller';
 import { PrismaHealthIndicator } from './health.indicator';
 import { AuthModule } from '../auth/auth.module';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { LobbiesModule } from '../lobbies/lobbies.module';
 import { MenuModule } from '../menu/menu.module';
 import { RestaurantsModule } from '../restaurants/restaurants.module';
 
@@ -34,6 +35,7 @@ import { RestaurantsModule } from '../restaurants/restaurants.module';
     AuthModule,
     RestaurantsModule,
     MenuModule,
+    LobbiesModule,
   ],
   controllers: [AppController, HealthController],
   providers: [
