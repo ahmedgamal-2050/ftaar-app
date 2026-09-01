@@ -6,16 +6,25 @@ const RESTAURANTS = [
   {
     id: '11111111-1111-4111-8111-111111111111',
     name: 'مطعم الفحام',
+    phone: '+201001111111',
+    image: 'https://cdn.ftaar.example/restaurants/alfaham.jpg',
+    note: 'مشويات على الفحم',
     itemCount: 18,
   },
   {
     id: '22222222-2222-4222-8222-222222222222',
     name: 'ديوان الشام',
+    phone: '+201002222222',
+    image: 'https://cdn.ftaar.example/restaurants/diwan.jpg',
+    note: null,
     itemCount: 28,
   },
   {
     id: '33333333-3333-4333-8333-333333333333',
     name: 'بيت الكبسة',
+    phone: '+201003333333',
+    image: 'https://cdn.ftaar.example/restaurants/kabsa.jpg',
+    note: 'أفضل وقت للطلب بعد المغرب',
     itemCount: 36,
   },
 ] as const;
@@ -84,8 +93,21 @@ export async function seedDatabase(prisma: PrismaClient): Promise<void> {
     for (const restaurant of RESTAURANTS) {
       await tx.restaurant.upsert({
         where: { id: restaurant.id },
-        create: { id: restaurant.id, name: restaurant.name, isActive: true },
-        update: { name: restaurant.name, isActive: true },
+        create: {
+          id: restaurant.id,
+          name: restaurant.name,
+          phone: restaurant.phone,
+          image: restaurant.image,
+          note: restaurant.note,
+          isActive: true,
+        },
+        update: {
+          name: restaurant.name,
+          phone: restaurant.phone,
+          image: restaurant.image,
+          note: restaurant.note,
+          isActive: true,
+        },
       });
 
       const count = restaurant.itemCount;

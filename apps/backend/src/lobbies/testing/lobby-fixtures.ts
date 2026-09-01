@@ -15,6 +15,9 @@ export function restaurantRow() {
   return {
     id: RESTAURANT_ID,
     name: 'مطعم الفحام',
+    phone: '+201001111111',
+    image: 'https://cdn.ftaar.example/restaurants/alfaham.jpg',
+    note: 'مشويات على الفحم',
     isActive: true,
     createdAt: NOW,
     updatedAt: NOW,
