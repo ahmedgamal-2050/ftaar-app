@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { TerminusModule } from '@nestjs/terminus';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { BillingModule } from '../billing/billing.module';
 import { DatabaseModule } from '../database/database.module';
 import { AppConfigModule } from '../core/config/app-config.module';
 import { AllExceptionsFilter } from '../core/http/all-exceptions.filter';
@@ -11,8 +12,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthController } from './health.controller';
 import { PrismaHealthIndicator } from './health.indicator';
-import { TodosController } from './todos.controller';
-import { TodosService } from './todos.service';
 import { AuthModule } from '../auth/auth.module';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { LobbiesModule } from '../lobbies/lobbies.module';
@@ -25,6 +24,7 @@ import { RestaurantsModule } from '../restaurants/restaurants.module';
     AppConfigModule,
     AppLoggerModule,
     DatabaseModule.forRoot(),
+    BillingModule,
     TerminusModule,
     ThrottlerModule.forRoot({
       throttlers: [{ name: 'default', ttl: 60_000, limit: 100 }],
@@ -39,10 +39,9 @@ import { RestaurantsModule } from '../restaurants/restaurants.module';
     LobbiesModule,
     OrdersModule,
   ],
-  controllers: [AppController, HealthController, TodosController],
+  controllers: [AppController, HealthController],
   providers: [
     AppService,
-    TodosService,
     PrismaHealthIndicator,
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: ThrottlerGuard },

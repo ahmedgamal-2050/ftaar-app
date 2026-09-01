@@ -30,6 +30,8 @@ export const ERROR_CODES = [
   'NOT_IMPLEMENTED',
   'SERVICE_UNAVAILABLE',
   'GATEWAY_TIMEOUT',
+  'PRICES_INCOMPLETE',
+  'BILL_LOCKED',
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
@@ -60,6 +62,8 @@ export const ERROR_HTTP_STATUS = {
   NOT_IMPLEMENTED: HttpStatus.NOT_IMPLEMENTED,
   SERVICE_UNAVAILABLE: HttpStatus.SERVICE_UNAVAILABLE,
   GATEWAY_TIMEOUT: HttpStatus.GATEWAY_TIMEOUT,
+  PRICES_INCOMPLETE: HttpStatus.UNPROCESSABLE_ENTITY,
+  BILL_LOCKED: HttpStatus.CONFLICT,
 } as const satisfies Record<ErrorCode, number>;
 
 export type ErrorHttpStatus = (typeof ERROR_HTTP_STATUS)[ErrorCode];

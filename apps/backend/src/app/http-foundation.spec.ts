@@ -32,8 +32,8 @@ describe('HTTP foundation', () => {
 
   it('rejects unexpected body fields with 400', async () => {
     const res = await request(app.getHttpServer())
-      .post('/api/todos')
-      .send({ title: 'ok', extra: true })
+      .post('/api/auth/login')
+      .send({ email: 'user@example.com', password: 'Str0ng!Pass', extra: true })
       .expect(400);
     expect(res.body.success).toBe(false);
     expect(res.body.error.code).toBe('VALIDATION_ERROR');
@@ -48,17 +48,5 @@ describe('HTTP foundation', () => {
 
   it('fails readiness at /health/db when Postgres is not wired', async () => {
     await request(app.getHttpServer()).get('/health/db').expect(503);
-  });
-
-  it('does not wrap 204 responses', async () => {
-    const created = await request(app.getHttpServer())
-      .post('/api/todos')
-      .send({ title: 'to delete' })
-      .expect(201);
-    const id = created.body.data.id as number;
-    const res = await request(app.getHttpServer())
-      .delete(`/api/todos/${id}`)
-      .expect(204);
-    expect(res.body).toEqual({});
   });
 });

@@ -87,7 +87,7 @@ export class OrdersService {
     const existingLobbyItem = await this.prisma.orderItem.findFirst({
       where: { lobbyId, menuItemId: dto.menuItemId },
     });
-    if (existingLobbyItem) {
+    if (existingLobbyItem?.actualPrice != null) {
       actualPricePiastres = existingLobbyItem.actualPrice;
     }
 

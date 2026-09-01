@@ -33,7 +33,7 @@ Copy `apps/backend/.env.example` to `apps/backend/.env` for that path.
 | OPS-02 | docker compose dev stack  | `docker compose up` with no extra manual steps                            |
 | OPS-03 | GitHub Actions CI         | Lint, typecheck, unit + e2e vs Postgres; under 5 min; blocks PRs          |
 | OPS-04 | Health + readiness        | `/health` and `/health/db` via Terminus; readiness fails if Postgres down |
-| OPS-05 | Staging deploy            | Merge to `main` publishes GHCR; entrypoint migrates; optional seed        |
+| OPS-05 | Staging deploy            | Merge to `master` publishes GHCR; entrypoint migrates; optional seed      |
 | OPS-06 | Helmet, CORS, body limits | Known origins only; JSON body size capped                                 |
 | OPS-07 | Secrets                   | DB + JWT from `/run/secrets` or `*_FILE`, not committed env files         |
 | OPS-08 | Dependency audit          | CI `npm audit --omit=dev --audit-level=high` on the pruned backend graph  |
@@ -46,7 +46,7 @@ Copy `apps/backend/.env.example` to `apps/backend/.env` for that path.
 
 ## CI (OPS-03, OPS-08)
 
-`.github/workflows/ci.yml` runs on pull requests and `main`. It starts a Postgres 16 service, applies migrations, then `lint`, `typecheck`, `test`, `e2e`, and `openapi` for `backend` and `api-e2e` only (mobile is skipped so the job stays under five minutes). Enable **Require status checks** for this workflow so it blocks merge.
+`.github/workflows/ci.yml` runs on pull requests and `master`. It starts a Postgres 16 service, applies migrations, then `lint`, `typecheck`, `test`, `e2e`, and `openapi` for `backend` and `api-e2e` only (mobile is skipped so the job stays under five minutes). Enable **Require status checks** for this workflow so it blocks merge.
 
 Audit is scoped to `dist/apps/backend` after prune so Expo/mobile high findings do not fail the API gate. `deepmerge-ts` is overridden to `^8.0.1` so the Prisma CLI in the production image is not flagged for GHSA-ggr8-5vv4-36mx.
 
