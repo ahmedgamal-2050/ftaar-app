@@ -17,6 +17,7 @@ import { AuthModule } from '../auth/auth.module';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { LobbiesModule } from '../lobbies/lobbies.module';
 import { MenuModule } from '../menu/menu.module';
+import { OrdersModule } from '../orders/orders.module';
 import { RestaurantsModule } from '../restaurants/restaurants.module';
 
 @Module({
@@ -36,6 +37,7 @@ import { RestaurantsModule } from '../restaurants/restaurants.module';
     RestaurantsModule,
     MenuModule,
     LobbiesModule,
+    OrdersModule,
   ],
   controllers: [AppController, HealthController, TodosController],
   providers: [
