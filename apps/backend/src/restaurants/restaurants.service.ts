@@ -8,9 +8,11 @@ import type { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import type { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import {
   ACTIVE_LOBBY_STATUSES,
+  IMAGE_MIN_LENGTH,
   LIST_DEFAULT_LIMIT,
   LIST_MAX_LIMIT,
   NAME_MIN_LENGTH,
+  PHONE_MIN_LENGTH,
   Restaurant,
 } from './restaurant.entity';
 
@@ -71,9 +73,12 @@ export class RestaurantsService {
 
   async create(dto: CreateRestaurantDto): Promise<Restaurant> {
     const name = normalizeName(dto.name);
+    const phone = normalizePhone(dto.phone);
+    const image = normalizeImage(dto.image);
+    const note = normalizeNote(dto.note);
     try {
       const row = await this.prisma.restaurant.create({
-        data: { name, isActive: true },
+        data: { name, phone, image, note, isActive: true },
       });
       return Restaurant.fromPersistence(row);
     } catch (error) {
@@ -114,6 +119,15 @@ export class RestaurantsService {
     const data: Prisma.RestaurantUpdateInput = {};
     if (dto.name !== undefined) {
       data.name = normalizeName(dto.name);
+    }
+    if (dto.phone !== undefined) {
+      data.phone = normalizePhone(dto.phone);
+    }
+    if (dto.image !== undefined) {
+      data.image = normalizeImage(dto.image);
+    }
+    if (dto.note !== undefined) {
+      data.note = normalizeNote(dto.note);
     }
     if (dto.isActive !== undefined) {
       data.isActive = dto.isActive;
@@ -172,6 +186,33 @@ function normalizeName(name: string): string {
     );
   }
   return trimmed;
+}
+
+function normalizePhone(phone: string): string {
+  const trimmed = phone.trim();
+  if (trimmed.length < PHONE_MIN_LENGTH) {
+    throw new AppError(
+      'VALIDATION_ERROR',
+      `phone must be at least ${PHONE_MIN_LENGTH} characters`,
+    );
+  }
+  return trimmed;
+}
+
+function normalizeImage(image: string): string {
+  const trimmed = image.trim();
+  if (trimmed.length < IMAGE_MIN_LENGTH) {
+    throw new AppError('VALIDATION_ERROR', 'image is required');
+  }
+  return trimmed;
+}
+
+function normalizeNote(note: string | null | undefined): string | null {
+  if (note === undefined || note === null) {
+    return null;
+  }
+  const trimmed = note.trim();
+  return trimmed.length === 0 ? null : trimmed;
 }
 
 function rethrowUniqueName(error: unknown): void {

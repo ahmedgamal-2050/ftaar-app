@@ -44,11 +44,11 @@ Nested calls use `AsyncLocalStorage`. After the outer callback finishes, the nex
 
 ## SHR-03 — pipes and `@Public()`
 
-| Symbol          | Use                                                                |
-| --------------- | ------------------------------------------------------------------ |
-| `ParseUuidPipe` | Route/query param must be UUID v4; otherwise `VALIDATION_ERROR`    |
-| `MoneyPipe`     | Parses an EGP string (`"36.87"`) into `Money`                      |
-| `@Public()`     | Sets `isPublic`; global `JwtAuthGuard` skips those handlers        |
+| Symbol          | Use                                                             |
+| --------------- | --------------------------------------------------------------- |
+| `ParseUuidPipe` | Route/query param must be UUID v4; otherwise `VALIDATION_ERROR` |
+| `MoneyPipe`     | Parses an EGP string (`"36.87"`) into `Money`                   |
+| `@Public()`     | Sets `isPublic`; global `JwtAuthGuard` skips those handlers     |
 
 ```ts
 @Get(':id')

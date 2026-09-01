@@ -10,6 +10,9 @@ function restaurantRow(overrides: Record<string, unknown> = {}) {
   return {
     id: ID,
     name: 'مطعم الفحام',
+    phone: '+201001111111',
+    image: 'https://cdn.ftaar.example/restaurants/alfaham.jpg',
+    note: 'مشويات على الفحم',
     isActive: true,
     createdAt: NOW,
     updatedAt: NOW,
@@ -81,20 +84,65 @@ describe('RestaurantsService', () => {
   });
 
   describe('create (REST-03)', () => {
-    it('creates a restaurant after trimming the name', async () => {
+    it('creates a restaurant after trimming fields', async () => {
       const { prisma, service } = buildService();
       prisma.restaurant.create.mockResolvedValue(restaurantRow());
 
-      const created = await service.create({ name: '  مطعم الفحام  ' });
+      const created = await service.create({
+        name: '  مطعم الفحام  ',
+        phone: '  +201001111111  ',
+        image: '  https://cdn.ftaar.example/restaurants/alfaham.jpg  ',
+        note: '  مشويات على الفحم  ',
+      });
       expect(created.name).toBe('مطعم الفحام');
+      expect(created.phone).toBe('+201001111111');
+      expect(created.image).toBe(
+        'https://cdn.ftaar.example/restaurants/alfaham.jpg',
+      );
+      expect(created.note).toBe('مشويات على الفحم');
       expect(prisma.restaurant.create).toHaveBeenCalledWith({
-        data: { name: 'مطعم الفحام', isActive: true },
+        data: {
+          name: 'مطعم الفحام',
+          phone: '+201001111111',
+          image: 'https://cdn.ftaar.example/restaurants/alfaham.jpg',
+          note: 'مشويات على الفحم',
+          isActive: true,
+        },
+      });
+    });
+
+    it('stores an omitted note as null', async () => {
+      const { prisma, service } = buildService();
+      prisma.restaurant.create.mockResolvedValue(
+        restaurantRow({ note: null }),
+      );
+
+      await service.create({
+        name: 'مطعم الفحام',
+        phone: '+201001111111',
+        image: 'https://cdn.ftaar.example/restaurants/alfaham.jpg',
+      });
+
+      expect(prisma.restaurant.create).toHaveBeenCalledWith({
+        data: {
+          name: 'مطعم الفحام',
+          phone: '+201001111111',
+          image: 'https://cdn.ftaar.example/restaurants/alfaham.jpg',
+          note: null,
+          isActive: true,
+        },
       });
     });
 
     it('rejects names shorter than 2 characters', async () => {
       const { service } = buildService();
-      await expect(service.create({ name: 'ا' })).rejects.toMatchObject({
+      await expect(
+        service.create({
+          name: 'ا',
+          phone: '+201001111111',
+          image: 'https://cdn.ftaar.example/r.jpg',
+        }),
+      ).rejects.toMatchObject({
         code: 'VALIDATION_ERROR',
       });
     });
@@ -142,15 +190,34 @@ describe('RestaurantsService', () => {
   });
 
   describe('update (REST-04)', () => {
-    it('applies a partial patch', async () => {
+    it('applies a partial patch including phone, image, and note', async () => {
       const { prisma, service } = buildService();
       prisma.restaurant.findFirst.mockResolvedValue({ id: ID });
       prisma.restaurant.update.mockResolvedValue(
-        restaurantRow({ name: 'ديوان الشام' }),
+        restaurantRow({
+          name: 'ديوان الشام',
+          phone: '+201009876543',
+          image: 'https://cdn.ftaar.example/restaurants/diwan.jpg',
+          note: null,
+        }),
       );
 
-      const updated = await service.update(ID, { name: 'ديوان الشام' });
+      const updated = await service.update(ID, {
+        name: 'ديوان الشام',
+        phone: '+201009876543',
+        image: 'https://cdn.ftaar.example/restaurants/diwan.jpg',
+        note: '',
+      });
       expect(updated.name).toBe('ديوان الشام');
+      expect(prisma.restaurant.update).toHaveBeenCalledWith({
+        where: { id: ID },
+        data: {
+          name: 'ديوان الشام',
+          phone: '+201009876543',
+          image: 'https://cdn.ftaar.example/restaurants/diwan.jpg',
+          note: null,
+        },
+      });
     });
   });
 
@@ -193,7 +260,13 @@ describe('RestaurantsService', () => {
       }),
     );
 
-    await expect(service.create({ name: 'مطعم الفحام' })).rejects.toMatchObject(
+    await expect(
+      service.create({
+        name: 'مطعم الفحام',
+        phone: '+201001111111',
+        image: 'https://cdn.ftaar.example/restaurants/alfaham.jpg',
+      }),
+    ).rejects.toMatchObject(
       {
         code: 'ALREADY_EXISTS',
       },

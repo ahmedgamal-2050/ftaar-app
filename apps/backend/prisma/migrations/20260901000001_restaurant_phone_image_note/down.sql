@@ -1,0 +1,4 @@
+ALTER TABLE restaurants
+  DROP COLUMN IF EXISTS note,
+  DROP COLUMN IF EXISTS image,
+  DROP COLUMN IF EXISTS phone;

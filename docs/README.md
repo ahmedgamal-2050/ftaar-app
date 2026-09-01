@@ -17,7 +17,9 @@ Guides for work completed in this workspace. Task-ID checklists record **what sh
 - [OTP security audit](./auth-otp-security-audit.md) — TTL, attempts, hashing, rate limits, gaps.
 - [Catalog menu (MENU-01–MENU-07)](./backend-catalog/backend-menu.md) — MenuItem `Money` price, restaurant menu APIs, bulk import, soft delete.
 - [Catalog restaurants (REST-01–REST-06)](./backend-catalog/backend-restaurants.md) — Restaurant CRUD, Arabic search, pagination, nested menu.
-- [Billing (BILL-01–BILL-16)](./backend-billing.md) — Fee allocator, draft / lines / preview / finalise / reopen.
+- [Lobbies (LOBBY-01–LOBBY-08)](./backend-lobbies.md) — Create, join by code, lock / reopen, leave / kick.
+- [Orders (ORD-01–ORD-07)](./backend-orders.md) — Member cart, admin roster / kitchen summary, price override.
+- [Billing (BILL-01–BILL-17)](./backend-billing.md) — Fee allocator, draft / lines / preview / finalise / reopen; JWT identity.
 
 ## Mobile
 

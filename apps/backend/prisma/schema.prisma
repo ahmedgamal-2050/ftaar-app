@@ -122,6 +122,9 @@ model PasswordResetToken {
 model Restaurant {
   id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   name      String     @unique @db.VarChar(255)
+  phone     String     @default("") @db.VarChar(32)
+  image     String     @default("") @db.VarChar(2048)
+  note      String?    @db.VarChar(2000)
   isActive  Boolean    @default(true) @map("is_active")
   createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
