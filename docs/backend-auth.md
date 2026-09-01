@@ -2,7 +2,7 @@
 
 Status: **done** in `apps/backend/src/auth`. Mapped from `PLAN.md`.
 
-Global `JwtAuthGuard` is registered in `AppModule`. Routes without `@Public()` require `Authorization: Bearer <accessToken>`. Catalog writes also use `RegisteredUserGuard` (`GUEST_NOT_ALLOWED`). Billing still takes identity from `x-user-id` **in addition to** a valid JWT (MEM-03 not done).
+Global `JwtAuthGuard` is registered in `AppModule`. Routes without `@Public()` require `Authorization: Bearer <accessToken>`. Catalog writes and lobby create also use `RegisteredUserGuard` (`GUEST_NOT_ALLOWED`). Lobbies, orders, and billing take the actor from `@CurrentUser('id')` (JWT `sub`).
 
 OTP hashing, TTL, attempt caps, and resend cooldown are documented in [Authentication / OTP security audit](./auth-otp-security-audit.md).
 

@@ -7,14 +7,20 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
-import { ApiHeader, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ParseUuidPipe } from '../shared/parse-uuid.pipe';
 import { BillingService } from './billing.service';
-import { CurrentUserId, USER_ID_HEADER } from './current-user';
 import { PatchBillLinesDto, PreviewBillDto } from './dto/billing.dto';
 
 @ApiTags('billing')
-@ApiHeader({ name: USER_ID_HEADER, required: true })
+@ApiBearerAuth()
+@ApiUnauthorizedResponse({ description: 'Authentication required' })
 @Controller('lobbies/:lobbyId/bill')
 export class BillingController {
   constructor(private readonly billing: BillingService) {}
@@ -23,7 +29,7 @@ export class BillingController {
   @ApiOperation({ summary: 'Admin draft: lines grouped by menu item' })
   draft(
     @Param('lobbyId', ParseUuidPipe) lobbyId: string,
-    @CurrentUserId() userId: string,
+    @CurrentUser('id') userId: string,
   ) {
     return this.billing.draft(lobbyId, userId);
   }
@@ -32,7 +38,7 @@ export class BillingController {
   @ApiOperation({ summary: 'Admin batch-save prices and delivery flags' })
   patchLines(
     @Param('lobbyId', ParseUuidPipe) lobbyId: string,
-    @CurrentUserId() userId: string,
+    @CurrentUser('id') userId: string,
     @Body() dto: PatchBillLinesDto,
   ) {
     return this.billing.patchLines(lobbyId, userId, dto);
@@ -42,7 +48,7 @@ export class BillingController {
   @ApiOperation({ summary: 'Admin totals preview (no writes)' })
   preview(
     @Param('lobbyId', ParseUuidPipe) lobbyId: string,
-    @CurrentUserId() userId: string,
+    @CurrentUser('id') userId: string,
     @Body() dto: PreviewBillDto,
   ) {
     return this.billing.preview(lobbyId, userId, dto);
@@ -52,7 +58,7 @@ export class BillingController {
   @ApiOperation({ summary: 'Admin finalise bill and move to payment' })
   finalise(
     @Param('lobbyId', ParseUuidPipe) lobbyId: string,
-    @CurrentUserId() userId: string,
+    @CurrentUser('id') userId: string,
     @Body() dto: PreviewBillDto,
     @Headers('idempotency-key') idempotencyKey?: string,
   ) {
@@ -63,7 +69,7 @@ export class BillingController {
   @ApiOperation({ summary: 'Admin reopen bill back to arrived' })
   reopen(
     @Param('lobbyId', ParseUuidPipe) lobbyId: string,
-    @CurrentUserId() userId: string,
+    @CurrentUser('id') userId: string,
   ) {
     return this.billing.reopen(lobbyId, userId);
   }
@@ -72,7 +78,7 @@ export class BillingController {
   @ApiOperation({ summary: 'Member-visible bill (full transparency)' })
   getBill(
     @Param('lobbyId', ParseUuidPipe) lobbyId: string,
-    @CurrentUserId() userId: string,
+    @CurrentUser('id') userId: string,
   ) {
     return this.billing.getBill(lobbyId, userId);
   }

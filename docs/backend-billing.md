@@ -1,10 +1,12 @@
-# Billing (BILL-01–BILL-16)
+# Billing (BILL-01–BILL-17)
 
 Status: **done** in `apps/backend/src/billing`.
 
 CSV **arrived** is stored as `lobbies.status = locked`. Finalise moves the lobby to `billed` (payment). Reopen returns it to `locked`.
 
-Caller identity is still header `x-user-id` (UUID v4). Admin vs member is `lobby_members.role`. The global JWT guard still applies, so a valid access token is required in addition to the header until MEM-03 wires billing to `AuthUser`.
+Identity comes from the access token (`@CurrentUser('id')` → JWT `sub`), the same as lobbies and orders. Admin vs member is still `lobby_members.role` via `LobbyAccessService`. A valid Bearer token is required; a spoofable `x-user-id` header is not used.
+
+Depends on: JWT (`docs/backend-auth.md`), catalog money prices, a locked lobby with members and order lines.
 
 ## Task checklist
 
@@ -26,6 +28,7 @@ Caller identity is still header `x-user-id` (UUID v4). Admin vs member is `lobby
 | BILL-14 | `GET /bill`                    | Any member; full transparency including others' totals                                              |
 | BILL-15 | Atomicity test                 | Injected failure after bill / lines / members / status → no `lobby_bill` row; status still arrived  |
 | BILL-16 | Undelivered exclusion          | Owner subtotal drops by that line; fee base excludes it; others' shares rise; invariant holds       |
+| BILL-17 | JWT identity                   | Actor is `req.user.id`; billing no longer reads `x-user-id`                                         |
 
 ## Allocator
 
@@ -42,7 +45,7 @@ Property tests live in `allocator.property.spec.ts` (`numRuns: 10_000`).
 
 ## HTTP
 
-Prefix: `/api/lobbies/:lobbyId/bill`. Requires Bearer JWT **and** header `x-user-id` (until MEM-03).
+Prefix: `/api/lobbies/:lobbyId/bill`. Requires Bearer JWT. `LobbyAccessService` then checks membership (GET `/`) or admin (everything else).
 
 | Method  | Path        | Who    | Status required    |
 | ------- | ----------- | ------ | ------------------ |

@@ -2,7 +2,7 @@
 
 This is a **learning and replication guide**, not a file inventory. It reverse-engineers the architecture of this workspace so you can build a **similar** product later without an AI and without copying this repository.
 
-**What this workspace is:** FTAAR — a group restaurant order (lobby) with split billing. The **real product** is a NestJS API: Postgres, integer money, JWT auth (guest / register / OTP / refresh), restaurant catalog, an admin bill workflow, Docker, and CI. Expo implements the **auth** screens against that API; it does not yet load lobbies or bills.
+**What this workspace is:** FTAAR — a group restaurant order (lobby) with split billing. The **real product** is a NestJS API: Postgres, integer money, JWT auth (guest / register / OTP / refresh), restaurant catalog, lobbies, member orders, an admin bill workflow, Docker, and CI. Expo implements the **auth** screens against that API; it does not yet load lobbies or bills.
 
 **What it sits on:** an Nx NestJS + Expo **template**. Root README still describes the template. `packages/types` still only exports `HealthResponse` (not billing). Do not confuse template copy with the architecture.
 
@@ -51,7 +51,7 @@ A **lobby** is a shared order at one **restaurant**. Members add **order lines**
 
 Any **member** can **GET** the finalised bill (full transparency: everyone sees everyone else’s totals).
 
-**FTAAR-specific:** HTTP APIs (except `@Public()` and health) require a Bearer access token. Catalog **writes** require `kind === 'registered'`. Billing **authorization** still uses header `x-user-id` on top of that JWT — the token’s `sub` is not the lobby actor until MEM-03. Payment gateways are not implemented.
+**FTAAR-specific:** HTTP APIs (except `@Public()` and health) require a Bearer access token. Catalog **writes** and lobby **create** require `kind === 'registered'`. Lobbies, orders, and billing take the actor from JWT `sub` (`@CurrentUser('id')`), then check `lobby_members`. Payment gateways are not implemented.
 
 ### Three layers you must keep distinct
 
@@ -59,7 +59,7 @@ Any **member** can **GET** the finalised bill (full transparency: everyone sees 
 | --- | --- | --- |
 | **Platform** | Boot, config, HTTP envelope, logging, health, Docker, CI | `apps/backend/src/core`, `src/shared`, ops files |
 | **Domain kernel** | Money, schema, transactions, fee math | `src/money`, `prisma/`, `src/billing/allocator.ts`, `bill-math.ts` |
-| **Feature HTTP** | Controllers, access checks, DTOs | `src/auth/*`, `src/restaurants/*`, `src/menu/*`, `src/billing/*` |
+| **Feature HTTP** | Controllers, access checks, DTOs | `src/auth/*`, `src/restaurants/*`, `src/menu/*`, `src/lobbies/*`, `src/orders/*`, `src/billing/*` |
 | **Clients** | Mobile, shared DTOs | Expo auth flow (`docs/mobile-auth.md`); shared types are still health-only |
 
 **Principle:** finish the platform and the *pure* domain before HTTP. HTTP should be a thin translation of already-tested math.
@@ -96,21 +96,21 @@ HTTP
 
 This is the most important path in the product.
 
-1. Client: `POST /api/lobbies/{lobbyId}/bill/finalise` with Bearer access token, EGP fee strings, optional `receiptTotal`, optional `Idempotency-Key`, required `x-user-id`.
+1. Client: `POST /api/lobbies/{lobbyId}/bill/finalise` with Bearer access token, EGP fee strings, optional `receiptTotal`, optional `Idempotency-Key`.
 2. `setupApp` already applied helmet, CORS, body size cap, request id, ValidationPipe.
 3. `JwtAuthGuard` requires a valid access token (this route is not `@Public()`). `ThrottlerGuard` counts the URL toward 100 requests / 60s (health is skipped; several `/auth/*` routes use a tighter `@Throttle`).
-4. `ParseUuidPipe` on `:lobbyId`. `@CurrentUserId()` reads `x-user-id` (not JWT `sub`), rejects missing header as `UNAUTHORIZED`, then UUID-validates it.
+4. `ParseUuidPipe` on `:lobbyId`. `@CurrentUser('id')` takes `req.user.id` from the JWT (`sub`).
 5. `PreviewBillDto` is class-validator’d; extra JSON keys → `VALIDATION_ERROR`.
-6. `BillingService.finalise`: `LobbyAccessService.requireAdmin` loads membership; non-admin → `FORBIDDEN`.
+6. `BillingService.finalise`: `LobbyAccessService.requireAdmin` loads membership for that user id; non-admin → `FORBIDDEN`.
 7. **Idempotency outside the transaction:** if a bill already exists for the lobby, same key returns the existing bill; otherwise `CONFLICT`. If the key exists on another lobby, `CONFLICT`.
 8. `runInTransaction`: reload context; lobby must be `locked`; every **delivered** line must have `actualPrice` or `PRICES_INCOMPLETE` (422).
 9. Pure `buildInvariant` (member subtotals of delivered priced lines, `netFees = delivery + service − discount`, Hamilton `allocateFees`).
 10. Insert `lobby_bill`, update lines, update member `payment_status` (zero delivered → `paid`), set lobby `billed`. `FinaliseFault.trip(...)` exists so tests can abort mid-transaction and assert **zero** bill rows.
 11. Interceptor serialises `Money` / leftover `bigint` to EGP strings and wraps `{ success: true, data }`.
 
-**Principle:** authorization (are you this lobby’s admin?) is **not** authentication (are you who you claim?). Auth proves a user via JWT. Billing still authorizes `lobby_members` using the **header**, so a valid token for user A plus `x-user-id` of admin B can act as B.
+**Principle:** authorization (are you this lobby’s admin?) is **not** authentication (are you who you claim?). Auth proves a user via JWT. Billing then authorizes against `lobby_members` using that same `userId`. Sending another person’s UUID in a header does nothing.
 
-**Maps to:** `apps/backend/src/core/setup-app.ts`, `auth/guards/jwt-auth.guard.ts`, `billing/current-user.ts`, `billing/lobby-access.service.ts`, `billing/billing.service.ts`, `billing/bill-math.ts`, `billing/allocator.ts`, `core/http/response-wrap.interceptor.ts`.
+**Maps to:** `apps/backend/src/core/setup-app.ts`, `auth/guards/jwt-auth.guard.ts`, `auth/decorators/current-user.decorator.ts`, `billing/lobby-access.service.ts`, `billing/billing.service.ts`, `billing/bill-math.ts`, `billing/allocator.ts`, `core/http/response-wrap.interceptor.ts`.
 
 ---
 
@@ -244,18 +244,20 @@ JWT + guest/register/OTP (so catalog and clients are not header-spoofable)
         ↓
 Catalog HTTP (restaurants, menu; registered writes)
         ↓
-Billing HTTP (access, draft, patch, preview, finalise, reopen)
+Lobbies (create / join / lock) then member orders
+        ↓
+Billing HTTP (JWT `sub`, draft, patch, preview, finalise, reopen)
         ↓
 Shared client types from OpenAPI (optional; this repo did not)
         ↓
 Mobile against that contract (this repo: auth screens only)
 ```
 
-**This repo’s actual order** shipped billing HTTP **before** JWT, so billing still trusts `x-user-id`. Rebuild with auth **before** any resource that must not be spoofable.
+**This repo’s actual order** shipped billing HTTP **before** JWT, then kept a header identity stub. That stub is gone: billing now uses the same `@CurrentUser('id')` as lobbies and orders. Rebuild with auth **before** any resource that must not be spoofable.
 
 **Do not** start with lobby REST if you cannot parse `"36.87"` into integers and wrap errors uniformly. **Do not** start with JWT if you have no users table and no “who is admin of this lobby” rule.
 
-Billing **data** prerequisites (FTAAR-specific): restaurant + menu with `referencePrice`; lobby `locked`; members with order lines; Bearer token **and** `x-user-id` matching an admin `userId`. Seed provides users and a locked lobby.
+Billing **data** prerequisites (FTAAR-specific): restaurant + menu with `referencePrice`; lobby `locked`; members with order lines; Bearer token whose `sub` is an admin `userId`. Seed provides users and a locked lobby.
 
 ---
 
@@ -598,9 +600,11 @@ await runInTransaction(prisma, async (em) => {
 
 ---
 
-### Phase 14 — Catalog then billing HTTP
+### Phase 14 — Catalog, lobbies, orders, then billing HTTP
 
 Catalog (`docs/backend-catalog/`): restaurants and menu with JWT + `RegisteredUserGuard` on writes. Build this after auth so guests cannot create restaurants.
+
+Then lobbies (`docs/backend-lobbies.md`) and orders (`docs/backend-orders.md`): create/join/lock, member carts, admin price override. Billing has nothing to split without those rows.
 
 Then billing:
 
@@ -608,7 +612,7 @@ Then billing:
 
 **(2) Why.** This is the product. Everything above exists so this stays thin.
 
-**(3) Problem.** Partial writes; double finalise; spoofed users (header auth).
+**(3) Problem.** Partial writes; double finalise; spoofed users if identity is a client-supplied header.
 
 **(4) Concepts.** Idempotency keys; access checks in a dedicated service; test fault injection.
 
@@ -622,7 +626,7 @@ Then billing:
 6. `POST reopen` — `BILL_LOCKED` if any `paid`.
 7. `GET /` — any member, full totals.
 
-**(6) Exhibits.** `docs/backend-catalog/`; `billing.module.ts`, `billing.controller.ts`, `billing.service.ts`, `lobby-access.service.ts`, `lobby-bill.entity.ts`, `finalise-fault.ts`, `billing.integration.spec.ts`.
+**(6) Exhibits.** `docs/backend-catalog/`; `docs/backend-lobbies.md`; `docs/backend-orders.md`; `billing.module.ts`, `billing.controller.ts`, `billing.service.ts`, `lobby-access.service.ts`, `lobby-bill.entity.ts`, `finalise-fault.ts`, `billing.integration.spec.ts`.
 
 **(7) Exit.** You can narrate the finalise trace (section 2) without opening files. Integration test: injected fault → no bill row.
 
@@ -650,7 +654,7 @@ Then billing:
 
 **(1) What.** Session storage, API client that unwraps `{ success, data }`, onboarding + login + forgot-password. Later: lobby/bill screens.
 
-**(2) Why.** Users do not curl Bearer tokens and `x-user-id`.
+**(2) Why.** Users do not curl Bearer tokens.
 
 **(3) Problem.** Building screens before OpenAPI exists; duplicating DTO types on the client.
 
@@ -664,21 +668,21 @@ Then billing:
 
 ---
 
-### Phase 17 — Real authentication (JWT shipped; billing header remains)
+### Phase 17 — Real authentication (JWT; billing uses `sub`)
 
-**(1) What.** Global `JwtAuthGuard`, access + refresh, `@Public()` for login/health/guest/register/OTP, `@CurrentUser()` from `req.user`. Stop trusting `x-user-id` on **resource** APIs.
+**(1) What.** Global `JwtAuthGuard`, access + refresh, `@Public()` for login/health/guest/register/OTP, `@CurrentUser()` from `req.user`. Resource APIs (lobbies, orders, billing) use token `sub`, not a client-supplied user header.
 
 **(2) Why.** Header identity is spoofable even when JWT is required.
 
-**(3) Problem.** Dual identity: valid token for A + header of B. Guest mint is not device-idempotent (`POST /auth/guest` ignores body).
+**(3) Problem.** Dual identity if you keep both: valid token for A + header of B. Guest mint is not device-idempotent (`POST /auth/guest` ignores body).
 
 **(4) Concepts.** Guard + Reflector `IS_PUBLIC_KEY`; refresh **family** reuse revocation; guest `kind` vs registered (`ck_user_kind`); OTP hashed at rest.
 
-**(5) Steps.** Verify user exists in `JwtStrategy`. Map token `sub` to `userId` in billing. Keep `LobbyAccessService` for **authorization**. Stricter throttle on login. Remove `@CurrentUserId()` header decorator.
+**(5) Steps.** Verify user exists in `JwtStrategy`. Map token `sub` to `userId` in billing. Keep `LobbyAccessService` for **authorization**. Stricter throttle on login. Do not add a billing `@CurrentUserId()` header decorator.
 
-**(6) Exhibits.** `docs/backend-auth.md`; `auth.controller.ts`; `jwt-auth.guard.ts`; `docs/auth-otp-security-audit.md`.
+**(6) Exhibits.** `docs/backend-auth.md`; `auth.controller.ts`; `jwt-auth.guard.ts`; `docs/auth-otp-security-audit.md`; `billing.controller.ts`.
 
-**(7) Exit.** Spoofing a UUID header cannot act as another member. **This repo has not met that exit for billing.**
+**(7) Exit.** Spoofing a UUID header cannot act as another member. Billing, lobbies, and orders all take identity from the token.
 
 ---
 
@@ -728,7 +732,6 @@ Copy the **patterns**. Do not copy these accidents.
 | --- | --- | --- |
 | README still template-shaped | Looks like a Nest starter, not FTAAR | Point README at `docs/` and lobbies |
 | `@nestjs-template/*` naming | Cognitive tax | Rename when you fork |
-| Billing `x-user-id` after JWT | Dual identity; spoof admin | Use `@CurrentUser('id')` (MEM-03) |
 | `POST /auth/guest` not device-idempotent | New guest every call; `GuestDto` unused | Idempotent device id **or** delete the DTO |
 | Duplicate `@Public()` modules | Two files, same metadata key | One export |
 | `tax` = service fee | Clients will display “tax” wrong | Rename or compute tax |
@@ -846,7 +849,7 @@ npx nx run-many -t lint,typecheck,test --projects=backend
 | Finalise 422 `PRICES_INCOMPLETE` | Cannot bill | Delivered line `actual_price` null | Patch lines first |
 | Finalise 409 | Retry created duplicate intent | No or different idempotency key | Send the same key |
 | Reopen 409 `BILL_LOCKED` | Cannot unlock | A member is `paid` | Product rule; do not “force” in API |
-| Spoofed admin | Wrong user billed | Header `x-user-id` after JWT | Use token `sub` (MEM-03) |
+| Spoofed admin | Wrong user billed | Trusted a client-supplied user header after JWT | Use token `sub` (`@CurrentUser('id')`) |
 | Prisma CHECK not in schema | Invalid rows from SQL console | Constraint only in migration | Keep SQL + constraint tests |
 | Docker image huge / Expo in API image | Slow deploy | Built whole workspace without prune | `backend:prune` then `npm ci --omit=dev` |
 | Audit fails on mobile advisory | CI red | Audited root graph | Audit `dist/apps/backend` after prune |
@@ -918,7 +921,7 @@ Compare a **future** project to this one **without copying names**.
 | How is config loaded? | Joi + hydrate files | |
 | How is schema changed? | Prisma migrate + extra SQL | |
 | How are nested writes atomic? | ALS `runInTransaction` | |
-| What is the identity stub vs real auth? | JWT global; billing still `x-user-id` | |
+| What is the identity stub vs real auth? | JWT global; billing/lobbies/orders use `sub` | |
 | What is liveness vs readiness? | `/health` vs `/health/db` | |
 | What is in CI vs skipped? | backend + e2e; not mobile | |
 | What is template leftover? | Root README; `@nestjs-template/*` names | |
@@ -951,7 +954,7 @@ Answer out loud. If you cannot, re-read the matching phase.
 15. Why `satisfies Record<ErrorCode, number>`?
 16. How does nested `runInTransaction` avoid a second `BEGIN`?
 17. Why can CHECK constraints live in SQL but not in `schema.prisma`?
-18. Why is `x-user-id` still insufficient once JWT exists?
+18. Why is a client-supplied user id header insufficient once JWT exists?
 19. What would break if you removed the response wrap interceptor?
 20. What would break if you throttled `/health`?
 21. Why audit `dist/apps/backend` instead of the repo root?
@@ -1024,5 +1027,5 @@ Request: Helmet/CORS/body → request id → prefix → **JWT** → throttle →
 - [ ] Health not throttled, not under `/api`
 - [ ] OpenAPI export skips DB
 - [ ] Image runs migrate then process
-- [ ] No spoofable identity if you claim auth is done (billing header is the current FTAAR hole)
+- [ ] No spoofable identity if you claim auth is done (billing uses JWT `sub`)
 - [ ] Demos (template README) not required to bill
