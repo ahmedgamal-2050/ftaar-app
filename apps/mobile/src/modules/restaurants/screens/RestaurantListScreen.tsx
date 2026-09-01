@@ -41,36 +41,49 @@ function cardAccent(id: string): string {
   return CARD_ACCENTS[Math.abs(hash) % CARD_ACCENTS.length] ?? CARD_ACCENTS[0];
 }
 
-function RestaurantCard({ item }: { item: Restaurant }) {
+function RestaurantCard({
+  item,
+  onPress,
+}: {
+  item: Restaurant;
+  onPress: () => void;
+}) {
   const accent = cardAccent(item.id);
   return (
-    <View style={styles.card}>
-      {/* Image — use real URL if available, else warm-toned placeholder */}
-      <View style={[styles.cardImage, { backgroundColor: accent }]}>
-        {item.image ? (
-          <Image
-            source={{ uri: item.image }}
-            style={StyleSheet.absoluteFill}
-            resizeMode="cover"
-          />
-        ) : (
-          <Ionicons
-            name="restaurant"
-            size={40}
-            color="rgba(255,255,255,0.35)"
-          />
-        )}
-      </View>
-      <View style={styles.cardBody}>
-        <Text style={styles.cardName} numberOfLines={1}>
-          {item.name}
-        </Text>
-        <View style={styles.cardMeta}>
-          <Ionicons name="call-outline" size={12} color={colors.textMuted} />
-          <Text style={styles.cardMetaText}>{item.phone || '—'}</Text>
+    <TouchableOpacity
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`Open ${item.name} menu`}
+      activeOpacity={0.75}
+    >
+      <View style={styles.card}>
+        {/* Image — use real URL if available, else warm-toned placeholder */}
+        <View style={[styles.cardImage, { backgroundColor: accent }]}>
+          {item.image ? (
+            <Image
+              source={{ uri: item.image }}
+              style={StyleSheet.absoluteFill}
+              resizeMode="cover"
+            />
+          ) : (
+            <Ionicons
+              name="restaurant"
+              size={40}
+              color="rgba(255,255,255,0.35)"
+            />
+          )}
+        </View>
+        <View style={styles.cardBody}>
+          <Text style={styles.cardName} numberOfLines={1}>
+            {item.name}
+          </Text>
+          <View style={styles.cardMeta}>
+            <Ionicons name="call-outline" size={12} color={colors.textMuted} />
+            <Text style={styles.cardMetaText}>{item.phone || '—'}</Text>
+          </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 
@@ -121,7 +134,12 @@ export function RestaurantListScreen({ navigation }: Props) {
   const items = useMemo(() => data?.items ?? [], [data]);
 
   const renderItem = ({ item }: { item: Restaurant }) => (
-    <RestaurantCard item={item} />
+    <RestaurantCard
+      item={item}
+      onPress={() =>
+        navigation.navigate('MenuManager', { restaurantId: item.id })
+      }
+    />
   );
 
   const renderEmpty = () => {
