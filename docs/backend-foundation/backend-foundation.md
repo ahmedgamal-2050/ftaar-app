@@ -25,18 +25,18 @@ Missing required variables print their names and exit with a non-zero code.
 
 ## Task checklist
 
-| ID      | Task                              | Done when                                                |
-| ------- | --------------------------------- | -------------------------------------------------------- |
-| CORE-01 | Scaffold NestJS app               | `start:dev` boots; `strict` + `noUncheckedIndexedAccess` |
-| CORE-02 | ESLint, Prettier, pre-commit hook | Lint passes; husky blocks a failing commit               |
-| CORE-03 | Joi-validated config module       | Typed `AppConfigService`; no `process.env` at call sites |
+| ID      | Task                              | Done when                                                      |
+| ------- | --------------------------------- | -------------------------------------------------------------- |
+| CORE-01 | Scaffold NestJS app               | `start:dev` boots; `strict` + `noUncheckedIndexedAccess`       |
+| CORE-02 | ESLint, Prettier, pre-commit hook | Lint passes; husky blocks a failing commit                     |
+| CORE-03 | Joi-validated config module       | Typed `AppConfigService`; no `process.env` at call sites       |
 | CORE-04 | Error code union + `AppError`     | Codes in `ERROR_CODES`; missing HTTP status is a compile error |
-| CORE-05 | Global exception filter           | One error envelope for all failure types                 |
-| CORE-06 | Response wrap interceptor         | `{ success, data }`; no double-wrap; 204 untouched       |
-| CORE-07 | Global validation pipe            | Unexpected body field → 400                              |
-| CORE-08 | Pino logger with request-ID ALS   | Request ID on logs; passwords/tokens redacted            |
-| CORE-09 | Throttler                         | 100/min global; 10/min on `/auth/*`; `/health` skipped   |
-| CORE-10 | Swagger + `openapi.json` export   | `/docs`; CI exports spec for Prism                       |
+| CORE-05 | Global exception filter           | One error envelope for all failure types                       |
+| CORE-06 | Response wrap interceptor         | `{ success, data }`; no double-wrap; 204 untouched             |
+| CORE-07 | Global validation pipe            | Unexpected body field → 400                                    |
+| CORE-08 | Pino logger with request-ID ALS   | Request ID on logs; passwords/tokens redacted                  |
+| CORE-09 | Throttler                         | 100/min global; 10/min on `/auth/*`; `/health` skipped         |
+| CORE-10 | Swagger + `openapi.json` export   | `/docs`; CI exports spec for Prism                             |
 
 ## Layout
 
@@ -84,35 +84,35 @@ Do not read `process.env` in controllers or services. `validateEnv` is only for 
 
 Canonical list is `ERROR_CODES` in `apps/backend/src/core/errors/error-codes.ts`. `ERROR_HTTP_STATUS` uses `satisfies Record<ErrorCode, number>`, so a new code without a status fails typecheck. Keep this table in sync with that file.
 
-| Code                      | HTTP |
-| ------------------------- | ---- |
-| `BAD_REQUEST`             | 400  |
-| `VALIDATION_ERROR`        | 400  |
-| `UNAUTHORIZED`            | 401  |
-| `INVALID_CREDENTIALS`     | 401  |
-| `TOKEN_EXPIRED`           | 401  |
-| `TOKEN_INVALID`           | 401  |
-| `FORBIDDEN`               | 403  |
-| `GUEST_NOT_ALLOWED`       | 403  |
-| `EMAIL_NOT_VERIFIED`      | 403  |
-| `NOT_FOUND`               | 404  |
-| `CONFLICT`                | 409  |
-| `ALREADY_EXISTS`          | 409  |
-| `EMAIL_ALREADY_REGISTERED`| 409  |
-| `PAYLOAD_TOO_LARGE`       | 413  |
-| `UNPROCESSABLE_ENTITY`    | 422  |
-| `INVALID_OTP`             | 422  |
-| `OTP_EXPIRED`             | 422  |
-| `OTP_TOO_MANY_ATTEMPTS`   | 422  |
-| `INVALID_RESET_TOKEN`     | 422  |
-| `RATE_LIMITED`            | 429  |
-| `OTP_RESEND_COOLDOWN`     | 429  |
-| `INTERNAL_ERROR`          | 500  |
-| `NOT_IMPLEMENTED`         | 501  |
-| `SERVICE_UNAVAILABLE`     | 503  |
-| `GATEWAY_TIMEOUT`         | 504  |
-| `PRICES_INCOMPLETE`       | 422  |
-| `BILL_LOCKED`             | 409  |
+| Code                       | HTTP |
+| -------------------------- | ---- |
+| `BAD_REQUEST`              | 400  |
+| `VALIDATION_ERROR`         | 400  |
+| `UNAUTHORIZED`             | 401  |
+| `INVALID_CREDENTIALS`      | 401  |
+| `TOKEN_EXPIRED`            | 401  |
+| `TOKEN_INVALID`            | 401  |
+| `FORBIDDEN`                | 403  |
+| `GUEST_NOT_ALLOWED`        | 403  |
+| `EMAIL_NOT_VERIFIED`       | 403  |
+| `NOT_FOUND`                | 404  |
+| `CONFLICT`                 | 409  |
+| `ALREADY_EXISTS`           | 409  |
+| `EMAIL_ALREADY_REGISTERED` | 409  |
+| `PAYLOAD_TOO_LARGE`        | 413  |
+| `UNPROCESSABLE_ENTITY`     | 422  |
+| `INVALID_OTP`              | 422  |
+| `OTP_EXPIRED`              | 422  |
+| `OTP_TOO_MANY_ATTEMPTS`    | 422  |
+| `INVALID_RESET_TOKEN`      | 422  |
+| `RATE_LIMITED`             | 429  |
+| `OTP_RESEND_COOLDOWN`      | 429  |
+| `INTERNAL_ERROR`           | 500  |
+| `NOT_IMPLEMENTED`          | 501  |
+| `SERVICE_UNAVAILABLE`      | 503  |
+| `GATEWAY_TIMEOUT`          | 504  |
+| `PRICES_INCOMPLETE`        | 422  |
+| `BILL_LOCKED`              | 409  |
 
 Throw domain failures with:
 

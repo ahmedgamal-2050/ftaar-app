@@ -8,34 +8,34 @@ Depends on: JWT, a lobby membership (`LobbyMemberGuard` / `LobbyAdminGuard`), an
 
 ## Task checklist
 
-| ID     | Task                         | Done when                                                                              |
-| ------ | ---------------------------- | -------------------------------------------------------------------------------------- |
-| ORD-01 | Add item                     | Open lobby; qty ≥ 1; price is reference or existing lobby override; members cannot set price |
-| ORD-02 | Update qty / remove          | Owner only; open lobby                                                                 |
-| ORD-03 | Get my items                 | Member JWT; personal subtotal                                                          |
-| ORD-04 | Admin roster                 | All members’ lines + grand subtotal                                                    |
-| ORD-05 | Kitchen summary              | Aggregated qty per `menuItemId`                                                        |
-| ORD-06 | Price override               | Admin; `open` or `locked`; updates every existing line of that item                    |
-| ORD-07 | Guards                       | `LobbyMemberGuard` / `LobbyAdminGuard` load membership from JWT `sub`                  |
+| ID     | Task                | Done when                                                                                    |
+| ------ | ------------------- | -------------------------------------------------------------------------------------------- |
+| ORD-01 | Add item            | Open lobby; qty ≥ 1; price is reference or existing lobby override; members cannot set price |
+| ORD-02 | Update qty / remove | Owner only; open lobby                                                                       |
+| ORD-03 | Get my items        | Member JWT; personal subtotal                                                                |
+| ORD-04 | Admin roster        | All members’ lines + grand subtotal                                                          |
+| ORD-05 | Kitchen summary     | Aggregated qty per `menuItemId`                                                              |
+| ORD-06 | Price override      | Admin; `open` or `locked`; updates every existing line of that item                          |
+| ORD-07 | Guards              | `LobbyMemberGuard` / `LobbyAdminGuard` load membership from JWT `sub`                        |
 
 ## HTTP
 
 Member prefix: `/api/lobbies/:lobbyId/orders` (`LobbyMemberGuard`).
 
-| Method   | Path              | Who    | Status   |
-| -------- | ----------------- | ------ | -------- |
-| `POST`   | `/items`          | member | `open`   |
-| `PATCH`  | `/items/:itemId`  | owner  | `open`   |
-| `DELETE` | `/items/:itemId`  | owner  | `open`   |
-| `GET`    | `/items`          | member | any      |
+| Method   | Path             | Who    | Status |
+| -------- | ---------------- | ------ | ------ |
+| `POST`   | `/items`         | member | `open` |
+| `PATCH`  | `/items/:itemId` | owner  | `open` |
+| `DELETE` | `/items/:itemId` | owner  | `open` |
+| `GET`    | `/items`         | member | any    |
 
 Admin prefix: `/api/lobbies/:lobbyId/admin/orders` (`LobbyAdminGuard`).
 
-| Method  | Path                                 | Who   | Status            |
-| ------- | ------------------------------------ | ----- | ----------------- |
-| `GET`   | `/`                                  | admin | any               |
-| `GET`   | `/summary`                           | admin | any               |
-| `PATCH` | `/menu-items/:menuItemId/price`      | admin | `open` or `locked` |
+| Method  | Path                            | Who   | Status             |
+| ------- | ------------------------------- | ----- | ------------------ |
+| `GET`   | `/`                             | admin | any                |
+| `GET`   | `/summary`                      | admin | any                |
+| `PATCH` | `/menu-items/:menuItemId/price` | admin | `open` or `locked` |
 
 Add body:
 

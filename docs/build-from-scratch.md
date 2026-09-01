@@ -11,7 +11,7 @@ This is a **learning and replication guide**, not a file inventory. It reverse-e
 1. Read the overview and technology choices once.
 2. Work through phases 0–17 in order. Each phase has exit criteria — do not skip them.
 3. When you start a new project months later, use [Keep This Beside Me While Building](#keep-this-beside-me-while-building).
-4. Task-ID checklists (CORE-01, BILL-01, …) live in the other `docs/` files. They record *what was shipped here*. This guide records *why and in what order you would rebuild*.
+4. Task-ID checklists (CORE-01, BILL-01, …) live in the other `docs/` files. They record _what was shipped here_. This guide records _why and in what order you would rebuild_.
 
 **Principle vs product.** Sentences marked **Principle** apply to any similar API. Sentences marked **FTAAR-specific** are domain details (piastres, lobby statuses, Hamilton split). Do not cargo-cult FTAAR-specific names into an unrelated product.
 
@@ -55,14 +55,14 @@ Any **member** can **GET** the finalised bill (full transparency: everyone sees 
 
 ### Three layers you must keep distinct
 
-| Layer | Role | In this repo |
-| --- | --- | --- |
-| **Platform** | Boot, config, HTTP envelope, logging, health, Docker, CI | `apps/backend/src/core`, `src/shared`, ops files |
-| **Domain kernel** | Money, schema, transactions, fee math | `src/money`, `prisma/`, `src/billing/allocator.ts`, `bill-math.ts` |
-| **Feature HTTP** | Controllers, access checks, DTOs | `src/auth/*`, `src/restaurants/*`, `src/menu/*`, `src/lobbies/*`, `src/orders/*`, `src/billing/*` |
-| **Clients** | Mobile, shared DTOs | Expo auth flow (`docs/mobile-auth.md`); shared types are still health-only |
+| Layer             | Role                                                     | In this repo                                                                                      |
+| ----------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **Platform**      | Boot, config, HTTP envelope, logging, health, Docker, CI | `apps/backend/src/core`, `src/shared`, ops files                                                  |
+| **Domain kernel** | Money, schema, transactions, fee math                    | `src/money`, `prisma/`, `src/billing/allocator.ts`, `bill-math.ts`                                |
+| **Feature HTTP**  | Controllers, access checks, DTOs                         | `src/auth/*`, `src/restaurants/*`, `src/menu/*`, `src/lobbies/*`, `src/orders/*`, `src/billing/*` |
+| **Clients**       | Mobile, shared DTOs                                      | Expo auth flow (`docs/mobile-auth.md`); shared types are still health-only                        |
 
-**Principle:** finish the platform and the *pure* domain before HTTP. HTTP should be a thin translation of already-tested math.
+**Principle:** finish the platform and the _pure_ domain before HTTP. HTTP should be a thin translation of already-tested math.
 
 ### Workspace shape
 
@@ -124,7 +124,7 @@ This is the most important path in the product.
 
 **This project:** started from `create-nx-workspace` Nest template, then added Expo and product code. Package names still say `@nestjs-template/*`.
 
-**Principle:** introduce a monorepo when you have (or will soon have) more than one app *or* a shared library that must not import apps. Do not add Expo “just in case” unless you will ship it.
+**Principle:** introduce a monorepo when you have (or will soon have) more than one app _or_ a shared library that must not import apps. Do not add Expo “just in case” unless you will ship it.
 
 ### NestJS
 
@@ -140,7 +140,7 @@ This is the most important path in the product.
 
 **Why extra SQL anyway:** Prisma schema cannot express all **CHECK** constraints, **partial unique indexes** (`WHERE`), and some **composite FKs**. Those live in `prisma/migrations/*/migration.sql`. Each folder also has a hand-written `down.sql` for a custom revert script.
 
-**Alternatives:** TypeORM (column transformers map cleanly to `MoneyTransformer` — this repo still *looks* TypeORM in names); Drizzle (SQL-first, less Nest convention); `db push` (forbidden here — no history).
+**Alternatives:** TypeORM (column transformers map cleanly to `MoneyTransformer` — this repo still _looks_ TypeORM in names); Drizzle (SQL-first, less Nest convention); `db push` (forbidden here — no history).
 
 **Principle:** the database is an enforcement layer, not a dump of the ORM. If the ORM cannot say it, say it in SQL and **test the constraint with a failing insert**.
 
@@ -194,14 +194,14 @@ This is the most important path in the product.
 
 ### Testing pyramid here
 
-| Layer | What | Exhibit |
-| --- | --- | --- |
-| Unit | Money, pipes, filters, bill-math | `*.spec.ts` beside source; Money **100% branch** coverage gate |
-| Property | allocator conservation | `allocator.property.spec.ts` (fast-check) |
-| Constraint | real CHECK/unique via `pg` | `database.constraints.spec.ts` |
-| HTTP foundation | envelope, validation, health | `http-foundation.spec.ts` with `SKIP_DB=true` |
-| Integration | billing service vs Postgres | `billing.integration.spec.ts` |
-| E2E smoke | live server hello + health | `apps/api-e2e` — **not** billing routes |
+| Layer           | What                             | Exhibit                                                        |
+| --------------- | -------------------------------- | -------------------------------------------------------------- |
+| Unit            | Money, pipes, filters, bill-math | `*.spec.ts` beside source; Money **100% branch** coverage gate |
+| Property        | allocator conservation           | `allocator.property.spec.ts` (fast-check)                      |
+| Constraint      | real CHECK/unique via `pg`       | `database.constraints.spec.ts`                                 |
+| HTTP foundation | envelope, validation, health     | `http-foundation.spec.ts` with `SKIP_DB=true`                  |
+| Integration     | billing service vs Postgres      | `billing.integration.spec.ts`                                  |
+| E2E smoke       | live server hello + health       | `apps/api-e2e` — **not** billing routes                        |
 
 **Principle:** property tests belong on **pure** functions with numeric invariants. HTTP e2e belongs on the contract you will not refactor weekly. This repo is light on billing HTTP tests — a gap.
 
@@ -690,33 +690,33 @@ Then billing:
 
 What it does, and what breaks if you change it.
 
-| File | Role | If removed or wrongly changed |
-| --- | --- | --- |
-| `package.json` | Scripts, deps, `lint-staged`, Prisma schema path, `deepmerge-ts` override | Install/CI/hooks break; Prisma CLI looks in the wrong place; audit may fail GHSA on Prisma CLI |
-| `package-lock.json` | Reproducible installs | CI drift |
-| `.npmrc` (`legacy-peer-deps`) | Expo/RN peer conflicts | `npm ci` may fail |
-| `nx.json` | Plugins, cache `namedInputs`, tsdown defaults | Inferred lint/test/expo targets disappear |
-| `tsconfig.base.json` | Path alias `@nestjs-template/types` | Backend import of types fails; **strict is off here** — app tsconfig must compensate |
-| `apps/backend/tsconfig.app.json` | Strict + decorators | Nest DI/routes break without decorator metadata; unsound indexing without `noUncheckedIndexedAccess` |
-| `apps/backend/tsdown.config.mts` | Bundle `main` + `seed` to `dist/apps/backend/*.cjs`, types alias | No `main.cjs`; OpenAPI export and Docker CMD fail |
-| `apps/backend/project.json` | serve env, prisma, openapi, prune, typecheck | Local serve missing `JWT_SECRET`/`DATABASE_URL`; build without generate |
-| `eslint.config.mjs` | Module boundaries | Cross-app imports slip through |
-| `apps/backend/eslint.config.mjs` | Ignore `prisma/**` | SQL files linted as JS |
-| `.prettierrc` / `.prettierignore` | Format | CI `format:check` fights you |
-| `.husky/pre-commit` | lint-staged | Dirty commits |
-| `jest.preset.js` + `apps/backend/jest.config.cts` | Node tests, Money coverage | Tests or coverage gate fail |
-| `apps/backend/prisma/schema.prisma` | Models | Client and migrations diverge |
-| `prisma/migrations/*/migration.sql` + `down.sql` | Up/down | Deploy/revert wrong; **hand `down.sql` can be stale** |
-| `docker-compose.yml` | Postgres + optional API | `db:up` gone; full-stack demo gone |
-| `apps/backend/Dockerfile` + `docker-entrypoint.sh` | Production image | Staging/GHCR useless; schema never applied in container |
-| `.dockerignore` | Slim context | Slow/huge builds |
-| `.github/workflows/ci.yml` | Quality gate (backend only) | Merges without tests; **mobile untested** |
-| `.github/workflows/staging.yml` | Push `ghcr.io/.../backend:master` | No image; **not a deploy**; branch is `master` (docs sometimes say `main`) |
-| `apps/backend/.env` | Local secrets | Ignored if `serve` injects env (this repo’s serve **does** inject) |
-| `babel.config.json` (root) / mobile `.babelrc.js` | Expo/Jest | Mobile tests fail; backend does not use Babel |
-| `apps/mobile/metro.config.js` | Monorepo Metro + SVG | Expo bundle fails |
-| `apps/mobile/eas.json` | EAS profiles | Cloud builds unconfigured |
-| `tools/scripts/eas-build-post-install.mjs` | Symlink workspace node_modules | EAS install breaks |
+| File                                               | Role                                                                      | If removed or wrongly changed                                                                        |
+| -------------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `package.json`                                     | Scripts, deps, `lint-staged`, Prisma schema path, `deepmerge-ts` override | Install/CI/hooks break; Prisma CLI looks in the wrong place; audit may fail GHSA on Prisma CLI       |
+| `package-lock.json`                                | Reproducible installs                                                     | CI drift                                                                                             |
+| `.npmrc` (`legacy-peer-deps`)                      | Expo/RN peer conflicts                                                    | `npm ci` may fail                                                                                    |
+| `nx.json`                                          | Plugins, cache `namedInputs`, tsdown defaults                             | Inferred lint/test/expo targets disappear                                                            |
+| `tsconfig.base.json`                               | Path alias `@nestjs-template/types`                                       | Backend import of types fails; **strict is off here** — app tsconfig must compensate                 |
+| `apps/backend/tsconfig.app.json`                   | Strict + decorators                                                       | Nest DI/routes break without decorator metadata; unsound indexing without `noUncheckedIndexedAccess` |
+| `apps/backend/tsdown.config.mts`                   | Bundle `main` + `seed` to `dist/apps/backend/*.cjs`, types alias          | No `main.cjs`; OpenAPI export and Docker CMD fail                                                    |
+| `apps/backend/project.json`                        | serve env, prisma, openapi, prune, typecheck                              | Local serve missing `JWT_SECRET`/`DATABASE_URL`; build without generate                              |
+| `eslint.config.mjs`                                | Module boundaries                                                         | Cross-app imports slip through                                                                       |
+| `apps/backend/eslint.config.mjs`                   | Ignore `prisma/**`                                                        | SQL files linted as JS                                                                               |
+| `.prettierrc` / `.prettierignore`                  | Format                                                                    | CI `format:check` fights you                                                                         |
+| `.husky/pre-commit`                                | lint-staged                                                               | Dirty commits                                                                                        |
+| `jest.preset.js` + `apps/backend/jest.config.cts`  | Node tests, Money coverage                                                | Tests or coverage gate fail                                                                          |
+| `apps/backend/prisma/schema.prisma`                | Models                                                                    | Client and migrations diverge                                                                        |
+| `prisma/migrations/*/migration.sql` + `down.sql`   | Up/down                                                                   | Deploy/revert wrong; **hand `down.sql` can be stale**                                                |
+| `docker-compose.yml`                               | Postgres + optional API                                                   | `db:up` gone; full-stack demo gone                                                                   |
+| `apps/backend/Dockerfile` + `docker-entrypoint.sh` | Production image                                                          | Staging/GHCR useless; schema never applied in container                                              |
+| `.dockerignore`                                    | Slim context                                                              | Slow/huge builds                                                                                     |
+| `.github/workflows/ci.yml`                         | Quality gate (backend only)                                               | Merges without tests; **mobile untested**                                                            |
+| `.github/workflows/staging.yml`                    | Push `ghcr.io/.../backend:master`                                         | No image; **not a deploy**; branch is `master` (docs sometimes say `main`)                           |
+| `apps/backend/.env`                                | Local secrets                                                             | Ignored if `serve` injects env (this repo’s serve **does** inject)                                   |
+| `babel.config.json` (root) / mobile `.babelrc.js`  | Expo/Jest                                                                 | Mobile tests fail; backend does not use Babel                                                        |
+| `apps/mobile/metro.config.js`                      | Monorepo Metro + SVG                                                      | Expo bundle fails                                                                                    |
+| `apps/mobile/eas.json`                             | EAS profiles                                                              | Cloud builds unconfigured                                                                            |
+| `tools/scripts/eas-build-post-install.mjs`         | Symlink workspace node_modules                                            | EAS install breaks                                                                                   |
 
 **Safe to ignore for runtime:** `.agents/`, `.github/skills/`, `tools/ai-migrations/`, `.vscode/`.
 
@@ -728,25 +728,25 @@ What it does, and what breaks if you change it.
 
 Copy the **patterns**. Do not copy these accidents.
 
-| Issue | Why it is a problem | Better default |
-| --- | --- | --- |
-| README still template-shaped | Looks like a Nest starter, not FTAAR | Point README at `docs/` and lobbies |
-| `@nestjs-template/*` naming | Cognitive tax | Rename when you fork |
-| `POST /auth/guest` not device-idempotent | New guest every call; `GuestDto` unused | Idempotent device id **or** delete the DTO |
-| Duplicate `@Public()` modules | Two files, same metadata key | One export |
-| `tax` = service fee | Clients will display “tax” wrong | Rename or compute tax |
-| `MoneyTransformer` TypeORM shape on Prisma | Misleading comments (`EntityManager`) | Name it `moneyToDb` only |
-| `MoneyPipe` unused | Two ways to parse money | Use the pipe in DTOs or delete it |
-| `FinaliseFault` in production providers | Test hook in prod graph | Test module / env-gated provider |
-| `BillingModule` implicit global Prisma | Optional inject `undefined` | Import `DatabaseModule` explicitly |
-| No billing HTTP e2e | Contract can drift | Supertest the controller |
-| Manual `down.sql` | Easy to forget | Prefer Prisma migrate discipline + expand/contract |
-| `tsconfig.base.json` not strict | Libs can be sloppy | Strict at the root |
-| `api-e2e` has no tags | Boundaries don’t apply | Tag `type:e2e` |
-| CI skips mobile | Auth client bitrots | Lint/test mobile or accept the risk |
-| Staging = image push | “Deployed” is a lie | CD to a real environment |
-| `deepmerge-ts` override | Audit workaround | Track upstream Prisma fix |
-| Error-code table in docs | Docs drift from `ERROR_CODES` | Generate the table or link the source |
+| Issue                                      | Why it is a problem                     | Better default                                     |
+| ------------------------------------------ | --------------------------------------- | -------------------------------------------------- |
+| README still template-shaped               | Looks like a Nest starter, not FTAAR    | Point README at `docs/` and lobbies                |
+| `@nestjs-template/*` naming                | Cognitive tax                           | Rename when you fork                               |
+| `POST /auth/guest` not device-idempotent   | New guest every call; `GuestDto` unused | Idempotent device id **or** delete the DTO         |
+| Duplicate `@Public()` modules              | Two files, same metadata key            | One export                                         |
+| `tax` = service fee                        | Clients will display “tax” wrong        | Rename or compute tax                              |
+| `MoneyTransformer` TypeORM shape on Prisma | Misleading comments (`EntityManager`)   | Name it `moneyToDb` only                           |
+| `MoneyPipe` unused                         | Two ways to parse money                 | Use the pipe in DTOs or delete it                  |
+| `FinaliseFault` in production providers    | Test hook in prod graph                 | Test module / env-gated provider                   |
+| `BillingModule` implicit global Prisma     | Optional inject `undefined`             | Import `DatabaseModule` explicitly                 |
+| No billing HTTP e2e                        | Contract can drift                      | Supertest the controller                           |
+| Manual `down.sql`                          | Easy to forget                          | Prefer Prisma migrate discipline + expand/contract |
+| `tsconfig.base.json` not strict            | Libs can be sloppy                      | Strict at the root                                 |
+| `api-e2e` has no tags                      | Boundaries don’t apply                  | Tag `type:e2e`                                     |
+| CI skips mobile                            | Auth client bitrots                     | Lint/test mobile or accept the risk                |
+| Staging = image push                       | “Deployed” is a lie                     | CD to a real environment                           |
+| `deepmerge-ts` override                    | Audit workaround                        | Track upstream Prisma fix                          |
+| Error-code table in docs                   | Docs drift from `ERROR_CODES`           | Generate the table or link the source              |
 
 **Strengths to copy:** integer money; constraint tests; nested transactions; property tests on allocation; uniform envelope; global JWT + `@Public()`; OTP hashed at rest; migrate in Docker entrypoint; prune + audit; skip DB for OpenAPI export.
 
@@ -832,30 +832,30 @@ npx nx run-many -t lint,typecheck,test --projects=backend
 
 ## 10. Common Mistakes & Troubleshooting
 
-| Mistake | Symptom | Cause | Diagnose / fix |
-| --- | --- | --- | --- |
-| Float money | Totals off by 0.01; `0.1 + 0.2` | `number` | Store minor units; add a conservation test |
-| `JSON.stringify` bigint | 500 on success path | Forgot interceptor walk | Serialise in one place (interceptor) |
-| Missing env | Process exits listing var names | Joi `required` | Match `serve` env / `.env.example` / Compose |
-| Changed `.env` but serve ignores it | Old DB URL | Nx `project.json` env wins | Change the target env or stop injecting |
-| Nest “can’t resolve dependencies” | Boot fail | Missing `reflect-metadata` or metadata emit | Import metadata first; check tsdown tsconfig |
-| OpenAPI export hangs / fails DB | Export needs Postgres | Did not skip DB | `shouldSkipDatabase()` on `--export-openapi` |
-| Tests need Docker unexpectedly | Connection refused | Forgot `SKIP_DB` | Set in `test-setup.ts`; only integration files connect |
-| Constraint tests skip | “passes” without asserting | Early return when DB down | Run migrate; fail CI if skip in CI |
-| Nested `$transaction` | Timeouts / unexpected isolation | Second BEGIN | ALS join pattern |
-| Extra JSON field 200 | Mass assignment | Pipe not global or `forbidNonWhitelisted` off | Integration test with `extra` |
-| Health 429 | Orchestrator flap | Health under throttler | `skipIf` / `@SkipThrottle` / exclude prefix |
-| Health 404 | Probe `/api/health` | Prefix applied | Exclude health |
-| Finalise 422 `PRICES_INCOMPLETE` | Cannot bill | Delivered line `actual_price` null | Patch lines first |
-| Finalise 409 | Retry created duplicate intent | No or different idempotency key | Send the same key |
-| Reopen 409 `BILL_LOCKED` | Cannot unlock | A member is `paid` | Product rule; do not “force” in API |
-| Spoofed admin | Wrong user billed | Trusted a client-supplied user header after JWT | Use token `sub` (`@CurrentUser('id')`) |
-| Prisma CHECK not in schema | Invalid rows from SQL console | Constraint only in migration | Keep SQL + constraint tests |
-| Docker image huge / Expo in API image | Slow deploy | Built whole workspace without prune | `backend:prune` then `npm ci --omit=dev` |
-| Audit fails on mobile advisory | CI red | Audited root graph | Audit `dist/apps/backend` after prune |
-| `db push` locally | CI missing columns | Never wrote migration | Always `migrate dev --create-only` then review SQL |
-| Wrong floor on negative fees | Shares do not sum to pool | Truncate toward zero | Property test; `floorDiv` |
-| Module boundary lint ignore | Mobile imports Prisma | Rule disabled | Keep `@nx/enforce-module-boundaries` as error |
+| Mistake                               | Symptom                         | Cause                                           | Diagnose / fix                                         |
+| ------------------------------------- | ------------------------------- | ----------------------------------------------- | ------------------------------------------------------ |
+| Float money                           | Totals off by 0.01; `0.1 + 0.2` | `number`                                        | Store minor units; add a conservation test             |
+| `JSON.stringify` bigint               | 500 on success path             | Forgot interceptor walk                         | Serialise in one place (interceptor)                   |
+| Missing env                           | Process exits listing var names | Joi `required`                                  | Match `serve` env / `.env.example` / Compose           |
+| Changed `.env` but serve ignores it   | Old DB URL                      | Nx `project.json` env wins                      | Change the target env or stop injecting                |
+| Nest “can’t resolve dependencies”     | Boot fail                       | Missing `reflect-metadata` or metadata emit     | Import metadata first; check tsdown tsconfig           |
+| OpenAPI export hangs / fails DB       | Export needs Postgres           | Did not skip DB                                 | `shouldSkipDatabase()` on `--export-openapi`           |
+| Tests need Docker unexpectedly        | Connection refused              | Forgot `SKIP_DB`                                | Set in `test-setup.ts`; only integration files connect |
+| Constraint tests skip                 | “passes” without asserting      | Early return when DB down                       | Run migrate; fail CI if skip in CI                     |
+| Nested `$transaction`                 | Timeouts / unexpected isolation | Second BEGIN                                    | ALS join pattern                                       |
+| Extra JSON field 200                  | Mass assignment                 | Pipe not global or `forbidNonWhitelisted` off   | Integration test with `extra`                          |
+| Health 429                            | Orchestrator flap               | Health under throttler                          | `skipIf` / `@SkipThrottle` / exclude prefix            |
+| Health 404                            | Probe `/api/health`             | Prefix applied                                  | Exclude health                                         |
+| Finalise 422 `PRICES_INCOMPLETE`      | Cannot bill                     | Delivered line `actual_price` null              | Patch lines first                                      |
+| Finalise 409                          | Retry created duplicate intent  | No or different idempotency key                 | Send the same key                                      |
+| Reopen 409 `BILL_LOCKED`              | Cannot unlock                   | A member is `paid`                              | Product rule; do not “force” in API                    |
+| Spoofed admin                         | Wrong user billed               | Trusted a client-supplied user header after JWT | Use token `sub` (`@CurrentUser('id')`)                 |
+| Prisma CHECK not in schema            | Invalid rows from SQL console   | Constraint only in migration                    | Keep SQL + constraint tests                            |
+| Docker image huge / Expo in API image | Slow deploy                     | Built whole workspace without prune             | `backend:prune` then `npm ci --omit=dev`               |
+| Audit fails on mobile advisory        | CI red                          | Audited root graph                              | Audit `dist/apps/backend` after prune                  |
+| `db push` locally                     | CI missing columns              | Never wrote migration                           | Always `migrate dev --create-only` then review SQL     |
+| Wrong floor on negative fees          | Shares do not sum to pool       | Truncate toward zero                            | Property test; `floorDiv`                              |
+| Module boundary lint ignore           | Mobile imports Prisma           | Rule disabled                                   | Keep `@nx/enforce-module-boundaries` as error          |
 
 ---
 
@@ -912,22 +912,22 @@ Use this on **your** implementation of a similar system.
 
 Compare a **future** project to this one **without copying names**.
 
-| Question | This project | Your project |
-| --- | --- | --- |
-| What is the aggregate root? | Lobby + 1:1 bill | |
-| Minor currency unit? | Piastre / EGP string | |
-| How are leftover integer units assigned? | Hamilton | |
-| How does a client see errors? | `{ success, error.code }` | |
-| How is config loaded? | Joi + hydrate files | |
-| How is schema changed? | Prisma migrate + extra SQL | |
-| How are nested writes atomic? | ALS `runInTransaction` | |
-| What is the identity stub vs real auth? | JWT global; billing/lobbies/orders use `sub` | |
-| What is liveness vs readiness? | `/health` vs `/health/db` | |
-| What is in CI vs skipped? | backend + e2e; not mobile | |
-| What is template leftover? | Root README; `@nestjs-template/*` names | |
-| Shared types: generated or hand-written? | Hand-written health only; mobile copies auth | |
-| Monorepo tags? | backend / mobile / shared | |
-| How is the API image built? | Nx prune + Node 22 Alpine | |
+| Question                                 | This project                                 | Your project |
+| ---------------------------------------- | -------------------------------------------- | ------------ |
+| What is the aggregate root?              | Lobby + 1:1 bill                             |              |
+| Minor currency unit?                     | Piastre / EGP string                         |              |
+| How are leftover integer units assigned? | Hamilton                                     |              |
+| How does a client see errors?            | `{ success, error.code }`                    |              |
+| How is config loaded?                    | Joi + hydrate files                          |              |
+| How is schema changed?                   | Prisma migrate + extra SQL                   |              |
+| How are nested writes atomic?            | ALS `runInTransaction`                       |              |
+| What is the identity stub vs real auth?  | JWT global; billing/lobbies/orders use `sub` |              |
+| What is liveness vs readiness?           | `/health` vs `/health/db`                    |              |
+| What is in CI vs skipped?                | backend + e2e; not mobile                    |              |
+| What is template leftover?               | Root README; `@nestjs-template/*` names      |              |
+| Shared types: generated or hand-written? | Hand-written health only; mobile copies auth |              |
+| Monorepo tags?                           | backend / mobile / shared                    |              |
+| How is the API image built?              | Nx prune + Node 22 Alpine                    |              |
 
 If your answers are “same as FTAAR” for **domain** questions, you may be copying, not designing.
 
