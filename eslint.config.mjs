@@ -25,6 +25,10 @@ export default [
               onlyDependOnLibsWithTags: ['scope:shared', 'scope:mobile'],
             },
             {
+              sourceTag: 'scope:web',
+              onlyDependOnLibsWithTags: ['scope:shared', 'scope:web'],
+            },
+            {
               sourceTag: 'scope:shared',
               onlyDependOnLibsWithTags: ['scope:shared'],
             },

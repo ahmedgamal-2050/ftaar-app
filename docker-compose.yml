@@ -33,6 +33,7 @@ services:
       PORT: '3000'
       LOG_LEVEL: info
       DATABASE_URL: postgres://ftaar:ftaar@postgres:5432/ftaar
+      DIRECT_URL: postgres://ftaar:ftaar@postgres:5432/ftaar
       JWT_SECRET: local-dev-jwt-secret-do-not-use-in-prod
       CORS_ORIGINS: http://localhost:3000,http://localhost:8081
       BODY_LIMIT: 256kb

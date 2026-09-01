@@ -66,9 +66,11 @@
           "NODE_ENV": "development",
           "PORT": "3000",
           "LOG_LEVEL": "info",
+          "DATABASE_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar",
+          "DIRECT_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar",
           "JWT_SECRET": "development-jwt-secret-32chars!!",
           "EMAIL_OTP_SECRET": "development-email-otp-secret-32chars!!",
-          "CORS_ORIGINS": "http://localhost:3000",
+          "CORS_ORIGINS": "http://localhost:3000,http://localhost:4200",
           "BODY_LIMIT": "256kb"
         }
       },
@@ -78,9 +80,11 @@
             "NODE_ENV": "development",
             "PORT": "3000",
             "LOG_LEVEL": "info",
+            "DATABASE_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar",
+            "DIRECT_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar",
             "JWT_SECRET": "development-jwt-secret-32chars!!",
             "EMAIL_OTP_SECRET": "development-email-otp-secret-32chars!!",
-            "CORS_ORIGINS": "http://localhost:3000",
+            "CORS_ORIGINS": "http://localhost:3000,http://localhost:4200",
             "BODY_LIMIT": "256kb"
           }
         },
@@ -89,9 +93,11 @@
             "NODE_ENV": "production",
             "PORT": "3000",
             "LOG_LEVEL": "info",
+            "DATABASE_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar",
+            "DIRECT_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar",
             "JWT_SECRET": "development-jwt-secret-32chars!!",
             "EMAIL_OTP_SECRET": "development-email-otp-secret-32chars!!",
-            "CORS_ORIGINS": "http://localhost:3000",
+            "CORS_ORIGINS": "http://localhost:3000,http://localhost:4200",
             "BODY_LIMIT": "256kb"
           }
         }
@@ -109,9 +115,11 @@
           "PORT": "3000",
           "LOG_LEVEL": "silent",
           "OPENAPI_OUT": "../../dist/apps/backend/openapi.json",
+          "DATABASE_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar",
+          "DIRECT_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar",
           "JWT_SECRET": "openapi-jwt-secret-min-32chars!!",
           "EMAIL_OTP_SECRET": "openapi-email-otp-secret-min-32chars!!",
-          "CORS_ORIGINS": "http://localhost:3000",
+          "CORS_ORIGINS": "http://localhost:3000,http://localhost:4200",
           "BODY_LIMIT": "256kb"
         }
       }
@@ -143,7 +151,11 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "npx prisma migrate deploy --schema prisma/schema.prisma",
-        "cwd": "apps/backend"
+        "cwd": "apps/backend",
+        "env": {
+          "DATABASE_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar",
+          "DIRECT_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar"
+        }
       }
     },
     "migration-revert": {
