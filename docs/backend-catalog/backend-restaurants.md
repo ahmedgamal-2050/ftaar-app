@@ -10,7 +10,7 @@ Writes require a **registered** JWT. Reads work with any access token. Guests ne
 | ------- | -------------------------------- | -------------------------------------------------------------------------------------- |
 | REST-01 | Entity + soft-delete scope       | Default queries exclude `isActive: false`                                              |
 | REST-02 | `GET /restaurants`               | Case-insensitive search (Arabic `ILIKE`); paginated; max `limit` 100                   |
-| REST-03 | `POST /restaurants`              | Name ≥ 2 characters; registered users only                                             |
+| REST-03 | `POST /restaurants`              | Name ≥ 2 characters; phone and image required; note optional; registered users only |
 | REST-04 | `PATCH /restaurants/:id`         | Partial update                                                                         |
 | REST-05 | DELETE soft + reference guard    | Sets `isActive: false`; **409** if an `open` / `locked` / `billed` lobby references it |
 | REST-06 | `GET /restaurants/:id` with menu | Active menu sorted by category then name; `?includeInactive` for managers              |
@@ -31,7 +31,16 @@ List response:
 
 ```json
 {
-  "items": [{ "id": "…", "name": "مطعم الفحام", "isActive": true }],
+  "items": [
+    {
+      "id": "…",
+      "name": "مطعم الفحام",
+      "phone": "+201001111111",
+      "image": "https://cdn.ftaar.example/restaurants/alfaham.jpg",
+      "note": "مشويات على الفحم",
+      "isActive": true
+    }
+  ],
   "page": 1,
   "limit": 20,
   "total": 3
@@ -42,8 +51,10 @@ Default `limit` is 20. Values above 100 are clamped to 100. `search` uses Postgr
 
 Detail includes `menu` (same shape as `GET /restaurants/:id/menu`).
 
-Create body: `{ "name": "بيت الكبسة" }`. Duplicate names (including case-insensitive) return **409** `ALREADY_EXISTS`.
+Create body: `{ "name": "بيت الكبسة", "phone": "+201003333333", "image": "https://cdn.ftaar.example/restaurants/kabsa.jpg", "note": "أفضل وقت للطلب بعد المغرب" }`. `note` is optional. Duplicate names (including case-insensitive) return **409** `ALREADY_EXISTS`.
 
 ## Schema
 
 Migration `20260828000001_restaurants_name_lower`: unique index on `lower(name)`.
+
+Migration `20260901000001_restaurant_phone_image_note`: `phone` and `image` required; `note` optional.
