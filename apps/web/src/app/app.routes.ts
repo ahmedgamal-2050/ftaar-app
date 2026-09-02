@@ -8,11 +8,13 @@ import { HomePage } from './pages/home.page';
 import { LobbiesPage } from './pages/lobbies.page';
 import { LobbyDetailPage } from './pages/lobby-detail.page';
 import { LobbyLookupPage } from './pages/lobby-lookup.page';
+import { LobbyOrdersPage } from './pages/lobby-orders.page';
 import { LoginPage } from './pages/login.page';
 import { OpsPage } from './pages/ops.page';
 import { ProfilePage } from './pages/profile.page';
 import { RegisterPage } from './pages/register.page';
 import { ResetPage } from './pages/reset.page';
+import { MenuFormPage } from './pages/menu-form.page';
 import { RestaurantDetailPage } from './pages/restaurant-detail.page';
 import { RestaurantsPage } from './pages/restaurants.page';
 import { VerifyOtpPage } from './pages/verify-otp.page';
@@ -41,10 +43,12 @@ export const appRoutes: Route[] = [
       { path: 'home', component: HomePage },
       { path: 'ops', component: OpsPage },
       { path: 'restaurants', component: RestaurantsPage },
+      { path: 'restaurants/:id/menu', component: MenuFormPage },
       { path: 'restaurants/:id', component: RestaurantDetailPage },
       { path: 'lobbies', component: LobbiesPage },
       { path: 'lobbies/lookup', component: LobbyLookupPage },
       { path: 'lobbies/:id', component: LobbyDetailPage },
+      { path: 'lobbies/:id/orders', component: LobbyOrdersPage },
       { path: 'account', component: ProfilePage },
       { path: 'account/convert', component: ConvertPage },
     ],

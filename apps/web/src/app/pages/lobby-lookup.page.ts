@@ -11,18 +11,19 @@ import { Banner, Field } from '../ui/ui';
   imports: [FormsModule, Banner, Field],
   template: `
     <div class="mx-auto max-w-xl space-y-4">
-      <form class="flex gap-2" (ngSubmit)="lookup()">
+      <form class="flex items-end gap-4" (ngSubmit)="lookup()">
         <fta-field class="flex-1" label="Share code">
           <input
             class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 uppercase outline-none"
             name="code"
             required
             maxlength="6"
+            placeholder="ABC123"
             [(ngModel)]="code"
           />
         </fta-field>
         <button
-          class="mt-6 h-10 rounded-[3px] bg-blurple px-3 text-sm text-white"
+          class="h-10 rounded-[3px] bg-blurple px-3 text-sm text-white"
         >
           GET /lobbies/code/:code
         </button>

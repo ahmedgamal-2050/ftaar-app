@@ -13,7 +13,7 @@ import { Banner, Field } from '../ui/ui';
     <div class="mx-auto grid max-w-4xl gap-4 md:grid-cols-2">
       <fta-banner class="md:col-span-2" [message]="error()" />
       <form
-        class="space-y-3 rounded-md bg-dc-secondary p-4"
+        class="space-y-5 rounded-md bg-dc-secondary p-4"
         (ngSubmit)="join()"
       >
         <h2 class="font-semibold text-dc-header">Join by code</h2>
@@ -23,6 +23,7 @@ import { Banner, Field } from '../ui/ui';
             name="code"
             required
             maxlength="6"
+            placeholder="ABC123"
             [(ngModel)]="code"
           />
         </fta-field>
@@ -30,6 +31,7 @@ import { Banner, Field } from '../ui/ui';
           <input
             class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 outline-none"
             name="displayName"
+            placeholder="Shown to other members"
             [(ngModel)]="displayName"
           />
         </fta-field>
@@ -40,7 +42,7 @@ import { Banner, Field } from '../ui/ui';
 
       @if (session.isRegistered()) {
         <form
-          class="space-y-3 rounded-md bg-dc-secondary p-4"
+          class="space-y-5 rounded-md bg-dc-secondary p-4"
           (ngSubmit)="create()"
         >
           <h2 class="font-semibold text-dc-header">Create lobby</h2>
@@ -49,6 +51,7 @@ import { Banner, Field } from '../ui/ui';
               class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 outline-none"
               name="restaurantId"
               required
+              placeholder="Restaurant id from catalog"
               [(ngModel)]="restaurantId"
             />
           </fta-field>
@@ -58,6 +61,7 @@ import { Banner, Field } from '../ui/ui';
               name="maxMembers"
               type="number"
               min="2"
+              placeholder="8"
               [(ngModel)]="maxMembers"
             />
           </fta-field>
@@ -67,6 +71,7 @@ import { Banner, Field } from '../ui/ui';
               name="expiryMinutes"
               type="number"
               min="1"
+              placeholder="30"
               [(ngModel)]="expiryMinutes"
             />
           </fta-field>
@@ -74,6 +79,7 @@ import { Banner, Field } from '../ui/ui';
             <input
               class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 outline-none"
               name="instaPay"
+              placeholder="instapay username"
               [(ngModel)]="instaPay"
             />
           </fta-field>

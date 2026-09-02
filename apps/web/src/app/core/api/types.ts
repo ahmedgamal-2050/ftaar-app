@@ -39,6 +39,9 @@ export interface MessageResponse {
 export interface Restaurant {
   id: string;
   name: string;
+  phone: string;
+  image: string;
+  note: string | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -150,4 +153,52 @@ export interface HealthPayload {
   info?: Record<string, unknown>;
   error?: Record<string, unknown>;
   details?: Record<string, unknown>;
+}
+
+export interface OrderItem {
+  id: string;
+  lobbyId: string;
+  lobbyMemberId: string;
+  menuItemId: string;
+  restaurantId: string;
+  qty: number;
+  actualPrice: string;
+  lineTotal: string;
+  createdAt: string;
+  menuItem?: { id: string; name: string; category: string };
+  lobbyMember?: { id: string; displayName: string };
+}
+
+export interface MemberOrderSummary {
+  items: OrderItem[];
+  subtotal: string;
+}
+
+export interface LobbyOrdersSummary {
+  lobbyId: string;
+  items: OrderItem[];
+  subtotal: string;
+}
+
+export interface KitchenSummaryItem {
+  menuItemId: string;
+  name: string;
+  category: string;
+  totalQty: number;
+  unitPrice: string;
+  totalPrice: string;
+}
+
+export interface KitchenSummary {
+  lobbyId: string;
+  totalItemsCount: number;
+  grandTotal: string;
+  items: KitchenSummaryItem[];
+}
+
+export interface OverridePriceResult {
+  lobbyId: string;
+  menuItemId: string;
+  updatedCount: number;
+  newPrice: string;
 }

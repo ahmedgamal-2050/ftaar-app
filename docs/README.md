@@ -27,4 +27,4 @@ Guides for work completed in this workspace. Task-ID checklists record **what sh
 
 ## Web
 
-- [Angular app](./web.md) — Discord-inspired Tailwind client covering auth, catalog, lobbies, billing, and health.
+- [Angular app](./web.md) — Discord-inspired Tailwind client covering auth, catalog, lobbies, orders, billing, and health.

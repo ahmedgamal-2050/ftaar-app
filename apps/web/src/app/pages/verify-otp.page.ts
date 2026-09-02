@@ -16,13 +16,14 @@ import { Banner, Field, OkBanner } from '../ui/ui';
     </p>
     <fta-banner [message]="error()" />
     <fta-ok [message]="info()" />
-    <form class="mt-4 flex flex-col gap-4" (ngSubmit)="submit()">
+    <form class="mt-4 flex flex-col gap-5" (ngSubmit)="submit()">
       <fta-field label="Email">
         <input
           class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
           name="email"
           type="email"
           required
+          placeholder="you@example.com"
           [(ngModel)]="email"
         />
       </fta-field>
@@ -33,6 +34,7 @@ import { Banner, Field, OkBanner } from '../ui/ui';
           required
           maxlength="6"
           pattern="\\d{6}"
+          placeholder="000000"
           [(ngModel)]="otp"
         />
       </fta-field>

@@ -12,12 +12,13 @@ import { Banner, Field, OkBanner } from '../ui/ui';
     <h2 class="mb-5 text-2xl font-semibold text-dc-header">New password</h2>
     <fta-banner [message]="error()" />
     <fta-ok [message]="info()" />
-    <form class="mt-4 flex flex-col gap-4" (ngSubmit)="submit()">
+    <form class="mt-4 flex flex-col gap-5" (ngSubmit)="submit()">
       <fta-field label="Reset token">
         <input
           class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
           name="token"
           required
+          placeholder="Token from the OTP step"
           [(ngModel)]="token"
         />
       </fta-field>
@@ -28,6 +29,7 @@ import { Banner, Field, OkBanner } from '../ui/ui';
           type="password"
           required
           minlength="8"
+          placeholder="At least 8 characters"
           [(ngModel)]="password"
         />
       </fta-field>

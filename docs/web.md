@@ -26,16 +26,18 @@ The dev server uses `apps/web/proxy.conf.json`, so the browser talks to same-ori
 | Home ping | `/home` | `GET /api` |
 | Ops | `/ops` | `GET /health`, `GET /health/db` |
 | Restaurant list / create | `/restaurants` | `GET /api/restaurants`, `POST /api/restaurants` |
-| Restaurant + menu | `/restaurants/:id` | `GET /api/restaurants/:id`, `PATCH` / `DELETE /api/restaurants/:id`, `GET` / `POST /api/restaurants/:id/menu`, `POST .../menu/bulk`, `PATCH` / `DELETE /api/menu-items/:id` |
+| Restaurant + menu | `/restaurants/:id` | `GET /api/restaurants/:id`, `PATCH` / `DELETE /api/restaurants/:id`, `GET /api/restaurants/:id/menu`, `PATCH` / `DELETE /api/menu-items/:id` |
+| Add menu (item / bulk) | `/restaurants/:id/menu` | `POST /api/restaurants/:id/menu`, `POST .../menu/bulk` |
 | Create / join lobby | `/lobbies` | `POST /api/lobbies`, `POST /api/lobbies/join` |
 | Lookup by code | `/lobbies/lookup` | `GET /api/lobbies/code/:code` |
 | Lobby room | `/lobbies/:id` | `GET /api/lobbies/:id`, `PATCH .../lock`, `PATCH .../reopen`, `DELETE .../leave`, `DELETE .../members/:memberId` |
+| Orders | `/lobbies/:id/orders` | `GET` / `POST` / `PATCH` / `DELETE .../orders/items`, admin `GET .../admin/orders`, `GET .../admin/orders/summary`, `PATCH .../admin/orders/menu-items/:menuItemId/price` |
 | Billing | `/lobbies/:id` | `GET .../bill/draft`, `PATCH .../bill/lines`, `POST .../bill/preview`, `POST .../bill/finalise`, `POST .../bill/reopen`, `GET .../bill` |
 | Profile | `/account` | `GET /api/auth/me`, `PATCH /api/auth/me`, `POST /api/auth/logout` |
 | Convert guest | `/account/convert` | `POST /api/auth/convert` |
 | Session restore | boot | `POST /api/auth/refresh` |
 
-Billing still requires header `x-user-id` in addition to JWT (see [backend billing](./backend-billing.md)). The web client sends the authenticated user's id on every `/bill` request.
+Billing identity is the JWT `sub` (BILL-17). The web client no longer sends `x-user-id`.
 
 ## Layout
 

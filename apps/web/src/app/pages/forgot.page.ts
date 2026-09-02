@@ -14,13 +14,14 @@ import { Banner, Field, OkBanner } from '../ui/ui';
     <fta-banner [message]="error()" />
     <fta-ok [message]="info()" />
     @if (step() === 'email') {
-      <form class="mt-4 flex flex-col gap-4" (ngSubmit)="send()">
+      <form class="mt-4 flex flex-col gap-5" (ngSubmit)="send()">
         <fta-field label="Email">
           <input
             class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
             name="email"
             type="email"
             required
+            placeholder="you@example.com"
             [(ngModel)]="email"
           />
         </fta-field>
@@ -32,13 +33,14 @@ import { Banner, Field, OkBanner } from '../ui/ui';
         </button>
       </form>
     } @else {
-      <form class="mt-4 flex flex-col gap-4" (ngSubmit)="verify()">
+      <form class="mt-4 flex flex-col gap-5" (ngSubmit)="verify()">
         <fta-field label="OTP">
           <input
             class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
             name="otp"
             required
             maxlength="6"
+            placeholder="6-digit code"
             [(ngModel)]="otp"
           />
         </fta-field>

@@ -13,13 +13,14 @@ import { Banner, Field } from '../ui/ui';
     <h2 class="mb-1 text-2xl font-semibold text-dc-header">Welcome back!</h2>
     <p class="mb-5 text-sm text-dc-muted">We're so excited to see you again!</p>
     <fta-banner [message]="error()" />
-    <form class="mt-4 flex flex-col gap-4" (ngSubmit)="submit()">
+    <form class="mt-4 flex flex-col gap-5" (ngSubmit)="submit()">
       <fta-field label="Email">
         <input
           class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
           name="email"
           type="email"
           required
+          placeholder="you@example.com"
           [(ngModel)]="email"
         />
       </fta-field>
@@ -29,6 +30,7 @@ import { Banner, Field } from '../ui/ui';
           name="password"
           type="password"
           required
+          placeholder="Your password"
           [(ngModel)]="password"
         />
       </fta-field>

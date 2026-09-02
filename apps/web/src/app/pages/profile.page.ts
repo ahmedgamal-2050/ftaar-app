@@ -28,13 +28,14 @@ import { Banner, Field, OkBanner } from '../ui/ui';
       </div>
       @if (session.isRegistered()) {
         <form
-          class="space-y-3 rounded-md bg-dc-secondary p-4"
+          class="space-y-5 rounded-md bg-dc-secondary p-4"
           (ngSubmit)="save()"
         >
           <fta-field label="Display name">
             <input
               class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 outline-none"
               name="displayName"
+              placeholder="How you appear in lobbies"
               [(ngModel)]="displayName"
             />
           </fta-field>
@@ -42,6 +43,7 @@ import { Banner, Field, OkBanner } from '../ui/ui';
             <input
               class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 outline-none"
               name="instaPay"
+              placeholder="instapay username"
               [(ngModel)]="instaPay"
             />
           </fta-field>

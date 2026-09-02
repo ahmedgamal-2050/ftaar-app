@@ -12,11 +12,12 @@ import { Banner, Field } from '../ui/ui';
   imports: [FormsModule, RouterLink, Banner, Field],
   template: `
     <div class="mx-auto max-w-3xl space-y-4">
-      <form class="flex flex-wrap items-end gap-2" (ngSubmit)="load()">
+      <form class="flex flex-wrap items-end gap-4" (ngSubmit)="load()">
         <fta-field label="Search">
           <input
             class="h-10 w-56 rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
             name="search"
+            placeholder="Restaurant name"
             [(ngModel)]="search"
           />
         </fta-field>
@@ -26,6 +27,7 @@ import { Banner, Field } from '../ui/ui';
             name="page"
             type="number"
             min="1"
+            placeholder="1"
             [(ngModel)]="page"
           />
         </fta-field>
@@ -45,15 +47,47 @@ import { Banner, Field } from '../ui/ui';
       </form>
 
       @if (session.isRegistered()) {
-        <form class="flex gap-2" (ngSubmit)="create()">
-          <input
-            class="h-10 flex-1 rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
-            name="name"
-            required
-            minlength="2"
-            placeholder="New restaurant name"
-            [(ngModel)]="newName"
-          />
+        <form
+          class="grid gap-4 rounded-md bg-dc-secondary p-4 md:grid-cols-2"
+          (ngSubmit)="create()"
+        >
+          <fta-field label="Name">
+            <input
+              class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
+              name="name"
+              required
+              minlength="2"
+              placeholder="Restaurant name"
+              [(ngModel)]="newName"
+            />
+          </fta-field>
+          <fta-field label="Phone">
+            <input
+              class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
+              name="phone"
+              required
+              minlength="5"
+              placeholder="0100 000 0000"
+              [(ngModel)]="newPhone"
+            />
+          </fta-field>
+          <fta-field label="Image URL" class="md:col-span-2">
+            <input
+              class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
+              name="image"
+              required
+              placeholder="https://example.com/photo.jpg"
+              [(ngModel)]="newImage"
+            />
+          </fta-field>
+          <fta-field label="Note (optional)" class="md:col-span-2">
+            <input
+              class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
+              name="note"
+              placeholder="Delivery notes, hours, …"
+              [(ngModel)]="newNote"
+            />
+          </fta-field>
           <button
             class="h-10 rounded-[3px] bg-dc-green px-3 text-sm text-white hover:bg-dc-green-hover"
           >
@@ -73,9 +107,21 @@ import { Banner, Field } from '../ui/ui';
           @for (item of data.items; track item.id) {
             <a
               [routerLink]="['/restaurants', item.id]"
-              class="flex items-center justify-between border-b border-black/20 px-4 py-3 last:border-0 hover:bg-dc-hover"
+              class="flex items-center gap-3 border-b border-black/20 px-4 py-3 last:border-0 hover:bg-dc-hover"
             >
-              <span class="font-medium text-dc-header">{{ item.name }}</span>
+              <img
+                [src]="item.image"
+                [alt]="item.name"
+                class="h-10 w-10 rounded object-cover"
+              />
+              <span class="min-w-0 flex-1">
+                <span class="block font-medium text-dc-header">{{
+                  item.name
+                }}</span>
+                <span class="block truncate text-xs text-dc-muted">{{
+                  item.phone
+                }}</span>
+              </span>
               <span
                 class="text-xs"
                 [class.text-dc-green]="item.isActive"
@@ -96,6 +142,9 @@ export class RestaurantsPage {
   page = 1;
   includeInactive = false;
   newName = '';
+  newPhone = '';
+  newImage = '';
+  newNote = '';
   readonly list = signal<RestaurantList | null>(null);
   readonly error = signal<string | null>(null);
 
@@ -122,8 +171,16 @@ export class RestaurantsPage {
   async create(): Promise<void> {
     this.error.set(null);
     try {
-      await this.api.createRestaurant(this.newName);
+      await this.api.createRestaurant({
+        name: this.newName,
+        phone: this.newPhone,
+        image: this.newImage,
+        note: this.newNote || undefined,
+      });
       this.newName = '';
+      this.newPhone = '';
+      this.newImage = '';
+      this.newNote = '';
       await this.load();
     } catch (err) {
       this.error.set(getApiError(err).message);

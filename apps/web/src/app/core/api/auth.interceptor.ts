@@ -11,10 +11,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   if (token) {
     headers = headers.set('Authorization', `Bearer ${token}`);
   }
-  const userId = session.user()?.id;
-  if (userId && requestPath(req.url).includes('/bill')) {
-    headers = headers.set('x-user-id', userId);
-  }
   const authReq = req.clone({ headers });
 
   return next(authReq).pipe(

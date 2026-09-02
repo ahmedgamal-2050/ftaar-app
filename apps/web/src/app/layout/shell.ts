@@ -66,6 +66,30 @@ export class Shell {
   });
 
   readonly channels = computed<Channel[]>(() => {
+    const path = this.url();
+    const restaurantMatch = path.match(
+      /^\/restaurants\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
+    );
+    if (restaurantMatch) {
+      const id = restaurantMatch[1];
+      return [
+        { label: 'restaurants', path: '/restaurants' },
+        { label: 'restaurant', path: `/restaurants/${id}` },
+        { label: 'add-menu', path: `/restaurants/${id}/menu` },
+      ];
+    }
+    const lobbyMatch = path.match(
+      /^\/lobbies\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})/i,
+    );
+    if (lobbyMatch) {
+      const id = lobbyMatch[1];
+      return [
+        { label: 'room', path: `/lobbies/${id}` },
+        { label: 'orders', path: `/lobbies/${id}/orders` },
+        { label: 'create-join', path: '/lobbies' },
+        { label: 'lookup', path: '/lobbies/lookup' },
+      ];
+    }
     switch (this.guild()) {
       case 'catalog':
         return [{ label: 'restaurants', path: '/restaurants' }];

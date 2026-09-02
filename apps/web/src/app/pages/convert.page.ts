@@ -24,7 +24,7 @@ import { Banner, Field } from '../ui/ui';
       } @else {
         <fta-banner [message]="error()" />
         <form
-          class="space-y-3 rounded-md bg-dc-secondary p-4"
+          class="space-y-5 rounded-md bg-dc-secondary p-4"
           (ngSubmit)="convert()"
         >
           <fta-field label="Email">
@@ -33,6 +33,7 @@ import { Banner, Field } from '../ui/ui';
               name="email"
               type="email"
               required
+              placeholder="you@example.com"
               [(ngModel)]="email"
             />
           </fta-field>
@@ -43,6 +44,7 @@ import { Banner, Field } from '../ui/ui';
               type="password"
               required
               minlength="8"
+              placeholder="At least 8 characters"
               [(ngModel)]="password"
             />
           </fta-field>

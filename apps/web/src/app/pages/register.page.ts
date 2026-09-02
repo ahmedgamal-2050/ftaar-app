@@ -14,13 +14,14 @@ import { Banner, Field } from '../ui/ui';
       Create an account
     </h2>
     <fta-banner [message]="error()" />
-    <form class="mt-4 flex flex-col gap-4" (ngSubmit)="submit()">
+    <form class="mt-4 flex flex-col gap-5" (ngSubmit)="submit()">
       <fta-field label="Email">
         <input
           class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
           name="email"
           type="email"
           required
+          placeholder="you@example.com"
           [(ngModel)]="email"
         />
       </fta-field>
@@ -31,6 +32,7 @@ import { Banner, Field } from '../ui/ui';
           type="password"
           required
           minlength="8"
+          placeholder="At least 8 characters"
           [(ngModel)]="password"
         />
       </fta-field>

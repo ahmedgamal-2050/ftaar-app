@@ -1,7 +1,7 @@
 import { JsonPipe } from '@angular/common';
 import { Component, inject, input, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { FtaarApi } from '../core/api/ftaar-api';
 import { getApiError } from '../core/api/http-error';
 import type { BillDraft, BillPreview, Lobby } from '../core/api/types';
@@ -10,7 +10,7 @@ import { Banner, Field } from '../ui/ui';
 
 @Component({
   selector: 'fta-lobby-detail-page',
-  imports: [FormsModule, Banner, Field, JsonPipe],
+  imports: [FormsModule, Banner, Field, JsonPipe, RouterLink],
   template: `
     <div class="mx-auto max-w-5xl space-y-4">
       <fta-banner [message]="error()" />
@@ -30,6 +30,12 @@ import { Banner, Field } from '../ui/ui';
           </div>
           <p class="mt-1 text-xs text-dc-muted">{{ room.id }}</p>
           <div class="mt-3 flex flex-wrap gap-2">
+            <a
+              [routerLink]="['/lobbies', room.id, 'orders']"
+              class="flex h-9 items-center rounded-[3px] bg-dc-green px-3 text-sm text-white"
+            >
+              Orders
+            </a>
             <button
               class="h-9 rounded-[3px] bg-blurple px-3 text-sm text-white"
               (click)="lock()"
@@ -87,11 +93,12 @@ import { Banner, Field } from '../ui/ui';
                   Reopen bill
                 </button>
               </div>
-              <div class="grid gap-2 md:grid-cols-4">
+              <div class="grid gap-4 md:grid-cols-4">
                 <fta-field label="Delivery">
                   <input
                     class="h-9 w-full rounded-[3px] bg-dc-input px-2 text-sm outline-none"
                     name="delivery"
+                    placeholder="15.00"
                     [(ngModel)]="deliveryFee"
                   />
                 </fta-field>
@@ -99,6 +106,7 @@ import { Banner, Field } from '../ui/ui';
                   <input
                     class="h-9 w-full rounded-[3px] bg-dc-input px-2 text-sm outline-none"
                     name="service"
+                    placeholder="5.00"
                     [(ngModel)]="serviceFee"
                   />
                 </fta-field>
@@ -106,6 +114,7 @@ import { Banner, Field } from '../ui/ui';
                   <input
                     class="h-9 w-full rounded-[3px] bg-dc-input px-2 text-sm outline-none"
                     name="discount"
+                    placeholder="0.00"
                     [(ngModel)]="discount"
                   />
                 </fta-field>
@@ -113,14 +122,16 @@ import { Banner, Field } from '../ui/ui';
                   <input
                     class="h-9 w-full rounded-[3px] bg-dc-input px-2 text-sm outline-none"
                     name="receipt"
+                    placeholder="Optional total"
                     [(ngModel)]="receiptTotal"
                   />
                 </fta-field>
               </div>
-              <fta-field label="Idempotency key">
+              <fta-field class="mt-4" label="Idempotency key">
                 <input
-                  class="mt-2 h-9 w-full rounded-[3px] bg-dc-input px-2 text-sm outline-none"
+                  class="h-9 w-full rounded-[3px] bg-dc-input px-2 text-sm outline-none"
                   name="idem"
+                  placeholder="Unique key for finalise"
                   [(ngModel)]="idempotencyKey"
                 />
               </fta-field>
@@ -145,16 +156,23 @@ import { Banner, Field } from '../ui/ui';
                       >
                     </p>
                     @for (line of group.lines; track line.id) {
-                      <div class="mt-2 flex flex-wrap items-center gap-2">
-                        <span class="text-xs text-dc-muted">{{ line.id }}</span>
-                        <input
-                          class="h-8 w-24 rounded-[3px] bg-dc-input px-2 text-sm outline-none"
-                          [ngModel]="line.actualPrice ?? line.suggestedActual"
-                          (ngModelChange)="line.actualPrice = $event"
-                        />
+                      <div class="mt-3 flex flex-wrap items-end gap-4">
+                        <span class="pb-2 text-xs text-dc-muted">{{
+                          line.id
+                        }}</span>
+                        <fta-field label="Actual price">
+                          <input
+                            class="h-8 w-28 rounded-[3px] bg-dc-input px-2 text-sm outline-none"
+                            [name]="'price' + line.id"
+                            placeholder="0.00"
+                            [ngModel]="line.actualPrice ?? line.suggestedActual"
+                            (ngModelChange)="line.actualPrice = $event"
+                          />
+                        </fta-field>
                         <label class="text-xs text-dc-muted">
                           <input
                             type="checkbox"
+                            [name]="'delivered' + line.id"
                             [ngModel]="line.delivered"
                             (ngModelChange)="line.delivered = $event"
                           />

@@ -8,10 +8,14 @@ import type {
   BillPreview,
   HealthPayload,
   JoinLobbyResult,
+  KitchenSummary,
   Lobby,
   LobbyMember,
+  LobbyOrdersSummary,
+  MemberOrderSummary,
   MenuItem,
   MessageResponse,
+  OverridePriceResult,
   Restaurant,
   RestaurantList,
 } from './types';
@@ -142,9 +146,14 @@ export class FtaarApi {
     );
   }
 
-  createRestaurant(name: string) {
+  createRestaurant(payload: {
+    name: string;
+    phone: string;
+    image: string;
+    note?: string;
+  }) {
     return firstValueFrom(
-      this.http.post<Restaurant>('/api/restaurants', { name }),
+      this.http.post<Restaurant>('/api/restaurants', payload),
     );
   }
 
@@ -158,7 +167,16 @@ export class FtaarApi {
     );
   }
 
-  updateRestaurant(id: string, payload: { name?: string; isActive?: boolean }) {
+  updateRestaurant(
+    id: string,
+    payload: {
+      name?: string;
+      phone?: string;
+      image?: string;
+      note?: string | null;
+      isActive?: boolean;
+    },
+  ) {
     return firstValueFrom(
       this.http.patch<Restaurant>(`/api/restaurants/${id}`, payload),
     );
@@ -289,6 +307,65 @@ export class FtaarApi {
   leaveLobby(id: string) {
     return firstValueFrom(
       this.http.delete<LobbyMember>(`/api/lobbies/${id}/leave`),
+    );
+  }
+
+  myOrder(lobbyId: string) {
+    return firstValueFrom(
+      this.http.get<MemberOrderSummary>(`/api/lobbies/${lobbyId}/orders/items`),
+    );
+  }
+
+  addOrderItem(lobbyId: string, menuItemId: string, qty: number) {
+    return firstValueFrom(
+      this.http.post<MemberOrderSummary>(
+        `/api/lobbies/${lobbyId}/orders/items`,
+        { menuItemId, qty },
+      ),
+    );
+  }
+
+  updateOrderItem(lobbyId: string, itemId: string, qty: number) {
+    return firstValueFrom(
+      this.http.patch<MemberOrderSummary>(
+        `/api/lobbies/${lobbyId}/orders/items/${itemId}`,
+        { qty },
+      ),
+    );
+  }
+
+  removeOrderItem(lobbyId: string, itemId: string) {
+    return firstValueFrom(
+      this.http.delete<MemberOrderSummary>(
+        `/api/lobbies/${lobbyId}/orders/items/${itemId}`,
+      ),
+    );
+  }
+
+  adminOrders(lobbyId: string) {
+    return firstValueFrom(
+      this.http.get<LobbyOrdersSummary>(`/api/lobbies/${lobbyId}/admin/orders`),
+    );
+  }
+
+  kitchenSummary(lobbyId: string) {
+    return firstValueFrom(
+      this.http.get<KitchenSummary>(
+        `/api/lobbies/${lobbyId}/admin/orders/summary`,
+      ),
+    );
+  }
+
+  overrideMenuItemPrice(
+    lobbyId: string,
+    menuItemId: string,
+    actualPrice: string,
+  ) {
+    return firstValueFrom(
+      this.http.patch<OverridePriceResult>(
+        `/api/lobbies/${lobbyId}/admin/orders/menu-items/${menuItemId}/price`,
+        { actualPrice },
+      ),
     );
   }
 

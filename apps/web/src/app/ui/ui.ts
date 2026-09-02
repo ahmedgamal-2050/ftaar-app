@@ -34,14 +34,13 @@ export class OkBanner {
 
 @Component({
   selector: 'fta-field',
+  host: { class: 'block' },
   template: `
-    <div class="block">
-      <span
-        class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-dc-header"
-        >{{ label() }}</span
-      >
-      <ng-content />
-    </div>
+    <span
+      class="mb-2 block text-xs font-bold uppercase tracking-wide text-dc-header"
+      >{{ label() }}</span
+    >
+    <ng-content />
   `,
 })
 export class Field {

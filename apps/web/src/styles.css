@@ -47,3 +47,8 @@ select,
 button {
   font-family: inherit;
 }
+
+input::placeholder,
+textarea::placeholder {
+  color: #949ba4;
+}
