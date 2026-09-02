@@ -38,6 +38,7 @@ export interface InvariantMember {
   id: string;
   userId: string;
   displayName: string;
+  role: 'admin' | 'member';
   itemsSubtotal: Money;
   feesShare: Money;
   total: Money;
@@ -138,6 +139,7 @@ export function buildInvariant(
       id: member.id,
       userId: member.userId,
       displayName: member.displayName,
+      role: member.role,
       itemsSubtotal,
       feesShare,
       total: itemsSubtotal.add(feesShare),

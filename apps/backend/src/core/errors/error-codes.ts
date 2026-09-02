@@ -32,6 +32,12 @@ export const ERROR_CODES = [
   'GATEWAY_TIMEOUT',
   'PRICES_INCOMPLETE',
   'BILL_LOCKED',
+  'NOT_IN_PAYMENT',
+  'CLAIM_NOT_PENDING',
+  'ALREADY_PAID',
+  'CANNOT_CLAIM_AS_HOST',
+  'SETTLEMENT_INCOMPLETE',
+  'LOBBY_SETTLED',
 ] as const;
 
 export type ErrorCode = (typeof ERROR_CODES)[number];
@@ -64,6 +70,12 @@ export const ERROR_HTTP_STATUS = {
   GATEWAY_TIMEOUT: HttpStatus.GATEWAY_TIMEOUT,
   PRICES_INCOMPLETE: HttpStatus.UNPROCESSABLE_ENTITY,
   BILL_LOCKED: HttpStatus.CONFLICT,
+  NOT_IN_PAYMENT: HttpStatus.CONFLICT,
+  CLAIM_NOT_PENDING: HttpStatus.CONFLICT,
+  ALREADY_PAID: HttpStatus.CONFLICT,
+  CANNOT_CLAIM_AS_HOST: HttpStatus.FORBIDDEN,
+  SETTLEMENT_INCOMPLETE: HttpStatus.CONFLICT,
+  LOBBY_SETTLED: HttpStatus.CONFLICT,
 } as const satisfies Record<ErrorCode, number>;
 
 export type ErrorHttpStatus = (typeof ERROR_HTTP_STATUS)[ErrorCode];
