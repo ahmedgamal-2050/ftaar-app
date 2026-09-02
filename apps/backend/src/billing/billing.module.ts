@@ -7,6 +7,6 @@ import { LobbyAccessService } from './lobby-access.service';
 @Module({
   controllers: [BillingController],
   providers: [BillingService, LobbyAccessService, FinaliseFault],
-  exports: [BillingService, FinaliseFault],
+  exports: [BillingService, LobbyAccessService, FinaliseFault],
 })
 export class BillingModule {}

@@ -58,6 +58,7 @@
       "dependsOn": ["build"],
       "options": {
         "cwd": "apps/backend",
+        "parallel": true,
         "commands": [
           "tsdown --watch --no-clean",
           "node --watch ../../dist/apps/backend/main.cjs"
@@ -100,6 +101,25 @@
             "CORS_ORIGINS": "http://localhost:3000,http://localhost:4200",
             "BODY_LIMIT": "256kb"
           }
+        }
+      }
+    },
+    "serve-static": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "cwd": "apps/backend",
+        "command": "node ../../dist/apps/backend/main.cjs",
+        "env": {
+          "NODE_ENV": "development",
+          "PORT": "3000",
+          "LOG_LEVEL": "info",
+          "DATABASE_URL": "postgres://ftaar:ftaar@127.0.0.1:5432/ftaar",
+          "JWT_SECRET": "development-jwt-secret-32chars!!",
+          "EMAIL_OTP_SECRET": "development-email-otp-secret-32chars!!",
+          "CORS_ORIGINS": "http://localhost:3000",
+          "BODY_LIMIT": "256kb"
         }
       }
     },

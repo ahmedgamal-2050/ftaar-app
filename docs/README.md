@@ -20,6 +20,7 @@ Guides for work completed in this workspace. Task-ID checklists record **what sh
 - [Lobbies (LOBBY-01–LOBBY-08)](./backend-lobbies.md) — Create, join by code, lock / reopen, leave / kick.
 - [Orders (ORD-01–ORD-07)](./backend-orders.md) — Member cart, admin roster / kitchen summary, price override.
 - [Billing (BILL-01–BILL-17)](./backend-billing.md) — Fee allocator, draft / lines / preview / finalise / reopen; JWT identity.
+- [Payments (PAY-01–PAY-09)](./backend-payments.md) — InstaPay claims, host confirm/reject, settle lobby.
 
 ## Mobile
 

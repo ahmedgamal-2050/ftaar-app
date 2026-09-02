@@ -17,6 +17,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { LobbiesModule } from '../lobbies/lobbies.module';
 import { MenuModule } from '../menu/menu.module';
 import { OrdersModule } from '../orders/orders.module';
+import { PaymentsModule } from '../payments/payments.module';
 import { RestaurantsModule } from '../restaurants/restaurants.module';
 
 @Module({
@@ -38,6 +39,7 @@ import { RestaurantsModule } from '../restaurants/restaurants.module';
     MenuModule,
     LobbiesModule,
     OrdersModule,
+    PaymentsModule,
   ],
   controllers: [AppController, HealthController],
   providers: [
