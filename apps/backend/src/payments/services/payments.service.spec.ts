@@ -52,6 +52,7 @@ describe('PaymentsService', () => {
       instaPayHandle: 'omar.instapay',
     });
     prisma.paymentClaim.findFirst.mockResolvedValue(null);
+    prisma.lobbyMember.findFirst.mockResolvedValue(owingMember());
     prisma.lobbyMember.findMany.mockResolvedValue([
       adminMember(),
       owingMember({ paymentStatus: 'pending' }),
@@ -82,6 +83,10 @@ describe('PaymentsService', () => {
     });
 
     const board = await service.claim(LOBBY_ID, MEMBER_USER_ID, {});
+    expect(billing.readFinalisedBill).toHaveBeenCalledWith(LOBBY_ID, prisma);
+    expect(prisma.lobbyMember.findFirst).toHaveBeenCalledWith({
+      where: { id: MEMBER_MEMBER_ID, lobbyId: LOBBY_ID },
+    });
     expect(prisma.paymentClaim.create).toHaveBeenCalled();
     expect(prisma.lobbyMember.update).toHaveBeenCalledWith({
       where: { id: MEMBER_MEMBER_ID },
@@ -134,6 +139,25 @@ describe('PaymentsService', () => {
       data: { status: 'settled' },
     });
     expect(settled.waitingOn).toEqual([]);
+  });
+
+  it('refuses a claim when the member is already paid inside the transaction', async () => {
+    const { prisma, access, billing, service } = buildPaymentsService();
+    access.requireMember.mockResolvedValue(owingMember());
+    prisma.lobby.findUnique.mockResolvedValue({
+      id: LOBBY_ID,
+      status: 'billed',
+      instaPayHandle: 'omar.instapay',
+    });
+    prisma.lobbyMember.findFirst.mockResolvedValue(
+      owingMember({ paymentStatus: 'paid' }),
+    );
+
+    await expect(
+      service.claim(LOBBY_ID, MEMBER_USER_ID, {}),
+    ).rejects.toMatchObject({ code: 'ALREADY_PAID' });
+    expect(prisma.paymentClaim.create).not.toHaveBeenCalled();
+    expect(billing.readFinalisedBill).not.toHaveBeenCalled();
   });
 
   it('rejects an idempotency key longer than 128 characters', async () => {

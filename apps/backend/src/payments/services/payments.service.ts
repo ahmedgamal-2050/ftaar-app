@@ -5,6 +5,7 @@ import { AppError } from '../../core/errors/app-error';
 import type { MemberRole, PaymentStatus } from '../../database/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { Money } from '../../money/money';
+import type { EntityManager } from '../../shared/run-in-transaction';
 import {
   isClaimIdempotencyConflict,
   isPendingClaimConflict,
@@ -71,6 +72,11 @@ type BoardMember = {
   pendingClaimId: string | null;
 };
 
+/** Transaction client for bill reads — same connection as the surrounding tx. */
+function billClient(em: PaymentDb): EntityManager {
+  return em as unknown as EntityManager;
+}
+
 @Injectable()
 export class PaymentsService {
   constructor(
@@ -127,17 +133,23 @@ export class PaymentsService {
       await this.db().runInTransaction(async (em) => {
         const lobby = await loadLobbyStatus(em, lobbyId);
         assertCollecting(lobby.status);
-        if (
-          (membership as { paymentStatus?: PaymentStatus }).paymentStatus ===
-          'paid'
-        ) {
+        const current = await em.lobbyMember.findFirst({
+          where: { id: membership.id, lobbyId },
+        });
+        if (!current) {
+          throw new AppError('NOT_FOUND', 'Member not found in this lobby');
+        }
+        if (current.paymentStatus === 'paid') {
           throw new AppError('ALREADY_PAID', 'This share is already paid');
         }
         const pending = await findPendingClaim(em, membership.id);
         if (pending) {
           return;
         }
-        const bill = await this.billing.readFinalisedBill(lobbyId);
+        const bill = await this.billing.readFinalisedBill(
+          lobbyId,
+          billClient(em),
+        );
         const row = bill.members.find((member) => member.id === membership.id);
         const amount = row?.total ?? Money.zero();
         await em.paymentClaim.create({
@@ -267,7 +279,7 @@ export class PaymentsService {
   ) {
     const lobby = await loadLobbyStatus(em, lobbyId);
     assertBoardVisible(lobby.status);
-    const bill = await this.billing.readFinalisedBill(lobbyId);
+    const bill = await this.billing.readFinalisedBill(lobbyId, billClient(em));
     const pending = await listPendingClaims(em, lobbyId);
     const pendingByMember = new Map(
       pending.map((claim) => [claim.lobbyMemberId, claim]),
