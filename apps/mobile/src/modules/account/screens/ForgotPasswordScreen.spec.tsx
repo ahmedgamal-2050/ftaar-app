@@ -86,6 +86,18 @@ describe('ForgotPasswordScreen', () => {
     ).toBe(false);
   });
 
+  it('shows an invalid-email hint once a malformed address is blurred', () => {
+    renderScreen();
+
+    fireEvent.changeText(
+      screen.getByTestId('forgot-password-email'),
+      'not-an-email',
+    );
+    fireEvent(screen.getByTestId('forgot-password-email'), 'blur');
+
+    expect(screen.getByText('Enter a valid email address.')).toBeTruthy();
+  });
+
   it('shows an inline error and stops the spinner on a network failure', async () => {
     mockAuthApi.forgotPassword.mockRejectedValue(new Error('offline'));
     renderScreen();

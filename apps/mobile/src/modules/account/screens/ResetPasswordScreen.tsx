@@ -32,12 +32,17 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
   const { resetToken } = route.params;
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordTouched, setPasswordTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [tokenExpired, setTokenExpired] = useState(false);
 
   const passwordsMismatch =
     confirmPassword.length > 0 && password !== confirmPassword;
+  const passwordTooShort =
+    passwordTouched &&
+    password.length > 0 &&
+    password.length < MIN_PASSWORD_LENGTH;
   const isValid =
     password.length >= MIN_PASSWORD_LENGTH && password === confirmPassword;
 
@@ -80,8 +85,10 @@ export function ResetPasswordScreen({ navigation, route }: Props) {
           label={t('forgotPassword.newPasswordLabel')}
           value={password}
           onChangeText={setPassword}
+          onBlur={() => setPasswordTouched(true)}
           placeholder={t('forgotPassword.newPasswordLabel')}
           secureTextEntry
+          error={passwordTooShort ? t('errors.passwordTooShort') : undefined}
           testID="reset-password-new"
         />
         <TextField

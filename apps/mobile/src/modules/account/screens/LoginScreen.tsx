@@ -16,6 +16,8 @@ import {
   typography,
 } from '../../../ui';
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 /** Pushed from both OnboardingStack (no session yet) and ProfileStack (an
  * existing guest wants to log into a different registered account) — typed
  * against the routes this screen actually uses rather than either stack's
@@ -28,10 +30,17 @@ export function LoginScreen({ navigation }: Props) {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isValid = email.trim().length > 0 && password.length > 0;
+  // Only flagged once the field's been left with something in it — an
+  // in-progress email shouldn't turn red before the user finishes typing.
+  const emailError =
+    emailTouched && email.trim().length > 0 && !EMAIL_PATTERN.test(email.trim())
+      ? t('errors.invalidEmail')
+      : undefined;
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -67,9 +76,11 @@ export function LoginScreen({ navigation }: Props) {
           label={t('account.emailLabel')}
           value={email}
           onChangeText={setEmail}
+          onBlur={() => setEmailTouched(true)}
           placeholder={t('account.emailLabel')}
           keyboardType="email-address"
           autoCapitalize="none"
+          error={emailError}
           testID="login-email"
         />
         <TextField

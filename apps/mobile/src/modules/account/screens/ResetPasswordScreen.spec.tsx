@@ -74,6 +74,17 @@ describe('ResetPasswordScreen', () => {
     ).toBe(true);
   });
 
+  it('shows a too-short hint once a short new password is blurred', () => {
+    renderScreen();
+
+    fireEvent.changeText(screen.getByTestId('reset-password-new'), 'short');
+    fireEvent(screen.getByTestId('reset-password-new'), 'blur');
+
+    expect(
+      screen.getByText('Password must be at least 8 characters.'),
+    ).toBeTruthy();
+  });
+
   it('resets the password and lands on Login, replacing the whole stack', async () => {
     mockAuthApi.resetPassword.mockResolvedValue({ message: 'ok' });
     const ref = renderScreen();

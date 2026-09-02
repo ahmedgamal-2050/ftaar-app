@@ -19,18 +19,28 @@ export function ChooseNameScreen() {
   const { t } = useTranslation();
   const { completeOnboarding } = useAuth();
   const [name, setName] = useState('');
+  const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const trimmedName = name.trim();
+  // Only surfaces once the field has been touched — typing from scratch on a
+  // fresh screen shouldn't open with a "required" error already showing.
+  const validationError =
+    touched && !trimmedName ? t('errors.nameRequired') : null;
+  const displayError = apiError ?? validationError;
 
   const handleContinue = async () => {
+    setTouched(true);
+    if (!trimmedName) {
+      return;
+    }
     setSubmitting(true);
-    setError(null);
+    setApiError(null);
     try {
       await completeOnboarding(trimmedName);
     } catch (err) {
-      setError(getApiError(err).message);
+      setApiError(getApiError(err).message);
       setSubmitting(false);
     }
   };
@@ -48,9 +58,12 @@ export function ChooseNameScreen() {
           label={t('onboarding.chooseNamePlaceholder')}
           value={name}
           onChangeText={setName}
+          onBlur={() => setTouched(true)}
           placeholder={t('onboarding.chooseNamePlaceholder')}
-          error={error ?? undefined}
-          helperText={error ? undefined : t('onboarding.chooseNameHelper')}
+          error={displayError ?? undefined}
+          helperText={
+            displayError ? undefined : t('onboarding.chooseNameHelper')
+          }
           testID="choose-name-input"
         />
       </View>
