@@ -1,4 +1,4 @@
-import { Injectable, Optional } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AppError } from '../core/errors/app-error';
 import { PrismaService } from '../database/prisma.service';
 import type { EntityManager } from '../shared/run-in-transaction';
@@ -9,12 +9,9 @@ export const BILLING_PAYMENT_STATUS = 'billed' as const;
 
 @Injectable()
 export class LobbyAccessService {
-  constructor(@Optional() private readonly prisma?: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   private db(): PrismaService {
-    if (!this.prisma) {
-      throw new AppError('SERVICE_UNAVAILABLE', 'Database is not configured');
-    }
     return this.prisma;
   }
 

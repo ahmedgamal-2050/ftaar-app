@@ -18,5 +18,8 @@ export const PAYMENT_STATUSES = [
 ] as const;
 export type PaymentStatus = (typeof PAYMENT_STATUSES)[number];
 
+export const CLAIM_STATUSES = ['pending', 'confirmed', 'rejected'] as const;
+export type ClaimStatus = (typeof CLAIM_STATUSES)[number];
+
 export const USER_KINDS = ['registered', 'guest'] as const;
 export type UserKind = (typeof USER_KINDS)[number];

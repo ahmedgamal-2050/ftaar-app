@@ -1,4 +1,4 @@
-import { Injectable, Optional } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { AppError } from '../core/errors/app-error';
 import { PrismaService } from '../database/prisma.service';
 import { Money } from '../money/money';
@@ -31,15 +31,12 @@ function parseFee(value: string): Money {
 @Injectable()
 export class BillingService {
   constructor(
-    @Optional() private readonly prisma: PrismaService | undefined,
+    private readonly prisma: PrismaService,
     private readonly access: LobbyAccessService,
     private readonly fault: FinaliseFault,
   ) {}
 
   private db(): PrismaService {
-    if (!this.prisma) {
-      throw new AppError('SERVICE_UNAVAILABLE', 'Database is not configured');
-    }
     return this.prisma;
   }
 
@@ -218,8 +215,16 @@ export class BillingService {
 
   async getBill(lobbyId: string, userId: string) {
     await this.access.requireMember(lobbyId, userId);
-    const { lobby, members, lines } = await this.loadBillContext(lobbyId);
-    const row = await this.db().lobbyBill.findUnique({ where: { lobbyId } });
+    return this.readFinalisedBill(lobbyId);
+  }
+
+  /** Bill snapshot without a membership check — caller must already be authorized. */
+  async readFinalisedBill(
+    lobbyId: string,
+    em: EntityManager | PrismaService = this.db(),
+  ) {
+    const { lobby, members, lines } = await this.loadBillContext(lobbyId, em);
+    const row = await em.lobbyBill.findUnique({ where: { lobbyId } });
     if (!row) {
       throw new AppError('NOT_FOUND', 'Bill has not been finalised');
     }
@@ -315,7 +320,7 @@ export class BillingService {
     lobbyId: string,
     em: EntityManager | PrismaService = this.db(),
   ): Promise<{
-    lobby: { id: string; status: string };
+    lobby: { id: string; status: string; instaPayHandle: string | null };
     members: BillMemberInput[];
     lines: BillLineInput[];
   }> {

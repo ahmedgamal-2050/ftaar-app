@@ -177,11 +177,13 @@ export async function seedDatabase(prisma: PrismaClient): Promise<void> {
           restaurantId: restaurant.id,
           code: `SEED-${status.toUpperCase()}`,
           status: status as LobbyStatus,
+          instaPayHandle: status === 'billed' ? 'omar.instapay' : null,
         },
         update: {
           restaurantId: restaurant.id,
           code: `SEED-${status.toUpperCase()}`,
           status: status as LobbyStatus,
+          instaPayHandle: status === 'billed' ? 'omar.instapay' : null,
         },
       });
 
@@ -228,9 +230,30 @@ export async function seedDatabase(prisma: PrismaClient): Promise<void> {
     if (billed) {
       const billedIndex = LOBBY_STATUSES.indexOf(billed);
       const restaurant = RESTAURANTS[billedIndex % RESTAURANTS.length];
-      if (!restaurant) {
+      const billedPayer = USERS[1];
+      if (!restaurant || !billedPayer) {
         throw new Error('Seed restaurant missing for billed lobby');
       }
+      // Kept in sync with MEMBER_MEMBER_ID in payment-fixtures.ts.
+      const billedPayerMemberId = 'cccccccc-cccc-4ccc-8ccc-ccccccccccc8';
+      await tx.lobbyMember.upsert({
+        where: { id: billedPayerMemberId },
+        create: {
+          id: billedPayerMemberId,
+          lobbyId: lobbyId(billed),
+          userId: billedPayer.id,
+          role: 'member',
+          displayName: billedPayer.displayName,
+          paymentStatus: 'unpaid',
+        },
+        update: {
+          lobbyId: lobbyId(billed),
+          userId: billedPayer.id,
+          role: 'member',
+          displayName: billedPayer.displayName,
+          paymentStatus: 'unpaid',
+        },
+      });
       const firstItemId = `dddddddd-dddd-4ddd-8ddd-${restaurant.id.slice(0, 8)}0000`;
       await tx.orderItem.upsert({
         where: { id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee1' },
@@ -245,21 +268,34 @@ export async function seedDatabase(prisma: PrismaClient): Promise<void> {
         },
         update: { qty: 2, actualPrice: 1600n },
       });
+      await tx.orderItem.upsert({
+        where: { id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee2' },
+        create: {
+          id: 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeee2',
+          lobbyId: lobbyId(billed),
+          lobbyMemberId: billedPayerMemberId,
+          menuItemId: firstItemId,
+          restaurantId: restaurant.id,
+          qty: 1,
+          actualPrice: 800n,
+        },
+        update: { qty: 1, actualPrice: 800n },
+      });
 
       await tx.lobbyBill.upsert({
         where: { lobbyId: lobbyId(billed) },
         create: {
           id: 'ffffffff-ffff-4fff-8fff-fffffffffff1',
           lobbyId: lobbyId(billed),
-          subtotal: 1600n,
+          subtotal: 2400n,
           tax: 240n,
-          total: 1840n,
+          total: 2640n,
           paymentStatus: 'pending',
         },
         update: {
-          subtotal: 1600n,
+          subtotal: 2400n,
           tax: 240n,
-          total: 1840n,
+          total: 2640n,
           paymentStatus: 'pending',
         },
       });

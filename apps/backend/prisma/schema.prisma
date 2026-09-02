@@ -44,6 +44,14 @@ enum PaymentStatus {
   @@map("payment_status")
 }
 
+enum ClaimStatus {
+  pending
+  confirmed
+  rejected
+
+  @@map("claim_status")
+}
+
 model User {
   id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   kind                String               @db.VarChar(32)
@@ -58,6 +66,7 @@ model User {
   refreshTokens       RefreshToken[]
   otpVerifications    OtpVerification[]
   passwordResetTokens PasswordResetToken[]
+  resolvedClaims      PaymentClaim[]     @relation("ClaimResolvedBy")
 
   @@unique([email], map: "uq_users_email")
   @@map("users")
@@ -166,6 +175,7 @@ model Lobby {
   members        LobbyMember[]
   orderItems     OrderItem[]
   bill           LobbyBill?
+  paymentClaims  PaymentClaim[]
 
   @@unique([id, restaurantId], map: "uq_lobbies_id_restaurant")
   @@index([restaurantId], map: "idx_lobbies_restaurant_id")
@@ -184,6 +194,7 @@ model LobbyMember {
   paymentStatus PaymentStatus @default(unpaid) @map("payment_status")
   createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
   orderItems    OrderItem[]
+  paymentClaims PaymentClaim[]
 
   @@unique([lobbyId, userId], map: "uq_lobby_members_lobby_user")
   @@index([lobbyId], map: "idx_lobby_members_lobby_id")
@@ -227,4 +238,26 @@ model LobbyBill {
 
   @@index([lobbyId], map: "idx_lobby_bill_lobby_id")
   @@map("lobby_bill")
+}
+
+model PaymentClaim {
+  id             String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lobbyId        String      @map("lobby_id") @db.Uuid
+  lobby          Lobby       @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
+  lobbyMemberId  String      @map("lobby_member_id") @db.Uuid
+  lobbyMember    LobbyMember @relation(fields: [lobbyMemberId], references: [id], onDelete: Cascade)
+  amount         BigInt
+  status         ClaimStatus
+  note           String?     @db.VarChar(500)
+  claimedAt      DateTime    @default(now()) @map("claimed_at") @db.Timestamptz(6)
+  resolvedAt     DateTime?   @map("resolved_at") @db.Timestamptz(6)
+  resolvedById   String?     @map("resolved_by_id") @db.Uuid
+  resolvedBy     User?       @relation("ClaimResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+  idempotencyKey String?     @map("idempotency_key") @db.VarChar(128)
+  createdAt      DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([lobbyId], map: "idx_payment_claims_lobby_id")
+  @@index([lobbyMemberId], map: "idx_payment_claims_member_id")
+  @@map("payment_claims")
 }
