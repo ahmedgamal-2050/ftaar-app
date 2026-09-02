@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     bottom: spacing.xxl,
-    right: spacing.xl,
+    end: spacing.xl,
     width: 56,
     height: 56,
     borderRadius: 28,

@@ -25,3 +25,4 @@ Guides for work completed in this workspace. Task-ID checklists record **what sh
 ## Mobile
 
 - [Auth flow](./mobile-auth.md) — Welcome / guest name / register / login / profile / forgot-password, against the real `/api/auth` contract.
+- [Ordering flow](./mobile-orders.md) — Menu / My Cart / Group / Order Summary, against the real orders/lobbies/menu contract.

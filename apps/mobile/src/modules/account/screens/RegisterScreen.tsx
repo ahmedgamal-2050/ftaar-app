@@ -27,11 +27,25 @@ export function RegisterScreen({ navigation }: Props) {
   const { user, register } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isValid =
     EMAIL_PATTERN.test(email.trim()) && password.length >= MIN_PASSWORD_LENGTH;
+  // Live, per-field feedback once each field's been left — the disabled
+  // submit button alone never explained *why* it stayed disabled.
+  const emailError =
+    emailTouched && email.trim().length > 0 && !EMAIL_PATTERN.test(email.trim())
+      ? t('errors.invalidEmail')
+      : undefined;
+  const passwordError =
+    passwordTouched &&
+    password.length > 0 &&
+    password.length < MIN_PASSWORD_LENGTH
+      ? t('errors.passwordTooShort')
+      : undefined;
 
   const handleSubmit = async () => {
     if (!EMAIL_PATTERN.test(email.trim())) {
@@ -81,17 +95,21 @@ export function RegisterScreen({ navigation }: Props) {
           label={t('register.emailLabel')}
           value={email}
           onChangeText={setEmail}
+          onBlur={() => setEmailTouched(true)}
           placeholder={t('register.emailLabel')}
           keyboardType="email-address"
           autoCapitalize="none"
+          error={emailError}
           testID="register-email"
         />
         <TextField
           label={t('register.passwordLabel')}
           value={password}
           onChangeText={setPassword}
+          onBlur={() => setPasswordTouched(true)}
           placeholder={t('register.passwordLabel')}
           secureTextEntry
+          error={passwordError}
           testID="register-password"
         />
         {error ? <ErrorBanner message={error} testID="register-error" /> : null}

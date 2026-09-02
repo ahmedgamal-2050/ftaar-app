@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   logoBadge: {
     position: 'absolute',
     bottom: 6,
-    right: 6,
+    end: 6,
     width: 22,
     height: 22,
     borderRadius: 11,
