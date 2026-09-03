@@ -81,6 +81,20 @@ describe('RegisterScreen', () => {
     );
   });
 
+  it('shows format hints once the email and password fields are blurred invalid', () => {
+    renderScreen();
+
+    fireEvent.changeText(screen.getByTestId('register-email'), 'not-an-email');
+    fireEvent(screen.getByTestId('register-email'), 'blur');
+    expect(screen.getByText('Enter a valid email address.')).toBeTruthy();
+
+    fireEvent.changeText(screen.getByTestId('register-password'), 'short');
+    fireEvent(screen.getByTestId('register-password'), 'blur');
+    expect(
+      screen.getByText('Password must be at least 8 characters.'),
+    ).toBeTruthy();
+  });
+
   it('navigates back to Profile after a successful conversion, instead of spinning forever', async () => {
     mockRegister.mockResolvedValue(undefined);
     const ref = renderScreen();

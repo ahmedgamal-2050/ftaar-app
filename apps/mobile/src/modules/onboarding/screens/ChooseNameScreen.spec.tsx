@@ -37,6 +37,14 @@ describe('ChooseNameScreen', () => {
     );
   });
 
+  it('shows a required-name error once the empty field is blurred', () => {
+    render(<ChooseNameScreen />);
+
+    fireEvent(screen.getByTestId('choose-name-input'), 'blur');
+
+    expect(screen.getByText('Enter your name to continue.')).toBeTruthy();
+  });
+
   it('shows an inline error when the guest bootstrap call fails', async () => {
     mockCompleteOnboarding.mockRejectedValue(new Error('offline'));
     render(<ChooseNameScreen />);

@@ -14,6 +14,7 @@ interface TextFieldProps {
   label: string;
   value: string;
   onChangeText?: (value: string) => void;
+  onBlur?: () => void;
   placeholder?: string;
   /** Adds an eye-toggle so the field can hide/reveal its value. */
   secureTextEntry?: boolean;
@@ -34,6 +35,7 @@ export function TextField({
   label,
   value,
   onChangeText,
+  onBlur,
   placeholder,
   secureTextEntry = false,
   editable = true,
@@ -62,6 +64,7 @@ export function TextField({
           style={styles.input}
           value={value}
           onChangeText={onChangeText}
+          onBlur={onBlur}
           placeholder={placeholder}
           placeholderTextColor={colors.textMuted}
           secureTextEntry={hidesText}

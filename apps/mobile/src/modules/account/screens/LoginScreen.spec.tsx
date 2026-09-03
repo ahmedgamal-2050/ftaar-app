@@ -71,6 +71,15 @@ describe('LoginScreen', () => {
     );
   });
 
+  it('shows an invalid-email hint once a malformed address is blurred', () => {
+    renderScreen();
+
+    fireEvent.changeText(screen.getByTestId('login-email'), 'not-an-email');
+    fireEvent(screen.getByTestId('login-email'), 'blur');
+
+    expect(screen.getByText('Enter a valid email address.')).toBeTruthy();
+  });
+
   it('navigates back to Profile after a successful login, instead of spinning forever', async () => {
     mockLogin.mockResolvedValue(undefined);
     const ref = renderScreen();

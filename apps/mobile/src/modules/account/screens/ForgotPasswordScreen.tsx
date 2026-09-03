@@ -30,10 +30,15 @@ type Props = NativeStackScreenProps<Routes, 'ForgotPassword'>;
 export function ForgotPasswordScreen({ navigation }: Props) {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isValid = EMAIL_PATTERN.test(email.trim());
+  const emailError =
+    emailTouched && email.trim().length > 0 && !isValid
+      ? t('errors.invalidEmail')
+      : undefined;
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -70,9 +75,11 @@ export function ForgotPasswordScreen({ navigation }: Props) {
           label={t('forgotPassword.emailLabel')}
           value={email}
           onChangeText={setEmail}
+          onBlur={() => setEmailTouched(true)}
           placeholder={t('forgotPassword.emailLabel')}
           keyboardType="email-address"
           autoCapitalize="none"
+          error={emailError}
           testID="forgot-password-email"
         />
       </View>
