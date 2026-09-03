@@ -26,3 +26,7 @@ Guides for work completed in this workspace. Task-ID checklists record **what sh
 
 - [Auth flow](./mobile-auth.md) — Welcome / guest name / register / login / profile / forgot-password, against the real `/api/auth` contract.
 - [Ordering flow](./mobile-orders.md) — Menu / My Cart / Group / Order Summary, against the real orders/lobbies/menu contract.
+
+## Web
+
+- [Angular app](./web.md) — Discord-inspired Tailwind client covering auth, catalog, lobbies, orders, billing, and health.

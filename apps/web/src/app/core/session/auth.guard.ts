@@ -1,0 +1,21 @@
+import { inject } from '@angular/core';
+import { CanActivateFn, Router } from '@angular/router';
+import { SessionService } from './session.service';
+
+export const authGuard: CanActivateFn = () => {
+  const session = inject(SessionService);
+  const router = inject(Router);
+  if (session.status() === 'ready' && session.user()) {
+    return true;
+  }
+  return router.createUrlTree(['/welcome']);
+};
+
+export const anonymousGuard: CanActivateFn = () => {
+  const session = inject(SessionService);
+  const router = inject(Router);
+  if (session.status() === 'ready' && session.user()) {
+    return router.createUrlTree(['/home']);
+  }
+  return true;
+};

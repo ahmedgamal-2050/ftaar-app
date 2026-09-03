@@ -1,0 +1,110 @@
+<div class="flex h-full bg-dc-tertiary text-dc-normal">
+  <nav
+    class="flex w-[72px] shrink-0 flex-col items-center gap-2 py-3"
+    aria-label="Servers"
+  >
+    <a
+      routerLink="/home"
+      class="flex h-12 w-12 items-center justify-center rounded-[16px] bg-blurple text-lg font-bold text-white transition-all hover:rounded-[14px]"
+      title="Ftaar"
+      >F</a
+    >
+    <div class="h-0.5 w-8 rounded bg-dc-modifier"></div>
+    <a
+      routerLink="/home"
+      [class.rounded-[16px]]="guild() === 'home'"
+      [class.bg-blurple]="guild() === 'home'"
+      [class.text-white]="guild() === 'home'"
+      class="flex h-12 w-12 items-center justify-center rounded-full bg-dc-primary text-sm font-semibold text-dc-header transition-all hover:rounded-[16px] hover:bg-blurple hover:text-white"
+      title="Home"
+      >🏠</a
+    >
+    <a
+      routerLink="/restaurants"
+      [class.rounded-[16px]]="guild() === 'catalog'"
+      [class.bg-blurple]="guild() === 'catalog'"
+      [class.text-white]="guild() === 'catalog'"
+      class="flex h-12 w-12 items-center justify-center rounded-full bg-dc-primary text-sm font-semibold text-dc-header transition-all hover:rounded-[16px] hover:bg-blurple hover:text-white"
+      title="Catalog"
+      >🍽</a
+    >
+    <a
+      routerLink="/lobbies"
+      [class.rounded-[16px]]="guild() === 'lobbies'"
+      [class.bg-blurple]="guild() === 'lobbies'"
+      [class.text-white]="guild() === 'lobbies'"
+      class="flex h-12 w-12 items-center justify-center rounded-full bg-dc-primary text-sm font-semibold text-dc-header transition-all hover:rounded-[16px] hover:bg-blurple hover:text-white"
+      title="Lobbies"
+      >#</a
+    >
+    <a
+      routerLink="/account"
+      [class.rounded-[16px]]="guild() === 'account'"
+      [class.bg-blurple]="guild() === 'account'"
+      [class.text-white]="guild() === 'account'"
+      class="flex h-12 w-12 items-center justify-center rounded-full bg-dc-primary text-sm font-semibold text-dc-header transition-all hover:rounded-[16px] hover:bg-blurple hover:text-white"
+      title="Account"
+      >{{ initials() }}</a
+    >
+    <a
+      routerLink="/ops"
+      [class.rounded-[16px]]="guild() === 'ops'"
+      [class.bg-blurple]="guild() === 'ops'"
+      [class.text-white]="guild() === 'ops'"
+      class="mt-auto flex h-12 w-12 items-center justify-center rounded-full bg-dc-primary text-sm font-semibold text-dc-header transition-all hover:rounded-[16px] hover:bg-blurple hover:text-white"
+      title="Ops"
+      >♥</a
+    >
+  </nav>
+
+  <aside class="flex w-60 shrink-0 flex-col bg-dc-secondary">
+    <header
+      class="flex h-12 items-center border-b border-black/20 px-4 text-base font-semibold text-dc-header shadow-sm"
+    >
+      {{ heading() }}
+    </header>
+    <div class="flex-1 overflow-y-auto px-2 py-3">
+      <p
+        class="mb-1 px-2 text-[11px] font-semibold uppercase tracking-wide text-dc-muted"
+      >
+        Channels
+      </p>
+      @for (channel of channels(); track channel.path) {
+      <a
+        [routerLink]="channel.path"
+        routerLinkActive="bg-dc-hover text-dc-header"
+        [routerLinkActiveOptions]="{ exact: true }"
+        class="mb-0.5 flex items-center gap-1.5 rounded px-2 py-1.5 text-[15px] text-dc-muted hover:bg-dc-hover hover:text-dc-normal"
+      >
+        <span class="text-lg leading-none text-dc-muted">#</span>
+        {{ channel.label }}
+      </a>
+      }
+    </div>
+    <footer class="flex h-[52px] items-center gap-2 bg-[#232428] px-2">
+      <div
+        class="flex h-8 w-8 items-center justify-center rounded-full bg-blurple text-xs font-bold text-white"
+      >
+        {{ initials() }}
+      </div>
+      <div class="min-w-0 flex-1">
+        <p class="truncate text-sm font-semibold leading-tight text-dc-header">
+          {{ session.user()?.displayName }}
+        </p>
+        <p class="truncate text-xs text-dc-muted">{{ session.user()?.kind }}</p>
+      </div>
+    </footer>
+  </aside>
+
+  <section class="flex min-w-0 flex-1 flex-col bg-dc-primary">
+    <header
+      class="flex h-12 items-center gap-2 border-b border-black/20 px-4 shadow-sm"
+    >
+      <span class="text-xl text-dc-muted">#</span>
+      <h1 class="text-base font-semibold text-dc-header">{{ heading() }}</h1>
+    </header>
+    <div class="min-h-0 flex-1 overflow-y-auto p-4">
+      <router-outlet />
+    </div>
+  </section>
+</div>

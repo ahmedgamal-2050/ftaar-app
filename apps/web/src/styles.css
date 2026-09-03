@@ -1,0 +1,54 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans:
+    'Noto Sans', 'gg sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  --color-blurple: #5865f2;
+  --color-blurple-hover: #4752c4;
+  --color-dc-green: #23a559;
+  --color-dc-green-hover: #1a7d44;
+  --color-dc-red: #da373c;
+  --color-dc-red-hover: #a12828;
+  --color-dc-yellow: #f0b232;
+
+  --color-dc-tertiary: #1e1f22;
+  --color-dc-secondary: #2b2d31;
+  --color-dc-primary: #313338;
+  --color-dc-hover: #3f4248;
+  --color-dc-active: #404249;
+  --color-dc-input: #1e1f22;
+  --color-dc-modifier: #4e5058;
+
+  --color-dc-header: #f2f3f5;
+  --color-dc-normal: #dbdee1;
+  --color-dc-muted: #949ba4;
+  --color-dc-link: #00a8fc;
+}
+
+html,
+body,
+fta-root {
+  height: 100%;
+  margin: 0;
+  background: #1e1f22;
+  color: #dbdee1;
+  font-family: var(--font-sans);
+}
+
+body {
+  overflow: hidden;
+}
+
+input,
+textarea,
+select,
+button {
+  font-family: inherit;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #949ba4;
+}
