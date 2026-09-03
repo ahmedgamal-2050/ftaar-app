@@ -23,7 +23,22 @@ export interface SuccessEnvelope<T> {
 export interface ApiErrorBody {
   code: string;
   message: string;
+  errors?: ApiValidationErrorItem[];
   details?: unknown;
+}
+
+export interface ApiValidationErrorItem {
+  path: string;
+  code: string;
+  message: string;
+  meta?: Record<string, unknown>;
+}
+
+export interface ValidationErrorResponse {
+  statusCode: 422;
+  code: 'VALIDATION_ERROR';
+  message: string;
+  errors: ApiValidationErrorItem[];
 }
 
 export interface ErrorEnvelope {

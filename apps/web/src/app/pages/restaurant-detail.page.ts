@@ -3,9 +3,16 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { FtaarApi } from '../core/api/ftaar-api';
 import { getApiError } from '../core/api/http-error';
-import type { MenuItem, Restaurant } from '../core/api/types';
+import type {
+  ApiValidationErrorItem,
+  MenuItem,
+  Restaurant,
+} from '../core/api/types';
 import { SessionService } from '../core/session/session.service';
 import { Banner, Field } from '../ui/ui';
+
+type RestaurantFormField = 'name' | 'phone' | 'image' | 'note';
+type RestaurantFieldErrors = Partial<Record<RestaurantFormField, string>>;
 
 @Component({
   selector: 'fta-restaurant-detail-page',
@@ -34,34 +41,62 @@ import { Banner, Field } from '../ui/ui';
               <fta-field label="Name">
                 <input
                   class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
+                  [class.border]="!!restaurantFieldErrors().name"
+                  [class.border-dc-red]="!!restaurantFieldErrors().name"
                   name="name"
                   placeholder="Restaurant name"
                   [(ngModel)]="editName"
                 />
+                @if (restaurantFieldErrors().name) {
+                  <p class="mt-1 text-xs text-dc-red">
+                    {{ restaurantFieldErrors().name }}
+                  </p>
+                }
               </fta-field>
               <fta-field label="Phone">
                 <input
                   class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
+                  [class.border]="!!restaurantFieldErrors().phone"
+                  [class.border-dc-red]="!!restaurantFieldErrors().phone"
                   name="phone"
                   placeholder="0100 000 0000"
                   [(ngModel)]="editPhone"
                 />
+                @if (restaurantFieldErrors().phone) {
+                  <p class="mt-1 text-xs text-dc-red">
+                    {{ restaurantFieldErrors().phone }}
+                  </p>
+                }
               </fta-field>
               <fta-field label="Image URL" class="md:col-span-2">
                 <input
                   class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
+                  [class.border]="!!restaurantFieldErrors().image"
+                  [class.border-dc-red]="!!restaurantFieldErrors().image"
                   name="image"
                   placeholder="https://example.com/photo.jpg"
                   [(ngModel)]="editImage"
                 />
+                @if (restaurantFieldErrors().image) {
+                  <p class="mt-1 text-xs text-dc-red">
+                    {{ restaurantFieldErrors().image }}
+                  </p>
+                }
               </fta-field>
               <fta-field label="Note" class="md:col-span-2">
                 <input
                   class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
+                  [class.border]="!!restaurantFieldErrors().note"
+                  [class.border-dc-red]="!!restaurantFieldErrors().note"
                   name="note"
                   placeholder="Delivery notes, hours, …"
                   [(ngModel)]="editNote"
                 />
+                @if (restaurantFieldErrors().note) {
+                  <p class="mt-1 text-xs text-dc-red">
+                    {{ restaurantFieldErrors().note }}
+                  </p>
+                }
               </fta-field>
               <label class="flex items-center gap-2 text-sm text-dc-muted">
                 <input type="checkbox" name="active" [(ngModel)]="editActive" />
@@ -190,6 +225,7 @@ export class RestaurantDetailPage implements OnInit {
   readonly restaurant = signal<Restaurant | null>(null);
   readonly menu = signal<MenuItem[]>([]);
   readonly error = signal<string | null>(null);
+  readonly restaurantFieldErrors = signal<RestaurantFieldErrors>({});
   includeInactive = false;
   editName = '';
   editPhone = '';
@@ -208,6 +244,7 @@ export class RestaurantDetailPage implements OnInit {
 
   async reload(): Promise<void> {
     this.error.set(null);
+    this.restaurantFieldErrors.set({});
     try {
       const rest = await this.api.getRestaurant(
         this.id(),
@@ -233,6 +270,8 @@ export class RestaurantDetailPage implements OnInit {
   }
 
   async saveRest(): Promise<void> {
+    this.error.set(null);
+    this.restaurantFieldErrors.set({});
     try {
       await this.api.updateRestaurant(this.id(), {
         name: this.editName,
@@ -243,7 +282,15 @@ export class RestaurantDetailPage implements OnInit {
       });
       await this.reload();
     } catch (err) {
-      this.error.set(getApiError(err).message);
+      const apiError = getApiError(err);
+      if (apiError.code === 'VALIDATION_ERROR' && apiError.errors?.length) {
+        this.restaurantFieldErrors.set(
+          mapRestaurantFieldErrors(apiError.errors),
+        );
+        this.error.set('Please fix the highlighted fields.');
+        return;
+      }
+      this.error.set(apiError.message);
     }
   }
 
@@ -288,4 +335,41 @@ export class RestaurantDetailPage implements OnInit {
       this.error.set(getApiError(err).message);
     }
   }
+}
+
+function mapRestaurantFieldErrors(
+  errors: ApiValidationErrorItem[],
+): RestaurantFieldErrors {
+  const mapped: RestaurantFieldErrors = {};
+
+  for (const error of errors) {
+    const field = normalizeRestaurantFieldPath(error.path);
+    if (!field) {
+      continue;
+    }
+    if (mapped[field]) {
+      continue;
+    }
+    mapped[field] = error.message;
+  }
+
+  return mapped;
+}
+
+function normalizeRestaurantFieldPath(
+  path: string,
+): RestaurantFormField | null {
+  const root = path.split('.')[0];
+  if (root === 'imageUrl') {
+    return 'image';
+  }
+  if (
+    root === 'name' ||
+    root === 'phone' ||
+    root === 'image' ||
+    root === 'note'
+  ) {
+    return root;
+  }
+  return null;
 }

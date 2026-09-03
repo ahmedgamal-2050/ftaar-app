@@ -1,9 +1,34 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import type { ApiErrorBody, ErrorEnvelope } from './types';
+import type {
+  ApiErrorBody,
+  ErrorEnvelope,
+  ValidationErrorResponse,
+} from './types';
+
+function isValidationErrorResponse(
+  body: unknown,
+): body is ValidationErrorResponse {
+  return (
+    typeof body === 'object' &&
+    body !== null &&
+    (body as { code?: unknown }).code === 'VALIDATION_ERROR' &&
+    Array.isArray((body as { errors?: unknown }).errors)
+  );
+}
 
 export function getApiError(err: unknown): ApiErrorBody {
   if (err instanceof HttpErrorResponse) {
-    const body = err.error as ErrorEnvelope | undefined;
+    const body = err.error as
+      | ErrorEnvelope
+      | ValidationErrorResponse
+      | undefined;
+    if (isValidationErrorResponse(body)) {
+      return {
+        code: body.code,
+        message: body.message,
+        errors: body.errors,
+      };
+    }
     if (body && typeof body === 'object' && body.error?.message) {
       return body.error;
     }

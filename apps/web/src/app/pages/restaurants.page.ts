@@ -3,9 +3,14 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { FtaarApi } from '../core/api/ftaar-api';
 import { getApiError } from '../core/api/http-error';
-import type { RestaurantList } from '../core/api/types';
+import type { ApiValidationErrorItem, RestaurantList } from '../core/api/types';
 import { SessionService } from '../core/session/session.service';
 import { Banner, Field } from '../ui/ui';
+
+type RestaurantCreateField = 'name' | 'phone' | 'image' | 'note';
+type RestaurantCreateFieldErrors = Partial<
+  Record<RestaurantCreateField, string>
+>;
 
 @Component({
   selector: 'fta-restaurants-page',
@@ -54,39 +59,67 @@ import { Banner, Field } from '../ui/ui';
           <fta-field label="Name">
             <input
               class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
+              [class.border]="!!createFieldErrors().name"
+              [class.border-dc-red]="!!createFieldErrors().name"
               name="name"
               required
               minlength="2"
               placeholder="Restaurant name"
               [(ngModel)]="newName"
             />
+            @if (createFieldErrors().name) {
+              <p class="mt-1 text-xs text-dc-red">
+                {{ createFieldErrors().name }}
+              </p>
+            }
           </fta-field>
           <fta-field label="Phone">
             <input
               class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
+              [class.border]="!!createFieldErrors().phone"
+              [class.border-dc-red]="!!createFieldErrors().phone"
               name="phone"
               required
               minlength="5"
               placeholder="0100 000 0000"
               [(ngModel)]="newPhone"
             />
+            @if (createFieldErrors().phone) {
+              <p class="mt-1 text-xs text-dc-red">
+                {{ createFieldErrors().phone }}
+              </p>
+            }
           </fta-field>
           <fta-field label="Image URL" class="md:col-span-2">
             <input
               class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
+              [class.border]="!!createFieldErrors().image"
+              [class.border-dc-red]="!!createFieldErrors().image"
               name="image"
               required
               placeholder="https://example.com/photo.jpg"
               [(ngModel)]="newImage"
             />
+            @if (createFieldErrors().image) {
+              <p class="mt-1 text-xs text-dc-red">
+                {{ createFieldErrors().image }}
+              </p>
+            }
           </fta-field>
           <fta-field label="Note (optional)" class="md:col-span-2">
             <input
               class="h-10 w-full rounded-[3px] bg-dc-input px-2.5 text-sm text-dc-header outline-none"
+              [class.border]="!!createFieldErrors().note"
+              [class.border-dc-red]="!!createFieldErrors().note"
               name="note"
               placeholder="Delivery notes, hours, …"
               [(ngModel)]="newNote"
             />
+            @if (createFieldErrors().note) {
+              <p class="mt-1 text-xs text-dc-red">
+                {{ createFieldErrors().note }}
+              </p>
+            }
           </fta-field>
           <button
             class="h-10 rounded-[3px] bg-dc-green px-3 text-sm text-white hover:bg-dc-green-hover"
@@ -147,6 +180,7 @@ export class RestaurantsPage {
   newNote = '';
   readonly list = signal<RestaurantList | null>(null);
   readonly error = signal<string | null>(null);
+  readonly createFieldErrors = signal<RestaurantCreateFieldErrors>({});
 
   constructor() {
     void this.load();
@@ -170,6 +204,7 @@ export class RestaurantsPage {
 
   async create(): Promise<void> {
     this.error.set(null);
+    this.createFieldErrors.set({});
     try {
       await this.api.createRestaurant({
         name: this.newName,
@@ -183,7 +218,52 @@ export class RestaurantsPage {
       this.newNote = '';
       await this.load();
     } catch (err) {
-      this.error.set(getApiError(err).message);
+      const apiError = getApiError(err);
+      if (apiError.code === 'VALIDATION_ERROR' && apiError.errors?.length) {
+        this.createFieldErrors.set(
+          mapRestaurantCreateFieldErrors(apiError.errors),
+        );
+        this.error.set('Please fix the highlighted fields.');
+        return;
+      }
+      this.error.set(apiError.message);
     }
   }
+}
+
+function mapRestaurantCreateFieldErrors(
+  errors: ApiValidationErrorItem[],
+): RestaurantCreateFieldErrors {
+  const mapped: RestaurantCreateFieldErrors = {};
+
+  for (const error of errors) {
+    const field = normalizeRestaurantCreateField(error.path);
+    if (!field) {
+      continue;
+    }
+    if (mapped[field]) {
+      continue;
+    }
+    mapped[field] = error.message;
+  }
+
+  return mapped;
+}
+
+function normalizeRestaurantCreateField(
+  path: string,
+): RestaurantCreateField | null {
+  const root = path.split('.')[0];
+  if (root === 'imageUrl') {
+    return 'image';
+  }
+  if (
+    root === 'name' ||
+    root === 'phone' ||
+    root === 'image' ||
+    root === 'note'
+  ) {
+    return root;
+  }
+  return null;
 }
