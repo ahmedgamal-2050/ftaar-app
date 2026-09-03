@@ -3,6 +3,7 @@ import type { ArgumentsHost } from '@nestjs/common';
 import { AppConfigService } from '../config/app-config.service';
 import { AppError } from '../errors/app-error';
 import { AllExceptionsFilter } from './all-exceptions.filter';
+import { ValidationException } from '../validation';
 
 function hostWithMocks() {
   const json = jest.fn();
@@ -44,6 +45,34 @@ describe('AllExceptionsFilter', () => {
     expect(json.mock.calls[0]?.[0]).toMatchObject({
       success: false,
       error: { code: 'FORBIDDEN', message: 'nope' },
+    });
+  });
+
+  it('renders validation errors as 422 with errors array', () => {
+    const { host, json, status } = hostWithMocks();
+    filter.catch(
+      new ValidationException([
+        {
+          path: 'name',
+          code: 'REQUIRED',
+          message: 'Name is required',
+        },
+      ]),
+      host,
+    );
+
+    expect(status).toHaveBeenCalledWith(HttpStatus.UNPROCESSABLE_ENTITY);
+    expect(json).toHaveBeenCalledWith({
+      statusCode: 422,
+      code: 'VALIDATION_ERROR',
+      message: 'Validation failed',
+      errors: [
+        {
+          path: 'name',
+          code: 'REQUIRED',
+          message: 'Name is required',
+        },
+      ],
     });
   });
 

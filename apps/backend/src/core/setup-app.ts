@@ -6,7 +6,7 @@ import {
 import { json, urlencoded } from 'express';
 import helmet from 'helmet';
 import type { AppConfigService } from './config/app-config.service';
-import { AppError } from './errors/app-error';
+import { ValidationException, flattenValidationErrors } from './validation';
 import { requestIdMiddleware } from './http/request-id.middleware';
 import { setupSwagger } from './http/swagger';
 
@@ -37,7 +37,7 @@ export function setupApp(
       transform: true,
       transformOptions: { enableImplicitConversion: true },
       exceptionFactory: (errors) =>
-        new AppError('VALIDATION_ERROR', 'Validation failed', errors),
+        new ValidationException(flattenValidationErrors(errors)),
     }),
   );
   setupSwagger(app);

@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import { AppError } from '../core/errors/app-error';
 import { PrismaService } from '../database/prisma.service';
 import { MenuItem } from '../menu/menu-item.entity';
+import { throwValidationError } from '../core/validation';
 import type { CreateRestaurantDto } from './dto/create-restaurant.dto';
 import type { UpdateRestaurantDto } from './dto/update-restaurant.dto';
 import {
@@ -33,6 +34,15 @@ export type RestaurantListResult = {
 export type RestaurantWithMenu = {
   restaurant: Restaurant;
   menu: MenuItem[];
+};
+
+type RestaurantField = 'name' | 'phone' | 'image' | 'note';
+
+export type RestaurantValidationError = {
+  field: RestaurantField;
+  code: string;
+  message: string;
+  meta?: Record<string, unknown>;
 };
 
 @Injectable()
@@ -72,10 +82,16 @@ export class RestaurantsService {
   }
 
   async create(dto: CreateRestaurantDto): Promise<Restaurant> {
-    const name = normalizeName(dto.name);
-    const phone = normalizePhone(dto.phone);
-    const image = normalizeImage(dto.image);
+    const name = dto.name.trim();
+    const phone = dto.phone.trim();
+    const image = dto.image.trim();
     const note = normalizeNote(dto.note);
+    assertRestaurantBodyValidation([
+      ...validateName(name),
+      ...validatePhone(phone),
+      ...validateImage(image),
+      ...validateNote(note),
+    ]);
     try {
       const row = await this.prisma.restaurant.create({
         data: { name, phone, image, note, isActive: true },
@@ -117,21 +133,31 @@ export class RestaurantsService {
   async update(id: string, dto: UpdateRestaurantDto): Promise<Restaurant> {
     await this.requireRestaurant(id, true);
     const data: Prisma.RestaurantUpdateInput = {};
+    const validationErrors: RestaurantValidationError[] = [];
     if (dto.name !== undefined) {
-      data.name = normalizeName(dto.name);
+      const name = dto.name.trim();
+      validationErrors.push(...validateName(name));
+      data.name = name;
     }
     if (dto.phone !== undefined) {
-      data.phone = normalizePhone(dto.phone);
+      const phone = dto.phone.trim();
+      validationErrors.push(...validatePhone(phone));
+      data.phone = phone;
     }
     if (dto.image !== undefined) {
-      data.image = normalizeImage(dto.image);
+      const image = dto.image.trim();
+      validationErrors.push(...validateImage(image));
+      data.image = image;
     }
     if (dto.note !== undefined) {
-      data.note = normalizeNote(dto.note);
+      const note = normalizeNote(dto.note);
+      validationErrors.push(...validateNote(note));
+      data.note = note;
     }
     if (dto.isActive !== undefined) {
       data.isActive = dto.isActive;
     }
+    assertRestaurantBodyValidation(validationErrors);
     try {
       const row = await this.prisma.restaurant.update({ where: { id }, data });
       return Restaurant.fromPersistence(row);
@@ -177,42 +203,82 @@ export class RestaurantsService {
   }
 }
 
-function normalizeName(name: string): string {
-  const trimmed = name.trim();
-  if (trimmed.length < NAME_MIN_LENGTH) {
-    throw new AppError(
-      'VALIDATION_ERROR',
-      `name must be at least ${NAME_MIN_LENGTH} characters`,
-    );
-  }
-  return trimmed;
-}
-
-function normalizePhone(phone: string): string {
-  const trimmed = phone.trim();
-  if (trimmed.length < PHONE_MIN_LENGTH) {
-    throw new AppError(
-      'VALIDATION_ERROR',
-      `phone must be at least ${PHONE_MIN_LENGTH} characters`,
-    );
-  }
-  return trimmed;
-}
-
-function normalizeImage(image: string): string {
-  const trimmed = image.trim();
-  if (trimmed.length < IMAGE_MIN_LENGTH) {
-    throw new AppError('VALIDATION_ERROR', 'image is required');
-  }
-  return trimmed;
-}
-
 function normalizeNote(note: string | null | undefined): string | null {
   if (note === undefined || note === null) {
     return null;
   }
   const trimmed = note.trim();
   return trimmed.length === 0 ? null : trimmed;
+}
+
+function validateName(name: string): RestaurantValidationError[] {
+  if (name.length < NAME_MIN_LENGTH) {
+    return [
+      {
+        field: 'name',
+        code: 'MIN_LENGTH',
+        message: `name must be at least ${NAME_MIN_LENGTH} characters`,
+        meta: { min: NAME_MIN_LENGTH },
+      },
+    ];
+  }
+  return [];
+}
+
+function validatePhone(phone: string): RestaurantValidationError[] {
+  if (phone.length < PHONE_MIN_LENGTH) {
+    return [
+      {
+        field: 'phone',
+        code: 'MIN_LENGTH',
+        message: `phone must be at least ${PHONE_MIN_LENGTH} characters`,
+        meta: { min: PHONE_MIN_LENGTH },
+      },
+    ];
+  }
+  return [];
+}
+
+function validateImage(image: string): RestaurantValidationError[] {
+  if (image.length < IMAGE_MIN_LENGTH) {
+    return [
+      {
+        field: 'image',
+        code: 'REQUIRED',
+        message: 'image is required',
+      },
+    ];
+  }
+  return [];
+}
+
+function validateNote(note: string | null): RestaurantValidationError[] {
+  if (note !== null && note.length > 2000) {
+    return [
+      {
+        field: 'note',
+        code: 'MAX_LENGTH',
+        message: 'note must be shorter than or equal to 2000 characters',
+        meta: { max: 2000 },
+      },
+    ];
+  }
+  return [];
+}
+
+function assertRestaurantBodyValidation(
+  errors: RestaurantValidationError[],
+): void {
+  if (errors.length > 0) {
+    throwValidationError(
+      errors.map((error) => ({
+        path: error.field,
+        code: error.code,
+        message: error.message,
+        ...(error.meta ? { meta: error.meta } : {}),
+      })),
+    );
+  }
 }
 
 function rethrowUniqueName(error: unknown): void {
