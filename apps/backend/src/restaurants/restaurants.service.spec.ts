@@ -113,9 +113,7 @@ describe('RestaurantsService', () => {
 
     it('stores an omitted note as null', async () => {
       const { prisma, service } = buildService();
-      prisma.restaurant.create.mockResolvedValue(
-        restaurantRow({ note: null }),
-      );
+      prisma.restaurant.create.mockResolvedValue(restaurantRow({ note: null }));
 
       await service.create({
         name: 'مطعم الفحام',
@@ -144,6 +142,37 @@ describe('RestaurantsService', () => {
         }),
       ).rejects.toMatchObject({
         code: 'VALIDATION_ERROR',
+      });
+    });
+
+    it('returns a field-error list when multiple trimmed values are invalid', async () => {
+      const { service } = buildService();
+
+      await expect(
+        service.create({
+          name: ' ',
+          phone: ' ',
+          image: ' ',
+        }),
+      ).rejects.toMatchObject({
+        code: 'VALIDATION_ERROR',
+        details: {
+          errors: [
+            {
+              path: 'name',
+              code: 'MIN_LENGTH',
+              message: 'name must be at least 2 characters',
+              meta: { min: 2 },
+            },
+            {
+              path: 'phone',
+              code: 'MIN_LENGTH',
+              message: 'phone must be at least 5 characters',
+              meta: { min: 5 },
+            },
+            { path: 'image', code: 'REQUIRED', message: 'image is required' },
+          ],
+        },
       });
     });
   });
@@ -219,6 +248,39 @@ describe('RestaurantsService', () => {
         },
       });
     });
+
+    it('returns field-error list for invalid patched fields after trim', async () => {
+      const { prisma, service } = buildService();
+      prisma.restaurant.findFirst.mockResolvedValue({ id: ID });
+
+      await expect(
+        service.update(ID, {
+          name: ' ',
+          phone: ' ',
+          image: ' ',
+        }),
+      ).rejects.toMatchObject({
+        code: 'VALIDATION_ERROR',
+        details: {
+          errors: [
+            {
+              path: 'name',
+              code: 'MIN_LENGTH',
+              message: 'name must be at least 2 characters',
+              meta: { min: 2 },
+            },
+            {
+              path: 'phone',
+              code: 'MIN_LENGTH',
+              message: 'phone must be at least 5 characters',
+              meta: { min: 5 },
+            },
+            { path: 'image', code: 'REQUIRED', message: 'image is required' },
+          ],
+        },
+      });
+      expect(prisma.restaurant.update).not.toHaveBeenCalled();
+    });
   });
 
   describe('remove (REST-05)', () => {
@@ -266,10 +328,8 @@ describe('RestaurantsService', () => {
         phone: '+201001111111',
         image: 'https://cdn.ftaar.example/restaurants/alfaham.jpg',
       }),
-    ).rejects.toMatchObject(
-      {
-        code: 'ALREADY_EXISTS',
-      },
-    );
+    ).rejects.toMatchObject({
+      code: 'ALREADY_EXISTS',
+    });
   });
 });

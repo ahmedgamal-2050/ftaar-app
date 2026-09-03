@@ -11,6 +11,7 @@ import type { Request, Response } from 'express';
 import { AppConfigService } from '../config/app-config.service';
 import { AppError } from '../errors/app-error';
 import { errorCodeFromHttpStatus, type ErrorCode } from '../errors/error-codes';
+import type { ValidationErrorItem } from '../validation';
 import { getRequestId } from './request-context';
 
 export interface ErrorEnvelope {
@@ -21,6 +22,13 @@ export interface ErrorEnvelope {
     details?: unknown;
   };
   requestId?: string;
+}
+
+interface ValidationErrorEnvelope {
+  statusCode: 422;
+  code: 'VALIDATION_ERROR';
+  message: string;
+  errors: ValidationErrorItem[];
 }
 
 @Catch()
@@ -42,6 +50,17 @@ export class AllExceptionsFilter implements ExceptionFilter {
         `${message} [${code}] ${request.url} requestId=${requestId ?? 'none'}`,
         exception instanceof Error ? exception.stack : undefined,
       );
+    }
+
+    if (code === 'VALIDATION_ERROR') {
+      const validationBody: ValidationErrorEnvelope = {
+        statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+        code: 'VALIDATION_ERROR',
+        message,
+        errors: this.extractValidationErrors(details),
+      };
+      response.status(HttpStatus.UNPROCESSABLE_ENTITY).json(validationBody);
+      return;
     }
 
     const body: ErrorEnvelope = {
@@ -132,5 +151,16 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message: raw ?? record.error ?? 'Request failed',
       isValidation: false,
     };
+  }
+
+  private extractValidationErrors(details: unknown): ValidationErrorItem[] {
+    if (
+      details &&
+      typeof details === 'object' &&
+      Array.isArray((details as { errors?: unknown }).errors)
+    ) {
+      return (details as { errors: ValidationErrorItem[] }).errors;
+    }
+    return [];
   }
 }
