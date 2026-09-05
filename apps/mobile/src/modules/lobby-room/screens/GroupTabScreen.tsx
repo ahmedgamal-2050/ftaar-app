@@ -219,6 +219,31 @@ export function GroupTabScreen({ route }: Props) {
             {t('order.groupViewSummary')}
           </Text>
         </TouchableOpacity>
+        {/* Pricing only opens once the food has arrived (the lobby is
+            locked); after finalise the bill is read-only, so the same slot
+            points at the review instead. */}
+        {lobby.status === 'locked' && (
+          <TouchableOpacity
+            style={styles.billBtn}
+            onPress={() => lobbyNavigation.navigate('BillEntry', { lobbyCode })}
+            testID="group-enter-bill"
+          >
+            <Ionicons name="receipt-outline" size={18} color={colors.primary} />
+            <Text style={styles.billBtnText}>{t('lobby.billEntryTitle')}</Text>
+          </TouchableOpacity>
+        )}
+        {lobby.status === 'billed' && (
+          <TouchableOpacity
+            style={styles.billBtn}
+            onPress={() =>
+              lobbyNavigation.navigate('BillReview', { lobbyCode })
+            }
+            testID="group-review-bill"
+          >
+            <Ionicons name="receipt-outline" size={18} color={colors.primary} />
+            <Text style={styles.billBtnText}>{t('lobby.billReviewTitle')}</Text>
+          </TouchableOpacity>
+        )}
       </Screen>
     );
   }
@@ -344,6 +369,20 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
   },
   summaryBtnText: { ...typography.label, color: colors.onPrimary },
+  billBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.sm,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    paddingVertical: spacing.md,
+  },
+  billBtnText: { ...typography.label, color: colors.primary },
   subtotalBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
