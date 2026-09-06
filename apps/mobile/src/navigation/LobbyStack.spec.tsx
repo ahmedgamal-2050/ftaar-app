@@ -69,10 +69,19 @@ const mockGetByCode = jest.fn(() => Promise.resolve(FIXTURE_LOBBY));
 
 jest.mock('../api/endpoints/lobbies', () => ({
   lobbiesApi: {
+    create: jest.fn(),
     getByCode: (...args: unknown[]) =>
       (mockGetByCode as (...a: unknown[]) => unknown)(...args),
     getById: (...args: unknown[]) =>
       (mockGetByCode as (...a: unknown[]) => unknown)(...args),
+  },
+}));
+
+jest.mock('../api/endpoints/restaurants', () => ({
+  restaurantsApi: {
+    list: jest.fn(() =>
+      Promise.resolve({ items: [], page: 1, limit: 20, total: 0 }),
+    ),
   },
 }));
 

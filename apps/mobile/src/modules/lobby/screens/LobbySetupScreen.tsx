@@ -59,6 +59,7 @@ function RestaurantOption({
       accessibilityRole="radio"
       accessibilityState={{ selected }}
       accessibilityLabel={`Select ${restaurant.name}`}
+      testID={`lobby-restaurant-${restaurant.id}`}
       onPress={onPress}
       style={[styles.restaurantCard, selected && styles.restaurantCardSelected]}
     >
@@ -139,9 +140,6 @@ export function LobbySetupScreen({ navigation, route }: Props) {
       const expiresAt = cutoffToIso(cutoffTime);
       const lobby = await createLobby.mutateAsync({
         restaurantId,
-        ...(user?.isGuest && user.displayName
-          ? { displayName: user.displayName }
-          : {}),
         ...(parsedMax === undefined ? {} : { maxMembers: parsedMax }),
         ...(expiresAt ? { expiresAt } : {}),
         ...(handle ? { instaPayHandle: handle } : {}),
@@ -152,7 +150,12 @@ export function LobbySetupScreen({ navigation, route }: Props) {
         setError(err.message);
         return;
       }
-      setError(getApiError(err).message);
+      const apiError = getApiError(err);
+      setError(
+        apiError.code === 'GUEST_NOT_ALLOWED'
+          ? 'Create an account to publish a lobby.'
+          : apiError.message,
+      );
     }
   }
 
@@ -160,7 +163,8 @@ export function LobbySetupScreen({ navigation, route }: Props) {
     <Screen scroll testID="lobby-setup-screen" style={styles.screen}>
       <Text style={styles.title}>Create Breakfast Lobby</Text>
       <Text style={styles.subtitle}>
-        Pick one restaurant and set the rules for your team's order.
+        Pick one restaurant and set the rules. You can change these freely until
+        you publish.
       </Text>
 
       <View style={styles.section}>

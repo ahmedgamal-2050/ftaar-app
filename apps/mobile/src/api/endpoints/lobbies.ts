@@ -43,7 +43,6 @@ export interface Lobby {
 
 export interface CreateLobbyPayload {
   restaurantId: string;
-  displayName?: string;
   maxMembers?: number;
   expiresAt?: string;
   instaPayHandle?: string;

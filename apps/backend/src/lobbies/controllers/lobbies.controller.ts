@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -24,6 +25,7 @@ import {
 } from '@nestjs/swagger';
 import { CurrentUser } from '../../auth/decorators/current-user.decorator';
 import type { AuthUser } from '../../auth/decorators/current-user.decorator';
+import { RegisteredUserGuard } from '../../auth/guards/registered-user.guard';
 import { ParseUuidPipe } from '../../shared/parse-uuid.pipe';
 import { CreateLobbyDto } from '../dto/create-lobby.dto';
 import { JoinLobbyDto } from '../dto/join-lobby.dto';
@@ -46,14 +48,14 @@ export class LobbiesController {
   ) {}
 
   @Post()
+  @UseGuards(RegisteredUserGuard)
   @ApiOperation({
-    summary: 'Publish an open lobby for an active restaurant',
+    summary:
+      'Create an open lobby for an active restaurant (registered users only)',
   })
   @ApiCreatedResponse({ type: LobbySuccessResponseDto })
-  @ApiBadRequestResponse({
-    description:
-      'Invalid lobby options, or a guest did not provide a payment handle',
-  })
+  @ApiBadRequestResponse({ description: 'Invalid lobby options' })
+  @ApiForbiddenResponse({ description: 'Registered users only' })
   @ApiNotFoundResponse({ description: 'Restaurant not found or inactive' })
   @ApiBody({
     type: CreateLobbyDto,

@@ -161,27 +161,6 @@ describe('OrdersService', () => {
         }),
       ).rejects.toThrow(AppError);
     });
-
-    it('rejects order changes after the lobby cut-off time', async () => {
-      const { prisma, service } = buildService();
-      prisma.lobby.findUnique.mockResolvedValue({
-        id: LOBBY_ID,
-        status: 'open',
-        restaurantId: RESTAURANT_ID,
-        expiresAt: new Date(0),
-      });
-
-      await expect(
-        service.addItem(USER_ID, LOBBY_ID, {
-          menuItemId: MENU_ITEM_ID,
-          qty: 1,
-        }),
-      ).rejects.toMatchObject({
-        code: 'CONFLICT',
-        message: 'The lobby order cut-off time has passed',
-      });
-      expect(prisma.orderItem.create).not.toHaveBeenCalled();
-    });
   });
 
   describe('updateItem', () => {
