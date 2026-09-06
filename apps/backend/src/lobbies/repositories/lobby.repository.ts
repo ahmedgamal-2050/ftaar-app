@@ -46,10 +46,14 @@ export async function loadLobbyByCode(
 export async function requireUserProfile(
   em: UserReader,
   userId: string,
-): Promise<{ displayName: string; instaPayHandle: string | null }> {
+): Promise<{
+  kind: string;
+  displayName: string;
+  instaPayHandle: string | null;
+}> {
   const user = await em.user.findUnique({
     where: { id: userId },
-    select: { displayName: true, instaPayHandle: true },
+    select: { kind: true, displayName: true, instaPayHandle: true },
   });
   if (!user) {
     throw new AppError('NOT_FOUND', `User ${userId} not found`);

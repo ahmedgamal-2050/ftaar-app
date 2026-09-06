@@ -7,6 +7,7 @@ import {
   IsString,
   IsUUID,
   Matches,
+  MaxLength,
   Min,
   ValidateIf,
 } from 'class-validator';
@@ -22,6 +23,18 @@ export class CreateLobbyDto {
   @ApiProperty({ format: 'uuid' })
   @IsUUID('4')
   restaurantId!: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Guest display name captured during onboarding. Registered users always use their profile name.',
+  })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? value.trim() : emptyToUndefined(value),
+  )
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  displayName?: string;
 
   @ApiPropertyOptional({
     type: Number,

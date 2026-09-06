@@ -19,6 +19,7 @@ import {
 import {
   normalizeOptionalHandle,
   resolveExpiresAt,
+  resolveJoinDisplayName,
 } from '../domain/lobby-rules';
 import { isUniqueOn } from '../domain/lobby-unique-errors';
 
@@ -42,6 +43,17 @@ export class LobbiesService {
         `Restaurant ${dto.restaurantId} not found`,
       );
     }
+    const payoutHandle = instaPayHandle ?? user.instaPayHandle;
+    if (user.kind === 'guest' && !payoutHandle) {
+      throw new AppError(
+        'VALIDATION_ERROR',
+        'Guests must provide an InstaPay handle before publishing a lobby',
+      );
+    }
+    const hostDisplayName = resolveJoinDisplayName(
+      user.kind === 'guest' ? dto.displayName : undefined,
+      user.displayName,
+    );
 
     // A failed unique insert aborts a PostgreSQL transaction, so each collision
     // attempt runs outside one. Prisma's nested create is atomic on its own.
@@ -54,12 +66,12 @@ export class LobbiesService {
             status: 'open',
             maxMembers: dto.maxMembers ?? null,
             expiresAt,
-            instaPayHandle: instaPayHandle ?? user.instaPayHandle,
+            instaPayHandle: payoutHandle,
             members: {
               create: {
                 userId,
                 role: 'admin',
-                displayName: user.displayName,
+                displayName: hostDisplayName,
               },
             },
           },

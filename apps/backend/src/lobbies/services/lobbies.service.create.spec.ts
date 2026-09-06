@@ -54,6 +54,7 @@ describe('LobbiesService create and lookup', () => {
       const { prisma, service } = buildService();
       prisma.restaurant.findFirst.mockResolvedValue({ id: RESTAURANT_ID });
       prisma.user.findUnique.mockResolvedValue({
+        kind: 'registered',
         displayName: 'أحمد',
         instaPayHandle: 'profile.handle',
       });
@@ -70,6 +71,60 @@ describe('LobbiesService create and lookup', () => {
       expect(prisma.lobby.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ instaPayHandle: 'custom.handle' }),
+        }),
+      );
+    });
+
+    it('requires a guest to provide a payout handle before publishing', async () => {
+      const { prisma, service } = buildService();
+      prisma.restaurant.findFirst.mockResolvedValue({ id: RESTAURANT_ID });
+      prisma.user.findUnique.mockResolvedValue({
+        kind: 'guest',
+        displayName: 'Guest',
+        instaPayHandle: null,
+      });
+
+      await expect(
+        service.create(USER_ID, { restaurantId: RESTAURANT_ID }),
+      ).rejects.toMatchObject({
+        code: 'VALIDATION_ERROR',
+        message:
+          'Guests must provide an InstaPay handle before publishing a lobby',
+      });
+      expect(prisma.lobby.create).not.toHaveBeenCalled();
+    });
+
+    it('publishes a guest lobby when a payout handle is provided', async () => {
+      const { prisma, service } = buildService();
+      prisma.restaurant.findFirst.mockResolvedValue({ id: RESTAURANT_ID });
+      prisma.user.findUnique.mockResolvedValue({
+        kind: 'guest',
+        displayName: 'Guest',
+        instaPayHandle: null,
+      });
+      prisma.lobby.create.mockResolvedValue({ id: LOBBY_ID });
+      prisma.lobby.findUnique.mockResolvedValue(
+        lobbyRow({ instaPayHandle: 'guest.handle' }),
+      );
+
+      await service.create(USER_ID, {
+        restaurantId: RESTAURANT_ID,
+        displayName: 'Mona',
+        instaPayHandle: 'guest.handle',
+      });
+
+      expect(prisma.lobby.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            instaPayHandle: 'guest.handle',
+            members: {
+              create: expect.objectContaining({
+                userId: USER_ID,
+                role: 'admin',
+                displayName: 'Mona',
+              }),
+            },
+          }),
         }),
       );
     });

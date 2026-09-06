@@ -41,6 +41,12 @@ export type OverridePriceResult = {
   newPrice: string;
 };
 
+function assertBeforeOrderCutoff(lobby: { expiresAt?: Date | null }): void {
+  if (lobby.expiresAt && lobby.expiresAt.getTime() <= Date.now()) {
+    throw new AppError('CONFLICT', 'The lobby order cut-off time has passed');
+  }
+}
+
 @Injectable()
 export class OrdersService {
   constructor(private readonly prisma: PrismaService) {}
@@ -60,6 +66,7 @@ export class OrdersService {
     if (lobby.status !== 'open') {
       throw new AppError('CONFLICT', 'Lobby is not open for taking orders');
     }
+    assertBeforeOrderCutoff(lobby);
 
     const member = await this.prisma.lobbyMember.findUnique({
       where: { lobbyId_userId: { lobbyId, userId } },
@@ -139,6 +146,7 @@ export class OrdersService {
     if (lobby.status !== 'open') {
       throw new AppError('CONFLICT', 'Lobby is not open for modifying orders');
     }
+    assertBeforeOrderCutoff(lobby);
 
     const member = await this.prisma.lobbyMember.findUnique({
       where: { lobbyId_userId: { lobbyId, userId } },
@@ -177,6 +185,7 @@ export class OrdersService {
     if (lobby.status !== 'open') {
       throw new AppError('CONFLICT', 'Lobby is not open for modifying orders');
     }
+    assertBeforeOrderCutoff(lobby);
 
     const member = await this.prisma.lobbyMember.findUnique({
       where: { lobbyId_userId: { lobbyId, userId } },

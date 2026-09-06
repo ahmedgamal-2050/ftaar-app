@@ -160,7 +160,7 @@ describe('LobbyStack', () => {
   it('starts on LobbySetup', () => {
     renderLobbyStack();
 
-    expect(screen.getByTestId('placeholder-LobbySetup')).toBeTruthy();
+    expect(screen.getByTestId('lobby-setup-screen')).toBeTruthy();
   });
 
   it('resolves every still-placeholder lobby-scoped route', () => {
