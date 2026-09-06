@@ -11,6 +11,7 @@ export const queryKeys = {
   lobbyMyOrders: (code: string) => ['lobby', code, 'orders', 'mine'] as const,
   lobbySummary: (code: string) => ['lobby', code, 'summary'] as const,
   lobbyBill: (code: string) => ['lobby', code, 'bill'] as const,
+  lobbyBillDraft: (code: string) => ['lobby', code, 'bill', 'draft'] as const,
   lobbyPayments: (code: string) => ['lobby', code, 'payments'] as const,
   restaurants: () => ['restaurants'] as const,
   restaurantMenu: (restaurantId: string) =>

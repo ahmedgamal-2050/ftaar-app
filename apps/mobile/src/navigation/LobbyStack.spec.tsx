@@ -166,18 +166,30 @@ describe('LobbyStack', () => {
   it('resolves every still-placeholder lobby-scoped route', () => {
     const ref = renderLobbyStack();
 
-    const routes = [
-      'LobbyShare',
-      'BillEntry',
-      'BillReview',
-      'PaymentBoard',
-      'LobbySettled',
-    ] as const;
+    const routes = ['LobbyShare', 'PaymentBoard', 'LobbySettled'] as const;
 
     for (const route of routes) {
       act(() => ref.navigate(route, { lobbyCode: LOBBY_CODE }));
       expect(screen.getByTestId(`placeholder-${route}`)).toBeTruthy();
     }
+  });
+
+  it('holds BillEntry back until the order is closed', async () => {
+    const ref = renderLobbyStack();
+
+    act(() => ref.navigate('BillEntry', { lobbyCode: LOBBY_CODE }));
+
+    // The fixture lobby is still `open`, so pricing is not available yet.
+    expect(await screen.findByText('The order is still open')).toBeTruthy();
+  });
+
+  it('sends the host back to BillEntry when Review has no charges to show', async () => {
+    const ref = renderLobbyStack();
+
+    act(() => ref.navigate('BillReview', { lobbyCode: LOBBY_CODE }));
+
+    // The only way on from here is back to entering the charges.
+    expect(await screen.findByText('Enter the bill')).toBeTruthy();
   });
 
   it('keeps Menu / MyCart / Group as LobbyRoom sub-tabs', () => {
