@@ -34,9 +34,11 @@ describe('HTTP foundation', () => {
     const res = await request(app.getHttpServer())
       .post('/api/auth/login')
       .send({ email: 'user@example.com', password: 'Str0ng!Pass', extra: true })
-      .expect(400);
-    expect(res.body.success).toBe(false);
-    expect(res.body.error.code).toBe('VALIDATION_ERROR');
+      .expect(422);
+    expect(res.body.statusCode).toBe(422);
+    expect(res.body.code).toBe('VALIDATION_ERROR');
+    expect(res.body.message).toBe('Validation failed');
+    expect(Array.isArray(res.body.errors)).toBe(true);
   });
 
   it('exposes public liveness at /health', async () => {

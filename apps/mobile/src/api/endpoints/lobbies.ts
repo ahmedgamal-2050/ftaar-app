@@ -41,9 +41,20 @@ export interface Lobby {
   members: LobbyMember[];
 }
 
+export interface CreateLobbyPayload {
+  restaurantId: string;
+  maxMembers?: number;
+  expiresAt?: string;
+  instaPayHandle?: string;
+}
+
 // ── API client ───────────────────────────────────────────────────────────────
 
 export const lobbiesApi = {
+  /** Publishes a lobby and automatically makes the current user its host. */
+  create: (payload: CreateLobbyPayload) =>
+    apiClient.post<Lobby>('/lobbies', payload).then((r) => r.data),
+
   /** Get lobby details (incl. members and restaurant) by its 6-char share code. */
   getByCode: (code: string) =>
     apiClient.get<Lobby>(`/lobbies/code/${code}`).then((r) => r.data),
