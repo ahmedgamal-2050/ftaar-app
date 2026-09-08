@@ -67,6 +67,10 @@ jest.mock('expo-crypto', () => ({
   randomUUID: jest.fn(() => '00000000-0000-4000-8000-000000000000'),
 }));
 
+jest.mock('expo-clipboard', () => ({
+  setStringAsync: jest.fn(() => Promise.resolve(true)),
+}));
+
 jest.mock('expo-localization', () => ({
   getLocales: jest.fn(() => [{ languageCode: 'en' }]),
 }));

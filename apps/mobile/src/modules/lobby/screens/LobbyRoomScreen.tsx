@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,6 +11,7 @@ import { MenuTabScreen } from '../../lobby-room/screens/MenuTabScreen';
 import { MyCartTabScreen } from '../../lobby-room/screens/MyCartTabScreen';
 import { GroupTabScreen } from '../../lobby-room/screens/GroupTabScreen';
 import { colors } from '../../../ui';
+import { useLobbyByCode } from '../hooks/useLobby';
 
 const Tab = createBottomTabNavigator<LobbyRoomTabParamList>();
 
@@ -31,9 +32,23 @@ const TAB_ICONS: Record<
  * Restaurants / Profile. The LobbyStack is presented over those tabs, so only
  * one tab bar is ever on screen.
  */
-export function LobbyRoomScreen({ route }: Props) {
+export function LobbyRoomScreen({ navigation, route }: Props) {
   const { t } = useTranslation();
   const { lobbyCode } = route.params;
+
+  // Once the host finalises the bill the room is no longer where the action
+  // is — everyone needs the payment board, and after close-out the receipt.
+  // The lobby query already polls, so this is how a member who is sitting on
+  // the Menu tab gets carried into the payment phase without being told.
+  const { data: lobby } = useLobbyByCode(lobbyCode);
+  const status = lobby?.status;
+  useEffect(() => {
+    if (status === 'billed') {
+      navigation.replace('PaymentBoard', { lobbyCode });
+    } else if (status === 'settled') {
+      navigation.replace('LobbySettled', { lobbyCode });
+    }
+  }, [status, lobbyCode, navigation]);
 
   return (
     <Tab.Navigator

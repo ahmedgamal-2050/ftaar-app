@@ -5,6 +5,7 @@ import { AppError } from '../../core/errors/app-error';
 import type { MemberRole, PaymentStatus } from '../../database/enums';
 import { PrismaService } from '../../database/prisma.service';
 import { Money } from '../../money/money';
+import { lockLobbyRow } from '../../shared/lock-lobby';
 import type { EntityManager } from '../../shared/run-in-transaction';
 import {
   isClaimIdempotencyConflict,
@@ -60,6 +61,10 @@ type PaymentDb = ClaimReader &
       }): Promise<unknown>;
     };
     runInTransaction<T>(work: (em: PaymentDb) => Promise<T>): Promise<T>;
+    $queryRaw(
+      query: TemplateStringsArray,
+      ...values: unknown[]
+    ): Promise<unknown>;
   };
 
 type BoardMember = {
@@ -131,6 +136,7 @@ export class PaymentsService {
 
     try {
       await this.db().runInTransaction(async (em) => {
+        await lockLobbyRow(em, lobbyId);
         const lobby = await loadLobbyStatus(em, lobbyId);
         assertCollecting(lobby.status);
         const current = await em.lobbyMember.findFirst({
@@ -215,6 +221,7 @@ export class PaymentsService {
   async settle(lobbyId: string, userId: string) {
     await this.access.requireAdmin(lobbyId, userId);
     await this.db().runInTransaction(async (em) => {
+      await lockLobbyRow(em, lobbyId);
       const lobby = await loadLobbyStatus(em, lobbyId);
       assertCollecting(lobby.status);
       const board = await this.buildBoard(lobbyId, userId, em);
@@ -245,6 +252,7 @@ export class PaymentsService {
     nextStatus: 'paid' | 'unpaid',
     note?: string,
   ) {
+    await lockLobbyRow(em, lobbyId);
     const lobby = await loadLobbyStatus(em, lobbyId);
     assertCollecting(lobby.status);
     const member = await em.lobbyMember.findFirst({
