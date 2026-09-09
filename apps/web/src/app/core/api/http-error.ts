@@ -59,6 +59,16 @@ export const PUBLIC_AUTH_PATHS = new Set([
   '/api/auth/reset-password',
 ]);
 
+/** Refresh (or access) tokens the server will never accept again. */
+const SESSION_INVALIDATING_CODES = new Set(['TOKEN_EXPIRED', 'TOKEN_INVALID']);
+
+export function isSessionInvalidatingAuthError(err: unknown): boolean {
+  if (!(err instanceof HttpErrorResponse) || err.status !== 401) {
+    return false;
+  }
+  return SESSION_INVALIDATING_CODES.has(getApiError(err).code);
+}
+
 export function requestPath(url: string): string {
   try {
     return new URL(url, 'http://local.invalid').pathname;

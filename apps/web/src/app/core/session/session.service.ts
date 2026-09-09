@@ -1,6 +1,7 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { FtaarApi } from '../api/ftaar-api';
+import { isSessionInvalidatingAuthError } from '../api/http-error';
 import type { AuthSession, AuthUser } from '../api/types';
 
 const REFRESH_KEY = 'ftaar.refreshToken';
@@ -38,10 +39,7 @@ export class SessionService {
       this.applySession(session);
       this.status.set('ready');
     } catch {
-      localStorage.removeItem(REFRESH_KEY);
-      this.accessToken.set(null);
-      this.user.set(null);
-      this.status.set('anonymous');
+      this.clearLocalSession();
     }
   }
 
@@ -61,6 +59,7 @@ export class SessionService {
     }
   }
 
+  /** Returns a new access token, or null if refresh is missing/expired/revoked (or transiently fails). */
   async refreshAccessToken(): Promise<string | null> {
     if (this.refreshInFlight) {
       return this.refreshInFlight;
@@ -75,18 +74,27 @@ export class SessionService {
         this.applySession(session);
         return session.accessToken;
       })
-      .catch(() => null)
+      .catch((err: unknown) => {
+        if (isSessionInvalidatingAuthError(err)) {
+          this.clearLocalSession();
+        }
+        return null;
+      })
       .finally(() => {
         this.refreshInFlight = null;
       });
     return this.refreshInFlight;
   }
 
-  expire(): void {
+  clearLocalSession(): void {
     localStorage.removeItem(REFRESH_KEY);
     this.accessToken.set(null);
     this.user.set(null);
     this.status.set('anonymous');
+  }
+
+  expire(): void {
+    this.clearLocalSession();
     void this.router.navigateByUrl('/welcome');
   }
 
