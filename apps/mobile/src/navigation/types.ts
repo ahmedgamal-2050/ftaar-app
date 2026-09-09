@@ -1,4 +1,5 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
+import type { BillFees } from '../api/endpoints/billing';
 
 // One param list per navigator in the tree, mirroring the screen map exactly.
 // Every route's params are declared here — navigation is never typed `any`.
@@ -69,7 +70,13 @@ export type LobbyStackParamList = {
   LobbyRoom: { lobbyCode: string };
   OrderSummary: { lobbyCode: string };
   BillEntry: { lobbyCode: string };
-  BillReview: { lobbyCode: string };
+  /**
+   * Review carries the charges the host typed on BillEntry — they are only
+   * persisted by finalise, so until then the entry screen is the only place
+   * they exist. Omitted when the bill is already published and Review is
+   * just showing what was saved.
+   */
+  BillReview: { lobbyCode: string; fees?: BillFees };
   PaymentBoard: { lobbyCode: string };
   LobbySettled: { lobbyCode: string };
 };
