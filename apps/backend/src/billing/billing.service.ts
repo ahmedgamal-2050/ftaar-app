@@ -3,6 +3,7 @@ import { AppError } from '../core/errors/app-error';
 import { PrismaService } from '../database/prisma.service';
 import { Money } from '../money/money';
 import { moneyTransformer } from '../money/money.transformer';
+import { lockLobbyRow } from '../shared/lock-lobby';
 import type { EntityManager } from '../shared/run-in-transaction';
 import {
   buildInvariant,
@@ -132,6 +133,7 @@ export class BillingService {
     }
 
     return this.db().runInTransaction(async (em) => {
+      await lockLobbyRow(em, lobbyId);
       const { lobby, members, lines } = await this.loadBillContext(lobbyId, em);
       this.assertArrived(lobby.status);
       const missing = deliveredLinesMissingPrice(lines);
@@ -190,6 +192,7 @@ export class BillingService {
   async reopen(lobbyId: string, userId: string) {
     await this.access.requireAdmin(lobbyId, userId);
     return this.db().runInTransaction(async (em) => {
+      await lockLobbyRow(em, lobbyId);
       const { lobby, members } = await this.loadBillContext(lobbyId, em);
       if (lobby.status !== BILLING_PAYMENT_STATUS) {
         throw new AppError('VALIDATION_ERROR', 'Bill is not in payment');

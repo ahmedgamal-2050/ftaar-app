@@ -81,6 +81,9 @@ export function buildPaymentsService() {
       update: jest.fn(),
     },
     runInTransaction: jest.fn(),
+    // Satisfies lockLobbyRow's `SELECT ... FOR UPDATE`; the mock `em` has no
+    // real transaction to lock, so resolving empty is the whole behaviour.
+    $queryRaw: jest.fn().mockResolvedValue([]),
   };
   prisma.runInTransaction.mockImplementation(
     async (work: (em: typeof prisma) => Promise<unknown>) => work(prisma),

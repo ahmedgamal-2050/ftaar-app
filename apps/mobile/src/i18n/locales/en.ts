@@ -134,6 +134,56 @@ export const en = {
     summaryAdminOnlyTitle: 'Host only',
     summaryAdminOnlyBody: 'Only the lobby host can view the merged order.',
   },
+  payments: {
+    // Status, shown identically on your own row and everyone else's.
+    statusPaid: 'Paid',
+    statusPending: 'Awaiting host',
+    statusUnpaid: 'Not paid',
+
+    currencyAmount: 'EGP {{amount}}',
+    /** Joins holdout names in "Waiting on Lina, Omar". */
+    nameSeparator: ', ',
+
+    collected: 'Collected so far',
+    collectedOf: 'EGP {{collected}} of EGP {{total}}',
+    payTo: 'Pay to',
+
+    yourShare: 'Your share',
+    itemsSubtotal: 'What you ordered',
+    feesShare: 'Your share of fees',
+    youOwe: 'You owe',
+    nothingDue: 'Nothing was delivered for you — you do not owe anything.',
+
+    payWithInstaPay: 'Pay with InstaPay',
+    markAsPaid: 'I have paid',
+    claimAwaitingHost: 'Waiting for the host',
+    claimPendingHint: 'The host will confirm once the money arrives.',
+
+    fallbackTitle: 'InstaPay did not open',
+    fallbackBody:
+      'We copied the payment details to your clipboard. Open your banking app and send it manually.',
+    clipboardText:
+      'InstaPay: {{handle}} — EGP {{amount}} (Ftaar lobby {{code}})',
+    noHandle:
+      'The host has not added an InstaPay handle yet. Ask them how to pay.',
+
+    everyoneTitle: 'Everyone',
+    waitingOn: 'Waiting on {{names}}',
+    settleLobby: 'Close out the lobby',
+
+    confirm: 'Confirm',
+    reject: 'Reject',
+    rejectTitle: 'Reject this payment?',
+    rejectBody: '{{name}} goes back to not paid and can try again.',
+    rejectReasonLabel: 'Reason (optional)',
+    rejectReasonPlaceholder: 'e.g. the amount was short',
+
+    settledTitle: 'All settled',
+    settledBody: 'Everyone paid their share. This lobby is now read-only.',
+    totalCollected: 'Total collected',
+    receiptTitle: 'Receipt',
+    backToHome: 'Done',
+  },
   billing: {
     // ── Bill entry ──
     entrySubtitle: 'Enter what the restaurant charged',

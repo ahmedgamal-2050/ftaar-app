@@ -144,6 +144,52 @@ export const ar: Messages<typeof en> = {
     summaryAdminOnlyTitle: 'للمضيف بس',
     summaryAdminOnlyBody: 'بس مضيف الأوردر يقدر يشوف اللستة المجمّعة.',
   },
+  payments: {
+    statusPaid: 'دفع',
+    statusPending: 'مستني المضيف',
+    statusUnpaid: 'لسه مدفعش',
+
+    currencyAmount: '{{amount}} جنيه',
+    nameSeparator: '، ',
+
+    collected: 'اتجمع لحد دلوقتي',
+    collectedOf: '{{collected}} من {{total}} جنيه',
+    payTo: 'ادفع لـ',
+
+    yourShare: 'نصيبك',
+    itemsSubtotal: 'اللي طلبته',
+    feesShare: 'نصيبك من الرسوم',
+    youOwe: 'عليك',
+    nothingDue: 'مجاش ليك حاجة — مش عليك أي فلوس.',
+
+    payWithInstaPay: 'ادفع بـ InstaPay',
+    markAsPaid: 'أنا دفعت',
+    claimAwaitingHost: 'مستني المضيف',
+    claimPendingHint: 'المضيف هيأكد أول ما الفلوس توصل.',
+
+    fallbackTitle: 'InstaPay مفتحش',
+    fallbackBody: 'نسخنا تفاصيل الدفع. افتح تطبيق البنك بتاعك وحوّل يدوي.',
+    clipboardText:
+      'InstaPay: {{handle}} — {{amount}} جنيه (أوردر فطار {{code}})',
+    noHandle: 'المضيف لسه محطش حساب InstaPay. اسأله يستلم إزاي.',
+
+    everyoneTitle: 'الكل',
+    waitingOn: 'مستنيين {{names}}',
+    settleLobby: 'اقفل الأوردر',
+
+    confirm: 'أكّد',
+    reject: 'ارفض',
+    rejectTitle: 'ترفض الدفعة دي؟',
+    rejectBody: '{{name}} هيرجع "لسه مدفعش" ويقدر يحاول تاني.',
+    rejectReasonLabel: 'السبب (اختياري)',
+    rejectReasonPlaceholder: 'مثلاً المبلغ كان ناقص',
+
+    settledTitle: 'خلصنا',
+    settledBody: 'كل واحد دفع نصيبه. الأوردر ده بقى للقراءة بس.',
+    totalCollected: 'إجمالي اللي اتجمع',
+    receiptTitle: 'الفاتورة',
+    backToHome: 'تمام',
+  },
   billing: {
     // ── إدخال الفاتورة ──
     entrySubtitle: 'دخّل اللي المطعم حسبه',

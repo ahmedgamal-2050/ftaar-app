@@ -5,6 +5,7 @@ import { FinaliseFault } from '../../billing/finalise-fault';
 import { LobbyAccessService } from '../../billing/lobby-access.service';
 import { PrismaService } from '../../database/prisma.service';
 import { moneyTransformer } from '../../money/money.transformer';
+import { lockLobbyRow } from '../../shared/lock-lobby';
 import { runInTransaction } from '../../shared/run-in-transaction';
 import { PaymentsService } from './payments.service';
 
@@ -102,6 +103,116 @@ describe('payments service (postgres)', () => {
       await expect(
         payments.claim(fx.lobbyId, fx.memberUserId, {}),
       ).rejects.toMatchObject({ code: 'LOBBY_SETTLED' });
+    } finally {
+      await deleteFixture(prisma, fx);
+    }
+  }, 60_000);
+
+  /**
+   * The lock primitive itself. Without `FOR UPDATE`, both transactions read
+   * the same "before" row under READ COMMITTED and the second one's view is
+   * already stale by the time it acts on it. Holding the lock forces the
+   * second to wait for the first to commit, which is what every
+   * settle/reopen/confirm ordering below relies on.
+   */
+  it('lockLobbyRow serialises two transactions on the same lobby', async () => {
+    if (!prisma) {
+      return;
+    }
+    const fx = await insertFixture(prisma);
+    const client = prisma as PrismaClient;
+    try {
+      const order: string[] = [];
+      let observedBySecond: string | null = null;
+
+      const first = client.$transaction(async (tx) => {
+        await lockLobbyRow(tx, fx.lobbyId);
+        order.push('first:locked');
+        // Long enough that the second transaction is provably waiting on the
+        // lock rather than simply losing a scheduling coin flip.
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        await tx.lobby.update({
+          where: { id: fx.lobbyId },
+          data: { instaPayHandle: 'written.by.first' },
+        });
+        order.push('first:committed');
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 80));
+
+      const second = client.$transaction(async (tx) => {
+        await lockLobbyRow(tx, fx.lobbyId);
+        order.push('second:locked');
+        const row = await tx.lobby.findUnique({
+          where: { id: fx.lobbyId },
+          select: { instaPayHandle: true },
+        });
+        observedBySecond = row?.instaPayHandle ?? null;
+      });
+
+      await Promise.all([first, second]);
+
+      expect(order).toEqual([
+        'first:locked',
+        'first:committed',
+        'second:locked',
+      ]);
+      // The whole point: the second transaction sees the first's write.
+      expect(observedBySecond).toBe('written.by.first');
+    } finally {
+      await deleteFixture(prisma, fx);
+    }
+  }, 60_000);
+
+  /**
+   * Criterion: a race between un-paying and closing out must never leave the
+   * lobby settled with money still owed. Fires the two mutations that move a
+   * member in opposite directions at the same instant and asserts the
+   * invariant on whatever final state they land in.
+   */
+  it('never settles while an owing member is unpaid, even under a concurrent resolve', async () => {
+    if (!prisma || !billing || !payments) {
+      return;
+    }
+    const fx = await insertFixture(prisma);
+    const client = prisma as PrismaClient;
+    try {
+      await billing.finalise(fx.lobbyId, fx.adminUserId, {
+        deliveryFee: '0',
+        serviceFee: '0',
+        discount: '0',
+      });
+      await payments.claim(fx.lobbyId, fx.memberUserId, {});
+
+      // Reject un-pays the member; settle tries to close out. Whichever wins,
+      // the invariant below must hold.
+      await Promise.allSettled([
+        payments.reject(fx.lobbyId, fx.memberMemberId, fx.adminUserId, {}),
+        payments.settle(fx.lobbyId, fx.adminUserId),
+      ]);
+
+      const lobby = await client.lobby.findUniqueOrThrow({
+        where: { id: fx.lobbyId },
+        select: { status: true },
+      });
+      const board = await payments.getBoard(fx.lobbyId, fx.adminUserId);
+
+      if (lobby.status === 'settled') {
+        expect(board.waitingOn).toEqual([]);
+        // And nothing may change afterwards.
+        await expect(
+          payments.claim(fx.lobbyId, fx.memberUserId, {}),
+        ).rejects.toMatchObject({ code: 'LOBBY_SETTLED' });
+        await expect(
+          payments.confirm(fx.lobbyId, fx.memberMemberId, fx.adminUserId, {}),
+        ).rejects.toMatchObject({ code: 'LOBBY_SETTLED' });
+        await expect(
+          payments.settle(fx.lobbyId, fx.adminUserId),
+        ).rejects.toMatchObject({ code: 'LOBBY_SETTLED' });
+      } else {
+        // Not settled: the member was un-paid, so they must still be owing.
+        expect(board.waitingOn.length).toBeGreaterThan(0);
+      }
     } finally {
       await deleteFixture(prisma, fx);
     }

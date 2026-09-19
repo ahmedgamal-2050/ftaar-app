@@ -3,7 +3,7 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json .npmrc ./
 RUN npm ci --ignore-scripts
 
 COPY . .
@@ -13,7 +13,7 @@ RUN npx nx run backend:prune --configuration=production
 WORKDIR /app/dist/apps/backend
 COPY apps/backend/prisma ./prisma
 COPY apps/backend/docker-entrypoint.sh ./docker-entrypoint.sh
-RUN npm ci --omit=dev --ignore-scripts \
+RUN npm install --omit=dev --ignore-scripts --no-audit --no-fund \
   && npx prisma generate --schema prisma/schema.prisma
 
 # ---- Runtime Stage ----

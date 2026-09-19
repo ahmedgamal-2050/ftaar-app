@@ -4,3 +4,10 @@ dist
 .nx/cache
 tmp
 *.log
+
+# Local mobile build artifacts. The backend image never needs them, and
+# apps/mobile/android alone is ~1.3GB of Gradle output.
+apps/mobile/android
+apps/mobile/ios
+.expo
+**/.expo

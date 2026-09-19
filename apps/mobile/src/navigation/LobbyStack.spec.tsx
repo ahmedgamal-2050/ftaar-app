@@ -126,6 +126,74 @@ const mockGetSummary = jest.fn(() =>
   }),
 );
 
+const FIXTURE_BOARD = {
+  lobbyId: LOBBY_ID,
+  status: 'billed' as const,
+  instaPayHandle: 'ahmed.instapay',
+  collected: '0.00',
+  grandTotal: '70.00',
+  you: {
+    memberId: ADMIN_MEMBER_ID,
+    amountOwed: '0.00',
+    paymentStatus: 'paid' as const,
+    isAdmin: true,
+  },
+  members: [
+    {
+      id: ADMIN_MEMBER_ID,
+      userId: USER_ID,
+      displayName: 'Ahmed',
+      role: 'admin' as const,
+      total: '0.00',
+      paymentStatus: 'paid' as const,
+      pendingClaimId: null,
+    },
+    {
+      id: REGULAR_MEMBER_ID,
+      userId: REGULAR_USER_ID,
+      displayName: 'Sarah',
+      role: 'member' as const,
+      total: '70.00',
+      paymentStatus: 'unpaid' as const,
+      pendingClaimId: null,
+    },
+  ],
+  waitingOn: ['Sarah'],
+};
+
+jest.mock('../api/endpoints/payments', () => ({
+  paymentsApi: {
+    getBoard: jest.fn(() => Promise.resolve(FIXTURE_BOARD)),
+    claim: jest.fn(),
+    confirm: jest.fn(),
+    reject: jest.fn(),
+    settle: jest.fn(),
+  },
+}));
+
+jest.mock('../api/endpoints/bill', () => ({
+  billApi: {
+    get: jest.fn(() =>
+      Promise.resolve({
+        subtotal: '70.00',
+        deliveryFee: '0.00',
+        serviceFee: '0.00',
+        discount: '0.00',
+        netFees: '0.00',
+        total: '70.00',
+        members: [],
+        reconciliation: {
+          receiptTotal: null,
+          computedTotal: '70.00',
+          difference: null,
+          warns: false,
+        },
+        status: 'billed',
+      }),
+    ),
+  },
+}));
+
 jest.mock('../api/endpoints/orders', () => ({
   ordersApi: {
     findMine: jest.fn(() => Promise.resolve({ items: [], subtotal: '0.00' })),
@@ -175,12 +243,22 @@ describe('LobbyStack', () => {
   it('resolves every still-placeholder lobby-scoped route', () => {
     const ref = renderLobbyStack();
 
-    const routes = ['LobbyShare', 'PaymentBoard', 'LobbySettled'] as const;
+    const routes = ['LobbyShare'] as const;
 
     for (const route of routes) {
       act(() => ref.navigate(route, { lobbyCode: LOBBY_CODE }));
       expect(screen.getByTestId(`placeholder-${route}`)).toBeTruthy();
     }
+  });
+
+  it('resolves the payment routes to their real screens', async () => {
+    const ref = renderLobbyStack();
+
+    act(() => ref.navigate('PaymentBoard', { lobbyCode: LOBBY_CODE }));
+    expect(await screen.findByTestId('payment-board-screen')).toBeTruthy();
+
+    act(() => ref.navigate('LobbySettled', { lobbyCode: LOBBY_CODE }));
+    expect(await screen.findByTestId('lobby-settled-screen')).toBeTruthy();
   });
 
   it('holds BillEntry back until the order is closed', async () => {
