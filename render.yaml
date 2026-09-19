@@ -1,0 +1,47 @@
+# Render Blueprint for the NestJS API (apps/backend).
+#
+# Render builds from the connected Git repo, so the Dockerfile fixes on this
+# branch must be pushed before a deploy will succeed. dockerContext is the
+# workspace root because the Dockerfile runs an Nx build and needs the monorepo
+# to resolve @nestjs-template/types.
+#
+# Migrations run at container boot (RUN_MIGRATIONS=true): Render has no
+# release-command hook on the free plan, and the free plan runs a single
+# instance, so concurrent `prisma migrate deploy` runs are not a concern.
+services:
+  - type: web
+    name: ftaar-api
+    runtime: docker
+    repo: https://github.com/ahmedgamal-2050/ftaar-app
+    branch: feat/payment
+    region: frankfurt
+    plan: free
+    dockerfilePath: ./apps/backend/Dockerfile
+    dockerContext: .
+    # Liveness only. /health/db is the right readiness signal but the wrong
+    # restart signal - a transient Postgres blip would cycle the instance.
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: LOG_LEVEL
+        value: info
+      - key: BODY_LIMIT
+        value: 256kb
+      - key: RUN_MIGRATIONS
+        value: 'true'
+      - key: CORS_ORIGINS
+        value: http://localhost:8081
+      # sync:false = set by hand in the Render dashboard, never committed.
+      # JWT_SECRET and EMAIL_OTP_SECRET must be >=32 chars or Joi rejects them
+      # at boot; generate with: openssl rand -base64 36
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: EMAIL_OTP_SECRET
+        sync: false
